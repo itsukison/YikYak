@@ -428,7 +428,7 @@ export default function HomeScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => router.push("/create-post")}
+            onPress={() => router.push({ pathname: "/create-post" })}
             style={{
               width: 44,
               height: 44,

@@ -68,15 +68,16 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 **Create Post Screen** (`src/app/create-post.jsx`)
 - Post creation interface (implementation pending)
 
-**Authentication System** ✅ (Completed 2025-10-21)
+**Authentication System** ✅ (Completed 2025-10-21, Updated 2025-10-23)
 - Supabase client initialized (`src/utils/supabase.js`)
 - Auth hook with session management (`src/utils/auth/useAuth.js`)
 - Login screen (`src/app/login.jsx`) - Headspace styling
 - Signup screen (`src/app/signup.jsx`) - Headspace styling
-- Onboarding screen (`src/app/onboarding.jsx`) - nickname/bio setup
+- Onboarding screen (`src/app/onboarding.jsx`) - username/nickname/bio setup with validation
+- Username field with uniqueness check (case-insensitive)
 - Root layout auth routing (`src/app/_layout.jsx`)
 - Auto-create user profile trigger on signup
-- Users table with RLS policies
+- Users table with RLS policies and unique username constraint
 - Note: Email verification needs to be disabled in Supabase dashboard
 
 ### 🚧 Pending Implementation

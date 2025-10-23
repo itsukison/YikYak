@@ -14,8 +14,12 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '../utils/auth/useAuth';
 import { useTheme } from '../utils/theme';
+import { supabase } from '../utils/supabase';
 
 export default function OnboardingScreen() {
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
@@ -26,8 +30,59 @@ export default function OnboardingScreen() {
   const { updateProfile } = useAuth();
   const { colors, isDark } = useTheme();
 
+  // Validate username format
+  const validateUsername = (value) => {
+    if (!value) return 'Username is required';
+    if (value.length < 3) return 'Username must be at least 3 characters';
+    if (value.length > 20) return 'Username must be 20 characters or less';
+    if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username can only contain letters, numbers, and underscores';
+    return null;
+  };
+
+  // Check username uniqueness (case-insensitive)
+  const checkUsernameAvailability = async (value) => {
+    if (!value || validateUsername(value)) return false;
+    
+    setCheckingUsername(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('username')
+        .ilike('username', value) // Case-insensitive match
+        .maybeSingle(); // Returns null if not found, doesn't throw error
+      
+      setCheckingUsername(false);
+      
+      if (error) {
+        console.error('Error checking username:', error);
+        setUsernameError('Error checking username availability');
+        return false;
+      }
+      
+      if (data) {
+        setUsernameError('Username is already taken');
+        return false;
+      }
+      
+      setUsernameError('');
+      return true;
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setCheckingUsername(false);
+      setUsernameError('Error checking username availability');
+      return false;
+    }
+  };
+
   const handleComplete = async () => {
-    // Validation
+    // Validate username
+    const usernameValidation = validateUsername(username);
+    if (usernameValidation) {
+      setError(usernameValidation);
+      return;
+    }
+
+    // Validate nickname
     if (!nickname.trim()) {
       setError('Please enter a nickname');
       return;
@@ -38,16 +93,25 @@ export default function OnboardingScreen() {
       return;
     }
 
+    // Validate bio
     if (bio.length > 150) {
       setError('Bio must be 150 characters or less');
+      return;
+    }
+
+    // Check username availability one final time
+    const isAvailable = await checkUsernameAvailability(username);
+    if (!isAvailable) {
+      setError('Username is already taken');
       return;
     }
 
     setLoading(true);
     setError('');
 
-    console.log('Onboarding: Updating profile with onboarding_completed=true');
+    console.log('Onboarding: Updating profile with username and onboarding_completed=true');
     const { data, error: updateError } = await updateProfile({
+      username: username.toLowerCase().trim(),
       nickname: nickname.trim(),
       bio: bio.trim() || null,
       is_anonymous: isAnonymous,
@@ -55,32 +119,40 @@ export default function OnboardingScreen() {
     });
 
     console.log('Onboarding: Profile updated', { data, error: updateError });
-    setLoading(false);
 
     if (updateError) {
       setError(updateError.message || 'Failed to update profile');
+      setLoading(false);
+    } else {
+      // Manual navigation to ensure redirect happens immediately
+      console.log('Onboarding: Navigating to home');
+      router.replace('/(tabs)/home');
     }
-    // Don't manually navigate - let root layout handle it automatically
-    // The profile state will update and trigger the routing logic
   };
 
   const handleSkip = async () => {
     setLoading(true);
     
+    // Generate random username
+    const randomUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
+    
     // Set default values
     const { error: updateError } = await updateProfile({
+      username: randomUsername,
       nickname: 'Anonymous User',
       bio: null,
       is_anonymous: true,
       onboarding_completed: true,
     });
 
-    setLoading(false);
-
     if (updateError) {
       setError(updateError.message || 'Failed to update profile');
+      setLoading(false);
+    } else {
+      // Manual navigation to ensure redirect happens immediately
+      console.log('Onboarding: Skip - Navigating to home');
+      router.replace('/(tabs)/home');
     }
-    // Don't manually navigate - let root layout handle it automatically
   };
 
   return (
@@ -104,6 +176,50 @@ export default function OnboardingScreen() {
 
         {/* Form */}
         <View style={styles.form}>
+          {/* Username Input */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+              Username *
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
+                  color: isDark ? '#FFFFFF' : '#1C1C1E'
+                }
+              ]}
+              placeholder="e.g., tokyo_student"
+              placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+              value={username}
+              onChangeText={(value) => {
+                const lowercaseValue = value.toLowerCase();
+                setUsername(lowercaseValue);
+                const error = validateUsername(lowercaseValue);
+                setUsernameError(error || '');
+              }}
+              onBlur={() => checkUsernameAvailability(username)}
+              maxLength={20}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+            {checkingUsername && (
+              <Text style={[styles.helperText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93' }]}>
+                Checking availability...
+              </Text>
+            )}
+            {usernameError && !checkingUsername && (
+              <Text style={styles.errorText}>{usernameError}</Text>
+            )}
+            {!usernameError && !checkingUsername && (
+              <Text style={[styles.helperText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+                Your unique identifier (3-20 characters, letters, numbers, underscore)
+              </Text>
+            )}
+          </View>
+
+          {/* Nickname Input */}
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
               Nickname *
@@ -254,6 +370,10 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     textAlign: 'right',
+    marginTop: 4,
+  },
+  helperText: {
+    fontSize: 12,
     marginTop: 4,
   },
   switchContainer: {

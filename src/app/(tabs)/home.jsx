@@ -17,6 +17,7 @@ import {
   ChevronUp,
   ChevronDown,
   MapPin,
+  School,
 } from "lucide-react-native";
 import {
   useFonts,
@@ -397,54 +398,35 @@ export default function HomeScreen() {
       >
         <View
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
+            marginTop: 20,
+            marginBottom: 14,
           }}
         >
-          <View>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <School size={28} color={colors.primary} strokeWidth={2} />
             <Text
               style={{
                 fontFamily: "Poppins_600SemiBold",
                 fontSize: 28,
                 color: colors.text,
+                marginLeft: 8,
               }}
             >
-              Campus Feed 🏫
+              Campus Feed
             </Text>
-            {location && (
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                  marginTop: 2,
-                }}
-              >
-                Posts within {radius / 1000}km
-              </Text>
-            )}
           </View>
-
-          <TouchableOpacity
-            onPress={() => router.push({ pathname: "/create-post" })}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: colors.primary,
-              justifyContent: "center",
-              alignItems: "center",
-              shadowColor: colors.shadow,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
-              elevation: 4,
-            }}
-          >
-            <Plus size={24} color="#FFFFFF" strokeWidth={2} />
-          </TouchableOpacity>
+          {location && (
+            <Text
+              style={{
+                fontFamily: "Poppins_400Regular",
+                fontSize: 12,
+                color: colors.textSecondary,
+                marginTop: 2,
+              }}
+            >
+              Posts within {radius / 1000}km
+            </Text>
+          )}
         </View>
 
         {/* Show location error */}
@@ -543,7 +525,7 @@ export default function HomeScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: insets.top + 120, // Account for fixed header
+          paddingTop: insets.top + 160, // Account for fixed header
           paddingBottom: insets.bottom + 20,
         }}
         showsVerticalScrollIndicator={false}
@@ -615,6 +597,29 @@ export default function HomeScreen() {
           posts.map(renderPost)
         )}
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        onPress={() => router.push({ pathname: "/create-post" })}
+        style={{
+          position: "absolute",
+          bottom: insets.bottom,
+          right: 20,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: colors.primary,
+          justifyContent: "center",
+          alignItems: "center",
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 12,
+          elevation: 8,
+        }}
+      >
+        <Plus size={28} color="#FFFFFF" strokeWidth={2.5} />
+      </TouchableOpacity>
     </AppBackground>
   );
 }

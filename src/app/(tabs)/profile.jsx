@@ -382,7 +382,10 @@ export default function ProfileScreen() {
               </Text>
             </View>
 
-            <View style={{ alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => router.push(`/user/following/${user.id}`)}
+              style={{ alignItems: "center" }}
+            >
               <Text
                 style={{
                   fontFamily: "Poppins_600SemiBold",
@@ -401,9 +404,12 @@ export default function ProfileScreen() {
               >
                 Following
               </Text>
-            </View>
+            </TouchableOpacity>
 
-            <View style={{ alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => router.push(`/user/followers/${user.id}`)}
+              style={{ alignItems: "center" }}
+            >
               <Text
                 style={{
                   fontFamily: "Poppins_600SemiBold",
@@ -422,7 +428,7 @@ export default function ProfileScreen() {
               >
                 Followers
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 

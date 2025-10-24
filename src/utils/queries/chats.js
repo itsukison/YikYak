@@ -12,12 +12,14 @@ export function useChatsQuery(userId) {
 
       const { data, error } = await supabase
         .from("chats")
-        .select(`
+        .select(
+          `
           *,
           user1:users!chats_user1_id_fkey(id, nickname, is_anonymous),
           user2:users!chats_user2_id_fkey(id, nickname, is_anonymous),
           messages(content, created_at, is_read, sender_id)
-        `)
+        `
+        )
         .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
         .order("updated_at", { ascending: false });
 
@@ -27,7 +29,8 @@ export function useChatsQuery(userId) {
       return data.map((chat) => {
         const otherUser = chat.user1.id === userId ? chat.user2 : chat.user1;
         const messages = chat.messages || [];
-        const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+        const lastMessage =
+          messages.length > 0 ? messages[messages.length - 1] : null;
         const unreadCount = messages.filter(
           (msg) => !msg.is_read && msg.sender_id !== userId
         ).length;
@@ -55,10 +58,12 @@ export function useChatMessagesQuery(chatId) {
 
       const { data, error } = await supabase
         .from("messages")
-        .select(`
+        .select(
+          `
           *,
           sender:users!messages_sender_id_fkey(id, nickname, is_anonymous)
-        `)
+        `
+        )
         .eq("chat_id", chatId)
         .order("created_at", { ascending: true });
 
@@ -115,24 +120,30 @@ export function useCreateChatMutation() {
   return useMutation({
     mutationFn: async ({ user1Id, user2Id }) => {
       // Check if chat already exists
-      const { data: existingChat } = await supabase
+      const { data: existingChat, error: checkError } = await supabase
         .from("chats")
         .select("*")
         .or(
           `and(user1_id.eq.${user1Id},user2_id.eq.${user2Id}),and(user1_id.eq.${user2Id},user2_id.eq.${user1Id})`
         )
-        .single();
+        .maybeSingle();
+
+      if (checkError) throw checkError;
 
       if (existingChat) {
         return existingChat;
       }
 
+      // Ensure user1_id < user2_id to satisfy CHECK constraint
+      const sortedIds = [user1Id, user2Id].sort();
+      const [smallerId, largerId] = sortedIds;
+
       // Create new chat
       const { data, error } = await supabase
         .from("chats")
         .insert({
-          user1_id: user1Id,
-          user2_id: user2Id,
+          user1_id: smallerId,
+          user2_id: largerId,
         })
         .select()
         .single();

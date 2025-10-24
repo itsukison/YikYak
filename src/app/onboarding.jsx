@@ -27,7 +27,7 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
   
   const router = useRouter();
-  const { updateProfile } = useAuth();
+  const { updateProfile, user, profile, setProfile, fetchProfile } = useAuth();
   const { colors, isDark } = useTheme();
 
   // Validate username format
@@ -109,7 +109,21 @@ export default function OnboardingScreen() {
     setLoading(true);
     setError('');
 
-    console.log('Onboarding: Updating profile with username and onboarding_completed=true');
+    // Optimistically update profile state immediately (before database call)
+    const optimisticProfile = {
+      ...profile,
+      username: username.toLowerCase().trim(),
+      nickname: nickname.trim(),
+      bio: bio.trim() || null,
+      is_anonymous: isAnonymous,
+      onboarding_completed: true,
+    };
+    
+    console.log('Onboarding: Optimistically updating profile state');
+    setProfile(optimisticProfile);
+
+    // Then update the database
+    console.log('Onboarding: Updating profile in database');
     const { data, error: updateError } = await updateProfile({
       username: username.toLowerCase().trim(),
       nickname: nickname.trim(),
@@ -121,11 +135,16 @@ export default function OnboardingScreen() {
     console.log('Onboarding: Profile updated', { data, error: updateError });
 
     if (updateError) {
+      // Revert optimistic update on error by refetching actual state
+      console.error('Onboarding: Database update failed, reverting optimistic update');
+      if (user?.id) {
+        await fetchProfile(user.id);
+      }
       setError(updateError.message || 'Failed to update profile');
       setLoading(false);
     } else {
-      // Manual navigation to ensure redirect happens immediately
-      console.log('Onboarding: Navigating to home');
+      // Navigation will happen automatically due to optimistic update
+      console.log('Onboarding: Success, navigating to home');
       router.replace('/(tabs)/home');
     }
   };
@@ -136,7 +155,20 @@ export default function OnboardingScreen() {
     // Generate random username
     const randomUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
     
-    // Set default values
+    // Optimistically update profile state immediately (before database call)
+    const optimisticProfile = {
+      ...profile,
+      username: randomUsername,
+      nickname: 'Anonymous User',
+      bio: null,
+      is_anonymous: true,
+      onboarding_completed: true,
+    };
+    
+    console.log('Onboarding: Skip - Optimistically updating profile state');
+    setProfile(optimisticProfile);
+    
+    // Then update the database
     const { error: updateError } = await updateProfile({
       username: randomUsername,
       nickname: 'Anonymous User',
@@ -146,11 +178,16 @@ export default function OnboardingScreen() {
     });
 
     if (updateError) {
+      // Revert optimistic update on error by refetching actual state
+      console.error('Onboarding: Skip - Database update failed, reverting optimistic update');
+      if (user?.id) {
+        await fetchProfile(user.id);
+      }
       setError(updateError.message || 'Failed to update profile');
       setLoading(false);
     } else {
-      // Manual navigation to ensure redirect happens immediately
-      console.log('Onboarding: Skip - Navigating to home');
+      // Navigation will happen automatically due to optimistic update
+      console.log('Onboarding: Skip - Success, navigating to home');
       router.replace('/(tabs)/home');
     }
   };

@@ -308,7 +308,7 @@ export default function PostDetailScreen() {
             ) : comments && comments.length > 0 ? (
               comments.map((commentItem) => {
                 const userVote = localVotes[commentItem.id];
-                const displayScore = commentItem.score + (userVote || 0) - (userVotes?.[commentItem.id] || 0);
+                const displayScore = commentItem.score;
 
                 return (
                   <View

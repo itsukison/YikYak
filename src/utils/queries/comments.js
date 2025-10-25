@@ -12,10 +12,12 @@ export function useCommentsQuery(postId) {
 
       const { data, error } = await supabase
         .from("comments")
-        .select(`
+        .select(
+          `
           *,
           author:users!comments_user_id_fkey(id, nickname, is_anonymous)
-        `)
+        `
+        )
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
 
@@ -50,10 +52,7 @@ export function useCommentVotesQuery(postId, userId) {
           "comment_id",
           // Get all comment IDs for this post first
           (
-            await supabase
-              .from("comments")
-              .select("id")
-              .eq("post_id", postId)
+            await supabase.from("comments").select("id").eq("post_id", postId)
           ).data?.map((c) => c.id) || []
         );
 
@@ -84,10 +83,12 @@ export function useCreateCommentMutation() {
           user_id: userId,
           content: content.trim(),
         })
-        .select(`
+        .select(
+          `
           *,
           author:users!comments_user_id_fkey(id, nickname, is_anonymous)
-        `)
+        `
+        )
         .single();
 
       if (error) throw error;
@@ -117,34 +118,62 @@ export function useVoteCommentMutation() {
 
   return useMutation({
     mutationFn: async ({ userId, commentId, voteType, postId }) => {
-      // Insert or update vote
-      const { error } = await supabase
-        .from("votes_comments")
-        .upsert(
-          {
-            user_id: userId,
-            comment_id: commentId,
-            vote_type: voteType,
-          },
-          {
-            onConflict: "user_id,comment_id",
-          }
-        );
+      // If voteType is 0 or null, delete the vote
+      if (voteType === 0 || voteType === null) {
+        const { error } = await supabase
+          .from("votes_comments")
+          .delete()
+          .eq("user_id", userId)
+          .eq("comment_id", commentId);
+
+        if (error) throw error;
+
+        // Recalculate comment score after deletion
+        const { data: votes } = await supabase
+          .from("votes_comments")
+          .select("vote_type")
+          .eq("comment_id", commentId);
+
+        const newScore =
+          votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
+
+        await supabase
+          .from("comments")
+          .update({ score: newScore })
+          .eq("id", commentId);
+
+        return null;
+      }
+
+      // Otherwise, upsert the vote
+      const { error } = await supabase.from("votes_comments").upsert(
+        {
+          user_id: userId,
+          comment_id: commentId,
+          vote_type: voteType,
+        },
+        {
+          onConflict: "user_id,comment_id",
+        }
+      );
 
       if (error) throw error;
 
-      // Recalculate comment score
+      // Recalculate comment score after upsert
       const { data: votes } = await supabase
         .from("votes_comments")
         .select("vote_type")
         .eq("comment_id", commentId);
 
-      const newScore = votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
+      const newScore =
+        votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
 
       await supabase
         .from("comments")
         .update({ score: newScore })
         .eq("id", commentId);
+
+      return voteType;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries(["comments", variables.postId]);

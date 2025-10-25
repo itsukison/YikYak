@@ -308,7 +308,7 @@ export default function HomeScreen() {
                 marginLeft: 4,
               }}
             >
-              {post.score > 0 ? post.score : ""}
+              {post.score || 0}
             </Text>
           </TouchableOpacity>
 

@@ -9,7 +9,7 @@
 
 ## 📋 Requirements
 
-Set up the complete Supabase backend for YikYak Japan, including:
+Set up the complete Supabase backend for HearSay Japan, including:
 
 1. **Authentication System** - Supabase Auth with email/password (no email verification)
 2. **Auth UI Screens** - Login, Signup, and Onboarding screens following Headspace design
@@ -45,6 +45,7 @@ Set up the complete Supabase backend for YikYak Japan, including:
 **Auth Provider:** Email/Password (no email verification required)
 
 **Auth Settings:**
+
 ```javascript
 // Disable email confirmation
 Settings → Authentication → Email Auth Settings
@@ -81,7 +82,9 @@ Settings → Authentication → Email Auth Settings
 ### Auth Screens to Implement
 
 #### 1. `/login.jsx` - Login Screen
+
 **Design:** Headspace-inspired with warm colors
+
 - App logo/title at top
 - Email input (rounded, #F2F2F7 background)
 - Password input (rounded, #F2F2F7 background)
@@ -90,7 +93,9 @@ Settings → Authentication → Email Auth Settings
 - Error message display (red text)
 
 #### 2. `/signup.jsx` - Signup Screen
+
 **Design:** Similar to login
+
 - App logo/title at top
 - Email input (with .ac.jp hint)
 - Password input (min 6 characters)
@@ -100,8 +105,10 @@ Settings → Authentication → Email Auth Settings
 - Terms & privacy disclaimer (small gray text)
 
 #### 3. `/onboarding.jsx` - Profile Setup
+
 **Design:** Welcoming, card-based
-- "Welcome to YikYak Japan! 🎉" heading
+
+- "Welcome to HearSay Japan! 🎉" heading
 - Nickname input (required, max 20 chars)
 - Bio textarea (optional, max 150 chars)
 - Anonymous mode toggle (Switch component)
@@ -109,6 +116,7 @@ Settings → Authentication → Email Auth Settings
 - Skip button (gray text) - sets default values
 
 **Styling Reference:** `apps/mobile/.agent/styling.md`
+
 - Rounded corners: 20px
 - Primary color: #FFCC00
 - Background: #FFF9F3
@@ -119,9 +127,10 @@ Settings → Authentication → Email Auth Settings
 ### Auth Utilities to Implement
 
 #### 1. `src/utils/supabase.js` - Supabase Client
+
 ```javascript
-import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -137,9 +146,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 ```
 
 #### 2. `src/utils/auth/useAuth.js` - Auth Hook
+
 ```javascript
-import { useEffect, useState } from 'react';
-import { supabase } from '../supabase';
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -155,12 +165,12 @@ export function useAuth() {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -174,9 +184,9 @@ export function useAuth() {
       return { data, error };
     },
     signIn: async (email, password) => {
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
       return { data, error };
     },
@@ -189,10 +199,11 @@ export function useAuth() {
 ```
 
 #### 3. `src/app/_layout.jsx` - Root Layout with Auth Routing
+
 ```javascript
-import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import { useAuth } from '../utils/auth/useAuth';
+import { useEffect } from "react";
+import { useRouter, useSegments } from "expo-router";
+import { useAuth } from "../utils/auth/useAuth";
 
 export default function RootLayout() {
   const { user, loading } = useAuth();
@@ -202,15 +213,15 @@ export default function RootLayout() {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
+    const inAuthGroup = segments[0] === "(auth)";
+    const inTabsGroup = segments[0] === "(tabs)";
 
     if (!user && !inAuthGroup) {
       // Redirect to login if not authenticated
-      router.replace('/login');
+      router.replace("/login");
     } else if (user && inAuthGroup) {
       // Redirect to home if authenticated
-      router.replace('/(tabs)/home');
+      router.replace("/(tabs)/home");
     }
   }, [user, loading, segments]);
 
@@ -255,16 +266,19 @@ CREATE TABLE public.users (
 ```
 
 **Indexes:**
+
 - `idx_users_email` on `email` (unique lookup)
 - `idx_users_nickname` on `nickname` (search)
 
 **RLS Policies:**
+
 - SELECT: Public (anyone can view profiles, but anonymous users show limited info)
 - INSERT: Service role only (via trigger)
 - UPDATE: Users can only update their own profile
 - DELETE: Users can only delete their own profile
 
 **Trigger:** Auto-create profile on signup
+
 ```sql
 -- Function to create user profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -309,12 +323,14 @@ CREATE TABLE public.posts (
 ```
 
 **Indexes:**
+
 - `idx_posts_location` on `(latitude, longitude)` using GIST (spatial queries)
 - `idx_posts_created_at` on `created_at DESC` (new posts)
 - `idx_posts_score` on `score DESC` (popular posts)
 - `idx_posts_user_id` on `user_id` (user's posts)
 
 **RLS Policies:**
+
 - SELECT: Public (anyone can view posts within radius)
 - INSERT: Authenticated users only
 - UPDATE: Only post author can update
@@ -336,16 +352,19 @@ CREATE TABLE public.votes_posts (
 ```
 
 **Indexes:**
+
 - `idx_votes_posts_user_post` on `(user_id, post_id)` (unique constraint)
 - `idx_votes_posts_post_id` on `post_id` (aggregation)
 
 **RLS Policies:**
+
 - SELECT: Public (to show vote counts)
 - INSERT: Authenticated users only
 - UPDATE: Users can only update their own votes
 - DELETE: Users can only delete their own votes
 
 **Triggers:**
+
 - Update `posts.score` on INSERT/UPDATE/DELETE
 
 ---
@@ -365,17 +384,20 @@ CREATE TABLE public.comments (
 ```
 
 **Indexes:**
+
 - `idx_comments_post_id` on `post_id` (fetch comments for a post)
 - `idx_comments_created_at` on `created_at ASC` (chronological order)
 - `idx_comments_user_id` on `user_id` (user's comments)
 
 **RLS Policies:**
+
 - SELECT: Public (anyone can view comments)
 - INSERT: Authenticated users only
 - UPDATE: Only comment author can update
 - DELETE: Only comment author can delete
 
 **Triggers:**
+
 - Update `posts.comment_count` on INSERT/DELETE
 
 ---
@@ -394,16 +416,19 @@ CREATE TABLE public.votes_comments (
 ```
 
 **Indexes:**
+
 - `idx_votes_comments_user_comment` on `(user_id, comment_id)` (unique)
 - `idx_votes_comments_comment_id` on `comment_id` (aggregation)
 
 **RLS Policies:**
+
 - SELECT: Public
 - INSERT: Authenticated users only
 - UPDATE: Users can only update their own votes
 - DELETE: Users can only delete their own votes
 
 **Triggers:**
+
 - Update `comments.score` on INSERT/UPDATE/DELETE
 
 ---
@@ -421,10 +446,12 @@ CREATE TABLE public.follows (
 ```
 
 **Indexes:**
+
 - `idx_follows_follower` on `follower_id` (who I follow)
 - `idx_follows_following` on `following_id` (who follows me)
 
 **RLS Policies:**
+
 - SELECT: Public (to show follower/following counts)
 - INSERT: Authenticated users can follow others
 - DELETE: Users can only unfollow their own follows
@@ -446,12 +473,14 @@ CREATE TABLE public.chats (
 ```
 
 **Indexes:**
+
 - `idx_chats_users` on `(user1_id, user2_id)` (unique lookup)
 - `idx_chats_user1` on `user1_id` (user's chats)
 - `idx_chats_user2` on `user2_id` (user's chats)
 - `idx_chats_updated_at` on `updated_at DESC` (recent chats)
 
 **RLS Policies:**
+
 - SELECT: Only chat participants can view
 - INSERT: Authenticated users can create chats with users they follow
 - DELETE: Either participant can delete the chat
@@ -472,17 +501,20 @@ CREATE TABLE public.messages (
 ```
 
 **Indexes:**
+
 - `idx_messages_chat_id` on `chat_id` (fetch messages for a chat)
 - `idx_messages_created_at` on `created_at ASC` (chronological order)
 - `idx_messages_sender_id` on `sender_id` (sender's messages)
 
 **RLS Policies:**
+
 - SELECT: Only chat participants can view messages
 - INSERT: Only chat participants can send messages
 - UPDATE: Only sender can mark as edited (future feature)
 - DELETE: Only sender can delete their messages
 
 **Triggers:**
+
 - Update `chats.updated_at` on INSERT
 
 ---
@@ -508,13 +540,13 @@ DECLARE
 BEGIN
   dLat := radians(lat2 - lat1);
   dLon := radians(lon2 - lon1);
-  
+
   a := sin(dLat/2) * sin(dLat/2) +
        cos(radians(lat1)) * cos(radians(lat2)) *
        sin(dLon/2) * sin(dLon/2);
-  
+
   c := 2 * atan2(sqrt(a), sqrt(1-a));
-  
+
   RETURN R * c; -- Distance in meters
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
@@ -546,7 +578,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     p.id,
     p.user_id,
     p.content,
@@ -562,12 +594,12 @@ BEGIN
   FROM posts p
   JOIN users u ON p.user_id = u.id
   WHERE calculate_distance(user_lat, user_lon, p.latitude, p.longitude) <= radius_meters
-  ORDER BY 
-    CASE 
+  ORDER BY
+    CASE
       WHEN sort_by = 'popular' THEN p.score
       ELSE 0
     END DESC,
-    CASE 
+    CASE
       WHEN sort_by = 'new' THEN p.created_at
       ELSE NULL
     END DESC
@@ -589,9 +621,9 @@ BEGIN
   -- Insert or update vote
   INSERT INTO votes_posts (user_id, post_id, vote_type)
   VALUES (p_user_id, p_post_id, p_vote_type)
-  ON CONFLICT (user_id, post_id) 
+  ON CONFLICT (user_id, post_id)
   DO UPDATE SET vote_type = p_vote_type;
-  
+
   -- Recalculate post score
   UPDATE posts
   SET score = (
@@ -624,6 +656,7 @@ ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ### Key RLS Policies
 
 **Users Table:**
+
 ```sql
 -- Anyone can view user profiles
 CREATE POLICY "Users are viewable by everyone"
@@ -642,6 +675,7 @@ CREATE POLICY "Users can update own profile"
 ```
 
 **Posts Table:**
+
 ```sql
 -- Anyone can view posts
 CREATE POLICY "Posts are viewable by everyone"
@@ -665,6 +699,7 @@ CREATE POLICY "Users can delete own posts"
 ```
 
 **Messages Table:**
+
 ```sql
 -- Only chat participants can view messages
 CREATE POLICY "Chat participants can view messages"
@@ -729,6 +764,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 ## 🚀 Implementation Plan
 
 ### Phase 0: Dependencies (Priority: Critical)
+
 1. Install Supabase client: `npm install @supabase/supabase-js`
 2. Update `.env` to use Expo-compatible env vars:
    - `EXPO_PUBLIC_SUPABASE_URL`
@@ -736,6 +772,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 3. Verify AsyncStorage is installed (already in package.json)
 
 ### Phase 1: Authentication Setup (Priority: Critical)
+
 1. Configure Supabase Auth (disable email verification in dashboard)
 2. Create Supabase client utility (`src/utils/supabase.js`)
 3. Implement auth context/hook (`src/utils/auth/useAuth.js`)
@@ -746,6 +783,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 8. Test signup → onboarding → home flow
 
 ### Phase 2: Database Schema (Priority: Critical)
+
 1. Create all 8 tables with proper types and constraints
 2. Add all indexes for performance
 3. Create trigger for auto-creating user profiles
@@ -753,6 +791,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 5. Test table creation and relationships
 
 ### Phase 3: Functions & Triggers (Priority: High)
+
 1. Implement distance calculation function
 2. Create get_posts_within_radius function
 3. Add vote handling functions
@@ -760,6 +799,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 5. Test all functions with sample queries
 
 ### Phase 4: RLS Policies (Priority: High)
+
 1. Implement all SELECT policies
 2. Implement all INSERT policies
 3. Implement all UPDATE policies
@@ -767,6 +807,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 5. Test policies with different user contexts
 
 ### Phase 5: Frontend Integration (Priority: High)
+
 1. Connect Feed screen to real Supabase data
 2. Implement post creation with location
 3. Connect vote system to database
@@ -774,6 +815,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 5. Test optimistic updates
 
 ### Phase 6: Realtime & Testing (Priority: Medium)
+
 1. Enable realtime for posts, messages, comments
 2. Insert sample data
 3. Test location-based queries
@@ -788,16 +830,19 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 ### 2025-10-21 - Phase 1 Complete: Authentication System ✅
 
 **Dependencies Installed:**
+
 - ✅ Installed `@supabase/supabase-js` package
-- ✅ Updated `.env` with EXPO_PUBLIC_ prefix for environment variables
+- ✅ Updated `.env` with EXPO*PUBLIC* prefix for environment variables
 - ✅ AsyncStorage already available in package.json
 
 **Supabase Client & Auth Hook:**
+
 - ✅ Created `src/utils/supabase.js` - Supabase client with AsyncStorage persistence
 - ✅ Created `src/utils/auth/useAuth.js` - Auth hook with signUp, signIn, signOut, updateProfile
 - ✅ Hook includes profile fetching and session management
 
 **Auth Screens (Headspace Design):**
+
 - ✅ Created `src/app/login.jsx` - Login screen with email/password
   - Warm colors (#FFF9F3 background, #FFCC00 button)
   - Rounded corners (20px)
@@ -817,6 +862,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
   - Skip button with default values
 
 **Auth Routing:**
+
 - ✅ Updated `src/app/_layout.jsx` - Root layout with auth routing logic
   - Redirects to /login if not authenticated
   - Redirects to /onboarding if profile incomplete
@@ -824,6 +870,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - ✅ Updated `src/app/index.jsx` - Initial route handler with loading state
 
 **Database Setup:**
+
 - ✅ Created `users` table in Supabase (extends auth.users)
   - Columns: id, email, nickname, bio, is_anonymous, onboarding_completed, created_at, updated_at
   - Indexes on email and nickname
@@ -834,17 +881,20 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - ✅ Applied trigger on auth.users INSERT
 
 **Testing Status:**
+
 - ⏳ Auth flow needs manual testing: Signup → Onboarding → Home
 - ⏳ Supabase Auth email verification needs to be disabled in dashboard
 - ⏳ Test profile creation trigger with real signup
 
 **Next Steps:**
+
 - Disable email verification in Supabase dashboard (Settings → Authentication → Email Auth)
 - Test complete auth flow on device/simulator
 
 ### 2025-10-21 - Phase 2 Complete: Database Schema ✅
 
 **All 8 Tables Created:**
+
 - ✅ `users` - User profiles (already created in Phase 1)
 - ✅ `posts` - Location-based posts with score and comment_count
 - ✅ `votes_posts` - Post voting system (upvote/downvote)
@@ -855,12 +905,14 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - ✅ `messages` - Chat messages with read status
 
 **Indexes Created:**
+
 - ✅ Location-based queries: GIST index on posts(longitude, latitude)
 - ✅ Performance indexes on created_at, score, user_id for all tables
 - ✅ Foreign key indexes for efficient joins
 - ✅ Unique constraints on votes (user_id, post_id) and (user_id, comment_id)
 
 **RLS Policies Applied:**
+
 - ✅ All tables have RLS enabled
 - ✅ SELECT policies: Public viewing for posts/comments/votes, restricted for chats/messages
 - ✅ INSERT policies: Authenticated users only, with ownership checks
@@ -870,38 +922,45 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 ### 2025-10-21 - Phase 3 Complete: Functions & Triggers ✅
 
 **Database Functions Created:**
+
 - ✅ `calculate_distance()` - Haversine formula for location-based queries
 - ✅ `get_posts_within_radius()` - Fetch posts within specified radius with sorting
 - ✅ `handle_post_vote()` - Upsert vote and recalculate post score
 - ✅ `handle_comment_vote()` - Upsert vote and recalculate comment score
 
 **Triggers Implemented:**
+
 - ✅ `update_post_score` - Auto-update post score when votes change
 - ✅ `update_comment_score` - Auto-update comment score when votes change
 - ✅ `update_post_comment_count` - Auto-increment/decrement comment count
 - ✅ `update_chat_timestamp` - Update chat updated_at when message sent
 
 **Realtime Configuration:**
+
 - ✅ Enabled realtime for `posts` table
 - ✅ Enabled realtime for `messages` table
 - ✅ Enabled realtime for `comments` table
 
 **Sample Data:**
+
 - ✅ Sample posts will be created automatically when users sign up
 
 **Profile Screen Fixed:**
+
 - ✅ Connected to real auth hook (useAuth)
 - ✅ Sign out functionality working
 - ✅ Anonymous mode toggle connected to database
 - ✅ Displays real user data from profile
 
 **Next Steps:**
+
 - See `FRONTEND_SUPABASE_INTEGRATION.md` for detailed frontend integration plan
 - Priority: Connect Home screen and Create Post screen to Supabase
 
 ### 2025-10-21 - Frontend Integration Analysis Complete ✅
 
 **Issues Identified:**
+
 - ❌ Home screen uses mock data and fake API calls
 - ❌ Create post screen uses hardcoded user ID "TokyoStudent"
 - ❌ Profile stats show 0 (need real queries)
@@ -909,6 +968,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - ❌ Notifications screen not implemented
 
 **Task Created:**
+
 - Created comprehensive task document: `FRONTEND_SUPABASE_INTEGRATION.md`
 - Identified 5 phases of integration work
 - Prioritized critical screens (Home, Create Post)
@@ -916,6 +976,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - Listed utilities to create (React Query hooks, realtime subscriptions)
 
 **Ready for Implementation:**
+
 - Backend is 100% complete and tested
 - All database tables, functions, and triggers ready
 - Auth system working
@@ -926,6 +987,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 ## ✅ Completion Checklist
 
 ### Authentication
+
 - [x] Supabase Auth configured (email verification needs manual disable in dashboard)
 - [x] Supabase client created (`src/utils/supabase.js`)
 - [x] Auth hook implemented (`src/utils/auth/useAuth.js`)
@@ -936,6 +998,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - [ ] Auth flow tested: Signup → Onboarding → Home (needs manual testing)
 
 ### Database
+
 - [x] All 8 tables created successfully
 - [x] All indexes added
 - [x] User profile trigger working (auto-create on signup)
@@ -945,6 +1008,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - [x] Realtime enabled for posts, messages, comments
 
 ### Testing
+
 - [ ] Sample data inserted
 - [ ] Location queries tested (<100ms)
 - [ ] Vote system tested
@@ -953,6 +1017,7 @@ INSERT INTO posts (user_id, content, latitude, longitude, location_name, score, 
 - [ ] RLS policies tested with different users
 
 ### Documentation
+
 - [ ] README.md updated with auth implementation
 - [ ] ARCHITECTURE.md updated with auth flow
 - [ ] Code comments added to auth utilities

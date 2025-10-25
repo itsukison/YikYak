@@ -1,11 +1,11 @@
-🦌 YikYak Japan – Product Requirements Document (PRD)
+🦌 HearSay – Product Requirements Document (PRD)
 1️⃣ Overview
 
 Goal:
 Build a location-based, semi-anonymous social app for Japanese university students.
 Users can:
 
-Post short text updates visible to nearby users (like YikYak).
+Post short text updates visible to nearby users (like HearSay).
 
 Upvote/downvote posts (like Reddit).
 
@@ -34,12 +34,14 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 ### ✅ Completed Features
 
 **UI/UX Foundation** (refs: `src/app/(tabs)/*.jsx`, `src/components/*.jsx`, `src/utils/theme.js`)
+
 - Tab navigation with 4 main screens: Feed, Messages, Notifications, Profile
 - Headspace-inspired design system with warm colors and rounded corners
 - Dark/light theme support via `useTheme()` hook
 - Custom components: `AppBackground`, `EmptyState`, `MenuItem`, `KeyboardAvoidingAnimatedView`
 
 **Feed Screen** (`src/app/(tabs)/home.jsx`)
+
 - Location-based post feed with GPS filtering
 - User-configurable radius (2km, 5km, 10km)
 - Toggle between "New" and "Popular" sorting
@@ -52,6 +54,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - Location error handling and status display
 
 **Profile Screen** (`src/app/(tabs)/profile.jsx`)
+
 - User profile with avatar, stats (posts, followers, following)
 - Anonymous mode toggle with Switch UI
 - Location radius preference (2km/5km/10km) - persisted to database
@@ -60,15 +63,19 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - Sign out functionality
 
 **Messages Screen** (`src/app/(tabs)/messages.jsx`)
+
 - Empty state placeholder for DM feature
 
 **Notifications Screen** (`src/app/(tabs)/notification.jsx`)
+
 - Empty state placeholder
 
 **Create Post Screen** (`src/app/create-post.jsx`)
+
 - Post creation interface (implementation pending)
 
 **Authentication System** ✅ (Completed 2025-10-21, Updated 2025-10-23)
+
 - Supabase client initialized (`src/utils/supabase.js`)
 - Auth hook with session management (`src/utils/auth/useAuth.js`)
 - Login screen (`src/app/login.jsx`) - Headspace styling
@@ -83,6 +90,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 ### 🚧 Pending Implementation
 
 **Backend Integration** ✅ (Completed 2025-10-21)
+
 - All 8 tables created with RLS policies and indexes
 - Helper functions (distance calculation, vote handling, get_posts_within_radius)
 - Triggers for auto-updating scores and counts
@@ -91,6 +99,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - Ready for frontend integration
 
 **Frontend Integration** ✅ (ALL PHASES COMPLETE 2025-10-21)
+
 - Home screen connected to Supabase (location-based posts, voting, realtime)
 - Create post screen saves to database with real user data
 - Profile screen shows real stats (post/follower/following counts)
@@ -110,6 +119,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - Onboarding flow completes successfully
 
 **Core Features** ✅ (ALL COMPLETE)
+
 - ✅ Authentication & Onboarding
 - ✅ Location-based Feed
 - ✅ Create Posts
@@ -123,6 +133,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - ✅ Anonymous Mode
 
 **Future Enhancements** 🚀
+
 - Push notifications (Expo Notifications)
 - Media uploads (images, videos)
 - Group chats
@@ -130,6 +141,7 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - AI moderation
 
 **Data Layer** ✅
+
 - React Query setup for caching
 - AsyncStorage for session persistence
 - Supabase Realtime subscriptions active
@@ -139,7 +151,9 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 ## 📚 Documentation Structure
 
 ### `/SOP/DEVELOPMENT_WORKFLOW.md`
+
 Standard operating procedures for common tasks:
+
 - Starting development and running the app
 - Working with Supabase (setup, database changes, queries)
 - Creating new screens with Expo Router
@@ -152,7 +166,9 @@ Standard operating procedures for common tasks:
 - Deployment process
 
 ### `/system/ARCHITECTURE.md`
+
 Complete technical architecture including:
+
 - Project structure and file organization
 - Tech stack details and dependencies
 - Design system (theme, typography, spacing)
@@ -163,7 +179,9 @@ Complete technical architecture including:
 - Performance and security considerations
 
 ### `/tasks/SUPABASE_DATABASE_SETUP.md`
+
 Comprehensive backend setup plan including:
+
 - **Authentication System:** Login, Signup, Onboarding screens with Headspace styling
 - **Supabase Auth:** Email/password (no verification), auto-profile creation trigger
 - **Auth Utilities:** Supabase client, useAuth hook, root layout routing
@@ -176,6 +194,7 @@ Comprehensive backend setup plan including:
 - **6-Phase Implementation Plan:** Dependencies → Auth → Schema → Functions → RLS → Frontend → Realtime
 
 ### Current Files Reference
+
 - **Tab Navigation:** `src/app/(tabs)/_layout.jsx`
 - **Feed Screen:** `src/app/(tabs)/home.jsx` (location-based posts, voting UI)
 - **Profile Screen:** `src/app/(tabs)/profile.jsx` (anonymous toggle, settings)
@@ -287,40 +306,40 @@ Tables
 
 users
 
-column	type	note
-id	uuid	PK
-email	text	unique
-nickname	text	nullable
-is_anonymous	boolean	default true
-created_at	timestamp	
+column type note
+id uuid PK
+email text unique
+nickname text nullable
+is_anonymous boolean default true
+created_at timestamp
 
 posts
 
-column	type	note
-id	bigserial	PK
-user_id	uuid	FK → users
-content	text	
-latitude	float	
-longitude	float	
-created_at	timestamp	
-score	int	cached upvote total
+column type note
+id bigserial PK
+user_id uuid FK → users
+content text
+latitude float
+longitude float
+created_at timestamp
+score int cached upvote total
 
 votes_posts
 
-column	type	note
-id	bigserial	PK
-user_id	uuid	
-post_id	bigint	
-vote_type	int	+1 / -1
+column type note
+id bigserial PK
+user_id uuid
+post_id bigint
+vote_type int +1 / -1
 
 comments
 
-column	type	note
-id	bigserial	PK
-post_id	bigint	FK → posts
-user_id	uuid	FK → users
-content	text	
-created_at	timestamp	
+column type note
+id bigserial PK
+post_id bigint FK → posts
+user_id uuid FK → users
+content text
+created_at timestamp
 
 votes_comments
 | id | bigserial | PK |
@@ -373,11 +392,11 @@ When new message inserted:
 Supabase Edge Function triggers Expo push to recipient if offline.
 
 5️⃣ Caching Strategy
-Feature	Cache Type	Notes
-Feed	React Query cache + AsyncStorage	Fast reload
-Chats	AsyncStorage (last 50 msgs per chat)	Offline support
-Profiles	Cached 24h	Faster loading
-Votes	Instant UI update; sync in background	Optimistic UI
+Feature Cache Type Notes
+Feed React Query cache + AsyncStorage Fast reload
+Chats AsyncStorage (last 50 msgs per chat) Offline support
+Profiles Cached 24h Faster loading
+Votes Instant UI update; sync in background Optimistic UI
 6️⃣ Security / Permissions (RLS)
 
 Only authors can edit/delete their posts or comments.

@@ -590,7 +590,7 @@ export default function ProfileScreen() {
               letterSpacing: 0.5,
             }}
           >
-            YikYak Japan v1.0.0
+            HearSay Japan v1.0.0
           </Text>
         </View>
       </ScrollView>

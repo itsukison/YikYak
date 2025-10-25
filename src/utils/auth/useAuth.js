@@ -68,11 +68,23 @@ export function useAuth() {
     }
   };
 
-  const signUp = async (email, password) => {
+  const signUp = async (email, password, options = {}) => {
     try {
+      // Build signup options
+      const signUpOptions = {
+        data: options.data || {}, // Pass school metadata
+      };
+
+      // Only add emailRedirectTo and require email confirmation if not a guest
+      if (options.emailConfirmation !== false) {
+        signUpOptions.emailRedirectTo =
+          options.emailRedirectTo || "HearSay://auth/callback";
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: signUpOptions,
       });
       return { data, error };
     } catch (error) {

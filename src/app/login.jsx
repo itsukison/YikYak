@@ -120,7 +120,7 @@ export default function LoginScreen() {
           <Text style={[styles.footerText, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
             Don't have an account?{' '}
           </Text>
-          <TouchableOpacity onPress={() => router.push('/signup')}>
+          <TouchableOpacity onPress={() => router.push('/school-selection')}>
             <Text style={[styles.linkText, { color: isDark ? '#FF6B47' : '#E75424' }]}>
               Sign Up
             </Text>

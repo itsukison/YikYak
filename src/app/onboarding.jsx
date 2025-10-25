@@ -204,7 +204,7 @@ export default function OnboardingScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
-            Welcome to YikYak Japan! 🎉
+            Welcome to HearSay Japan! 🎉
           </Text>
           <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
             Let's set up your profile

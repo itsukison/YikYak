@@ -35,7 +35,7 @@ import {
 
 export default function PostDetailScreen() {
   const { id: postId, post: postJson } = useLocalSearchParams();
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -199,7 +199,7 @@ export default function PostDetailScreen() {
               marginHorizontal: 16,
               marginTop: 16,
               padding: 16,
-              borderRadius: 20,
+              borderRadius: radius.card,
             }}
           >
             {/* Post Header */}
@@ -316,7 +316,7 @@ export default function PostDetailScreen() {
                     style={{
                       backgroundColor: colors.card,
                       padding: 12,
-                      borderRadius: 16,
+                      borderRadius: radius.card,
                       marginBottom: 12,
                     }}
                   >
@@ -434,8 +434,8 @@ export default function PostDetailScreen() {
             placeholderTextColor={colors.textSecondary}
             style={{
               flex: 1,
-              backgroundColor: colors.card,
-              borderRadius: 24,
+              backgroundColor: colors.inputBackground,
+              borderRadius: radius.button,
               paddingHorizontal: 16,
               paddingVertical: 10,
               fontFamily: "Poppins_400Regular",
@@ -453,7 +453,7 @@ export default function PostDetailScreen() {
               backgroundColor: comment.trim() ? colors.primary : colors.border,
               width: 44,
               height: 44,
-              borderRadius: 22,
+              borderRadius: radius.button,
               justifyContent: "center",
               alignItems: "center",
             }}

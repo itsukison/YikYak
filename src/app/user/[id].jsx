@@ -29,7 +29,7 @@ import { useCreateChatMutation } from "../../utils/queries/chats";
 
 export default function UserProfileScreen() {
   const { id: targetUserId } = useLocalSearchParams();
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -169,8 +169,8 @@ export default function UserProfileScreen() {
                 style={{
                   width: 80,
                   height: 80,
-                  borderRadius: 40,
-                  backgroundColor: colors.primary + "20",
+                  borderRadius: radius.avatar,
+                  backgroundColor: colors.accentSubtle,
                   justifyContent: "center",
                   alignItems: "center",
                   marginBottom: 16,
@@ -180,7 +180,7 @@ export default function UserProfileScreen() {
                   style={{
                     fontFamily: "Poppins_600SemiBold",
                     fontSize: 32,
-                    color: colors.primary,
+                    color: colors.accent,
                   }}
                 >
                   {displayName[0].toUpperCase()}
@@ -250,7 +250,7 @@ export default function UserProfileScreen() {
                     style={{
                       fontFamily: "Poppins_600SemiBold",
                       fontSize: 20,
-                      color: colors.text,
+                      color: colors.accent,
                     }}
                   >
                     {targetStats?.followerCount || 0}
@@ -273,7 +273,7 @@ export default function UserProfileScreen() {
                     style={{
                       fontFamily: "Poppins_600SemiBold",
                       fontSize: 20,
-                      color: colors.text,
+                      color: colors.accent,
                     }}
                   >
                     {targetStats?.followingCount || 0}
@@ -298,9 +298,9 @@ export default function UserProfileScreen() {
                     disabled={followMutation.isPending || unfollowMutation.isPending}
                     style={{
                       flex: 1,
-                      backgroundColor: isFollowing ? colors.border : colors.primary,
+                      backgroundColor: isFollowing ? colors.inputBackground : colors.primary,
                       paddingVertical: 12,
-                      borderRadius: 24,
+                      borderRadius: radius.button,
                       alignItems: "center",
                     }}
                   >
@@ -323,18 +323,18 @@ export default function UserProfileScreen() {
                     onPress={handleMessage}
                     disabled={createChatMutation.isPending}
                     style={{
-                      backgroundColor: colors.card,
+                      backgroundColor: colors.accentSubtle,
                       paddingVertical: 12,
                       paddingHorizontal: 20,
-                      borderRadius: 24,
+                      borderRadius: radius.button,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
                     {createChatMutation.isPending ? (
-                      <ActivityIndicator size="small" color={colors.primary} />
+                      <ActivityIndicator size="small" color={colors.accent} />
                     ) : (
-                      <MessageCircle size={20} color={colors.primary} />
+                      <MessageCircle size={20} color={colors.accent} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -369,7 +369,7 @@ export default function UserProfileScreen() {
                     style={{
                       backgroundColor: colors.card,
                       padding: 16,
-                      borderRadius: 16,
+                      borderRadius: radius.card,
                       marginBottom: 12,
                     }}
                   >

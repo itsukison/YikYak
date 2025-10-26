@@ -27,7 +27,7 @@ import * as Location from 'expo-location';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
   const { user, profile } = useAuth();
   
   const [content, setContent] = useState('');
@@ -212,7 +212,7 @@ export default function CreatePost() {
                       : colors.primary,
                   paddingHorizontal: 16,
                   paddingVertical: 8,
-                  borderRadius: 20,
+                  borderRadius: radius.button,
                 }}
               >
                 <Text
@@ -241,7 +241,7 @@ export default function CreatePost() {
                     justifyContent: 'space-between',
                     marginBottom: 20,
                     backgroundColor: colors.surface,
-                    borderRadius: 16,
+                    borderRadius: radius.card,
                     padding: 16,
                   }}
                 >
@@ -299,11 +299,11 @@ export default function CreatePost() {
                       alignItems: 'center',
                       marginBottom: 20,
                       backgroundColor: colors.surface,
-                      borderRadius: 16,
+                      borderRadius: radius.card,
                       padding: 16,
                     }}
                   >
-                    <MapPin size={20} color={colors.accent} />
+                    <MapPin size={20} color={colors.accent} strokeWidth={2} />
                     <Text
                       style={{
                         fontFamily: 'Poppins_400Regular',
@@ -321,7 +321,7 @@ export default function CreatePost() {
                 <View
                   style={{
                     backgroundColor: colors.surface,
-                    borderRadius: 20,
+                    borderRadius: radius.card,
                     padding: 20,
                     minHeight: 200,
                   }}
@@ -362,7 +362,7 @@ export default function CreatePost() {
                 <View
                   style={{
                     backgroundColor: colors.surface,
-                    borderRadius: 16,
+                    borderRadius: radius.card,
                     padding: 16,
                     marginTop: 16,
                     marginBottom: 20,

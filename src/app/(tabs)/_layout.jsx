@@ -8,7 +8,7 @@ import { useUnreadCountQuery } from "../../utils/queries/notifications";
 import { useEffect } from "react";
 
 export default function TabLayout() {
-  const { colors } = useTheme();
+  const { colors, radius } = useTheme();
   const { user, loading } = useAuth();
   const router = useRouter();
   const { data: unreadCount } = useUnreadCountQuery(user?.id);
@@ -80,8 +80,8 @@ export default function TabLayout() {
                     position: "absolute",
                     top: -4,
                     right: -8,
-                    backgroundColor: "#FF3B30",
-                    borderRadius: 10,
+                    backgroundColor: colors.error,
+                    borderRadius: radius.avatar,
                     minWidth: 18,
                     height: 18,
                     justifyContent: "center",

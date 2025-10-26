@@ -11,7 +11,7 @@ export default function EmptyState({
   style 
 }) {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, radius } = useTheme();
 
   return (
     <View
@@ -32,16 +32,16 @@ export default function EmptyState({
         style={{
           width: 80,
           height: 80,
-          borderRadius: 40,
-          backgroundColor: colors.surface,
+          borderRadius: radius.avatar,
+          backgroundColor: colors.accentSubtle,
           justifyContent: 'center',
           alignItems: 'center',
           marginBottom: 24,
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 1,
+          shadowRadius: 3,
+          elevation: 2,
         }}
       >
         <Icon size={36} color={iconColor || colors.accent} strokeWidth={1.5} />

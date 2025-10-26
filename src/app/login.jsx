@@ -22,7 +22,7 @@ export default function LoginScreen() {
   
   const router = useRouter();
   const { signIn } = useAuth();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -55,10 +55,10 @@ export default function LoginScreen() {
       >
         {/* Logo/Title */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
-            Welcome Back! 👋
+          <Text style={[styles.title, { color: colors.text }]}>
+            Welcome Back
           </Text>
-          <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Sign in to continue
           </Text>
         </View>
@@ -69,12 +69,13 @@ export default function LoginScreen() {
             style={[
               styles.input,
               { 
-                backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                color: isDark ? '#FFFFFF' : '#1C1C1E'
+                backgroundColor: colors.inputBackground,
+                color: colors.text,
+                borderRadius: radius.input,
               }
             ]}
             placeholder="Email"
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+            placeholderTextColor={colors.textSecondary}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -86,12 +87,13 @@ export default function LoginScreen() {
             style={[
               styles.input,
               { 
-                backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                color: isDark ? '#FFFFFF' : '#1C1C1E'
+                backgroundColor: colors.inputBackground,
+                color: colors.text,
+                borderRadius: radius.input,
               }
             ]}
             placeholder="Password"
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+            placeholderTextColor={colors.textSecondary}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -103,7 +105,11 @@ export default function LoginScreen() {
           ) : null}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button, 
+              { backgroundColor: colors.primary, borderRadius: radius.button },
+              loading && styles.buttonDisabled
+            ]}
             onPress={handleLogin}
             disabled={loading}
           >
@@ -117,11 +123,11 @@ export default function LoginScreen() {
 
         {/* Sign Up Link */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             Don't have an account?{' '}
           </Text>
           <TouchableOpacity onPress={() => router.push('/school-selection')}>
-            <Text style={[styles.linkText, { color: isDark ? '#FF6B47' : '#E75424' }]}>
+            <Text style={[styles.linkText, { color: colors.primary }]}>
               Sign Up
             </Text>
           </TouchableOpacity>
@@ -141,14 +147,15 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 48,
     alignItems: 'center',
   },
   title: {
     fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -159,15 +166,12 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    borderRadius: 20,
     paddingHorizontal: 20,
     fontSize: 16,
     marginBottom: 16,
   },
   button: {
     height: 56,
-    backgroundColor: '#FFCC00',
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
@@ -177,11 +181,11 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   errorText: {
-    color: '#FF6B6B',
+    color: '#EF4444',
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'center',
@@ -192,10 +196,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 15,
   },
   linkText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

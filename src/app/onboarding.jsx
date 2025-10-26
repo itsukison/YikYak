@@ -28,7 +28,7 @@ export default function OnboardingScreen() {
   
   const router = useRouter();
   const { updateProfile, user, profile, setProfile, fetchProfile } = useAuth();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
 
   // Validate username format
   const validateUsername = (value) => {
@@ -203,10 +203,10 @@ export default function OnboardingScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
-            Welcome to HearSay Japan! 🎉
+          <Text style={[styles.title, { color: colors.text }]}>
+            Welcome to HearSay Japan
           </Text>
-          <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Let's set up your profile
           </Text>
         </View>
@@ -215,19 +215,20 @@ export default function OnboardingScreen() {
         <View style={styles.form}>
           {/* Username Input */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
               Username *
             </Text>
             <TextInput
               style={[
                 styles.input,
                 { 
-                  backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                  color: isDark ? '#FFFFFF' : '#1C1C1E'
+                  backgroundColor: colors.inputBackground,
+                  color: colors.text,
+                  borderRadius: radius.input,
                 }
               ]}
               placeholder="e.g., tokyo_student"
-              placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+              placeholderTextColor={colors.textSecondary}
               value={username}
               onChangeText={(value) => {
                 const lowercaseValue = value.toLowerCase();
@@ -242,15 +243,15 @@ export default function OnboardingScreen() {
               editable={!loading}
             />
             {checkingUsername && (
-              <Text style={[styles.helperText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93' }]}>
+              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
                 Checking availability...
               </Text>
             )}
             {usernameError && !checkingUsername && (
-              <Text style={styles.errorText}>{usernameError}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{usernameError}</Text>
             )}
             {!usernameError && !checkingUsername && (
-              <Text style={[styles.helperText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+              <Text style={[styles.helperText, { color: colors.textTertiary }]}>
                 Your unique identifier (3-20 characters, letters, numbers, underscore)
               </Text>
             )}
@@ -258,42 +259,44 @@ export default function OnboardingScreen() {
 
           {/* Nickname Input */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
               Nickname *
             </Text>
             <TextInput
               style={[
                 styles.input,
                 { 
-                  backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                  color: isDark ? '#FFFFFF' : '#1C1C1E'
+                  backgroundColor: colors.inputBackground,
+                  color: colors.text,
+                  borderRadius: radius.input,
                 }
               ]}
               placeholder="Enter your nickname"
-              placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+              placeholderTextColor={colors.textSecondary}
               value={nickname}
               onChangeText={setNickname}
               maxLength={20}
             />
-            <Text style={[styles.charCount, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+            <Text style={[styles.charCount, { color: colors.textTertiary }]}>
               {nickname.length}/20
             </Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+            <Text style={[styles.label, { color: colors.text }]}>
               Bio (optional)
             </Text>
             <TextInput
               style={[
                 styles.textArea,
                 { 
-                  backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                  color: isDark ? '#FFFFFF' : '#1C1C1E'
+                  backgroundColor: colors.inputBackground,
+                  color: colors.text,
+                  borderRadius: radius.input,
                 }
               ]}
               placeholder="Tell us about yourself..."
-              placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+              placeholderTextColor={colors.textSecondary}
               value={bio}
               onChangeText={setBio}
               maxLength={150}
@@ -301,37 +304,41 @@ export default function OnboardingScreen() {
               numberOfLines={4}
               textAlignVertical="top"
             />
-            <Text style={[styles.charCount, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+            <Text style={[styles.charCount, { color: colors.textTertiary }]}>
               {bio.length}/150
             </Text>
           </View>
 
           <View style={[
             styles.switchContainer,
-            { backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7' }
+            { backgroundColor: colors.inputBackground, borderRadius: radius.input }
           ]}>
             <View style={styles.switchLabel}>
-              <Text style={[styles.label, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+              <Text style={[styles.label, { color: colors.text }]}>
                 Anonymous Mode
               </Text>
-              <Text style={[styles.switchDescription, { color: isDark ? 'rgba(255,255,255,0.6)' : '#8E8E93' }]}>
+              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
                 Hide your identity in posts
               </Text>
             </View>
             <Switch
               value={isAnonymous}
               onValueChange={setIsAnonymous}
-              trackColor={{ false: '#767577', true: '#FFCC00' }}
-              thumbColor="#FFFFFF"
+              trackColor={{ false: colors.border, true: colors.primarySubtle }}
+              thumbColor={isAnonymous ? colors.primary : '#FFFFFF'}
             />
           </View>
 
           {error ? (
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
           ) : null}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary, borderRadius: radius.button },
+              loading && styles.buttonDisabled
+            ]}
             onPress={handleComplete}
             disabled={loading}
           >
@@ -347,7 +354,7 @@ export default function OnboardingScreen() {
             onPress={handleSkip}
             disabled={loading}
           >
-            <Text style={[styles.skipText, { color: isDark ? 'rgba(255,255,255,0.6)' : '#8E8E93' }]}>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>
               Skip for now
             </Text>
           </TouchableOpacity>
@@ -367,14 +374,15 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 48,
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -393,13 +401,11 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    borderRadius: 20,
     paddingHorizontal: 20,
     fontSize: 16,
   },
   textArea: {
     minHeight: 100,
-    borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 16,
     fontSize: 16,
@@ -418,7 +424,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    borderRadius: 20,
     marginBottom: 24,
   },
   switchLabel: {
@@ -431,8 +436,6 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 56,
-    backgroundColor: '#FFCC00',
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -442,7 +445,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   skipButton: {
@@ -450,10 +453,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   skipText: {
-    fontSize: 16,
+    fontSize: 15,
   },
   errorText: {
-    color: '#FF6B6B',
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'center',

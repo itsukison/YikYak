@@ -35,7 +35,7 @@ import { router } from "expo-router";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
   const { user, profile } = useAuth();
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
@@ -43,7 +43,7 @@ export default function HomeScreen() {
   const [locationError, setLocationError] = useState(null);
   
   // Use profile radius (default to 5000 if not set)
-  const radius = profile?.location_radius || 5000;
+  const locationRadius = profile?.location_radius || 5000;
 
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -55,7 +55,7 @@ export default function HomeScreen() {
   const { data: posts = [], isLoading, refetch } = usePostsQuery(
     location?.coords.latitude,
     location?.coords.longitude,
-    radius,
+    locationRadius,
     activeTab,
     !!location
   );
@@ -76,7 +76,7 @@ export default function HomeScreen() {
     if (location) {
       refetch();
     }
-  }, [radius]);
+  }, [locationRadius]);
 
   // Subscribe to new posts
   useEffect(() => {
@@ -189,13 +189,13 @@ export default function HomeScreen() {
         backgroundColor: colors.surface,
         marginHorizontal: 16,
         marginBottom: 12,
-        borderRadius: 20,
+        borderRadius: radius.card,
         padding: 16,
         shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 1,
+        shadowRadius: 3,
+        elevation: 2,
       }}
     >
       {/* Post Header */}
@@ -240,7 +240,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <MapPin size={12} color={colors.textSecondary} />
+          <MapPin size={12} color={colors.accent} />
           <Text
             style={{
               fontFamily: "Poppins_400Regular",
@@ -286,7 +286,7 @@ export default function HomeScreen() {
               alignItems: "center",
               paddingVertical: 8,
               paddingHorizontal: 12,
-              borderRadius: 20,
+              borderRadius: radius.button,
               backgroundColor:
                 userVote === 1
                   ? colors.primarySubtle
@@ -424,7 +424,7 @@ export default function HomeScreen() {
                 marginTop: 2,
               }}
             >
-              Posts within {radius / 1000}km
+              Posts within {locationRadius / 1000}km
             </Text>
           )}
         </View>
@@ -456,7 +456,7 @@ export default function HomeScreen() {
           style={{
             flexDirection: "row",
             backgroundColor: colors.inputBackground,
-            borderRadius: 20,
+            borderRadius: radius.input,
             padding: 4,
           }}
         >
@@ -468,7 +468,7 @@ export default function HomeScreen() {
               alignItems: "center",
               justifyContent: "center",
               paddingVertical: 10,
-              borderRadius: 16,
+              borderRadius: radius.small,
               backgroundColor:
                 activeTab === "new" ? colors.primary : "transparent",
             }}
@@ -497,7 +497,7 @@ export default function HomeScreen() {
               alignItems: "center",
               justifyContent: "center",
               paddingVertical: 10,
-              borderRadius: 16,
+              borderRadius: radius.small,
               backgroundColor:
                 activeTab === "popular" ? colors.primary : "transparent",
             }}
@@ -607,15 +607,15 @@ export default function HomeScreen() {
           right: 20,
           width: 56,
           height: 56,
-          borderRadius: 28,
+          borderRadius: radius.button,
           backgroundColor: colors.primary,
           justifyContent: "center",
           alignItems: "center",
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
-          elevation: 8,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 1,
+          shadowRadius: 8,
+          elevation: 6,
         }}
       >
         <Plus size={28} color="#FFFFFF" strokeWidth={2.5} />

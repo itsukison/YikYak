@@ -11,7 +11,7 @@ export default function MenuItem({
   showDivider = false,
   showChevron = true 
 }) {
-  const { colors } = useTheme();
+  const { colors, radius } = useTheme();
 
   return (
     <>
@@ -29,7 +29,7 @@ export default function MenuItem({
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: radius.avatar,
             backgroundColor: colors.inputBackground,
             justifyContent: 'center',
             alignItems: 'center',

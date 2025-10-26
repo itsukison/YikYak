@@ -17,7 +17,7 @@ import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function MessagesScreen() {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -116,7 +116,7 @@ export default function MessagesScreen() {
           padding: 16,
           marginHorizontal: 16,
           marginBottom: 12,
-          borderRadius: 16,
+          borderRadius: radius.card,
           flexDirection: "row",
           alignItems: "center",
         }}
@@ -126,8 +126,8 @@ export default function MessagesScreen() {
           style={{
             width: 48,
             height: 48,
-            borderRadius: 24,
-            backgroundColor: colors.primary + "20",
+            borderRadius: radius.avatar,
+            backgroundColor: colors.primarySubtle,
             justifyContent: "center",
             alignItems: "center",
             marginRight: 12,
@@ -178,7 +178,7 @@ export default function MessagesScreen() {
               <View
                 style={{
                   backgroundColor: colors.primary,
-                  borderRadius: 10,
+                  borderRadius: radius.avatar,
                   minWidth: 20,
                   height: 20,
                   justifyContent: "center",

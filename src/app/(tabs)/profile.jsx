@@ -35,7 +35,7 @@ import MenuItem from "../../components/MenuItem";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
   const { user, profile, signOut, updateProfile, updateLocationRadius } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -290,15 +290,15 @@ export default function ProfileScreen() {
         <View
           style={{
             alignItems: "center",
-            marginBottom: 32,
+            marginBottom: 24,
             backgroundColor: colors.surface,
-            borderRadius: 20,
+            borderRadius: radius.card,
             padding: 24,
             shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 1,
+            shadowRadius: 3,
+            elevation: 2,
           }}
         >
           {/* Profile Avatar */}
@@ -390,7 +390,7 @@ export default function ProfileScreen() {
                 style={{
                   fontFamily: "Poppins_600SemiBold",
                   fontSize: 18,
-                  color: colors.text,
+                  color: colors.accent,
                 }}
               >
                 {currentUser.following_count}
@@ -414,7 +414,7 @@ export default function ProfileScreen() {
                 style={{
                   fontFamily: "Poppins_600SemiBold",
                   fontSize: 18,
-                  color: colors.text,
+                  color: colors.accent,
                 }}
               >
                 {currentUser.follower_count}
@@ -436,14 +436,14 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: colors.surface,
-            borderRadius: 20,
+            borderRadius: radius.card,
             paddingVertical: 8,
             marginBottom: 16,
             shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 1,
+            shadowRadius: 3,
+            elevation: 2,
           }}
         >
           <View
@@ -554,13 +554,13 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: colors.surface,
-            borderRadius: 20,
+            borderRadius: radius.card,
             paddingVertical: 8,
             shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 4,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 1,
+            shadowRadius: 3,
+            elevation: 2,
           }}
         >
           {appMenuItems.map((item, index) => (

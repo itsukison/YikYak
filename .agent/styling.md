@@ -1,80 +1,78 @@
-🎨 Overall Style
+🎨 UI Design Description for Claude
 
-These screens are from Headspace, a meditation app known for its soft, uplifting, and minimalistic design.
-The UI combines friendly rounded shapes, bold typography, and warm pastel colors to create a calming and approachable experience.
+Overall Style:
+Design a modern, minimalist interface that blends the clarity and layout of Coinbase, the warmth and personality of Clubhouse, and the geometric simplicity of Artifact.
+The app should feel clean, editorial, and professional — not playful or childish. Focus on balance, whitespace, and confident typography.
 
 🧩 Layout and Structure
-1. Navigation & Layout
 
-Each screen has a top navigation bar with the time (9:41), signal/Wi-Fi/battery icons, and sometimes a simple “Back” button.
+Use a grid-based layout with clear spacing and alignment similar to Coinbase’s card and section organization.
 
-The bottom navigation bar contains 3 icons:
+Each screen should have ample breathing room, consistent padding (16–24px), and visual hierarchy defined by text weight and spacing rather than borders or shading.
 
-“Today” (home icon)
+Employ flat elements — minimal shadows, solid fills, and clean dividers.
 
-“Explore” (grid icon)
+Top navigation is simple and fixed, with a clear title and right-aligned utility icons.
 
-“Profile” (person icon)
+Bottom navigation should have 4–5 icons with clear labels (like Coinbase).
 
-The layout is vertically scrollable, using a card-based design for tasks or courses.
+🎨 Color Palette (Artifact-inspired)
 
-Spacing is generous — lots of white space between elements to reduce visual clutter.
+Primary background: White (#FFFFFF)
 
-🧠 Typography
+Primary text: Black (#000000)
 
-Uses Headspace’s signature geometric sans-serif font (similar to Circular Std or Proxima Nova).
+Accent Blue: #B7D4FF (used sparingly for highlights or illustrations)
 
-Font hierarchy:
+Accent Orange: #FF5A1F (used for primary CTAs like buttons)
 
-Large headings: Bold, black (#1C1C1E), around 24–32px.
+Grays / Neutrals:
 
-Subheadings / labels: Medium, gray (#8E8E93), around 16px.
+Light gray background sections (#F8F9FB)
 
-Descriptions: Regular, light gray (#AEAEB2), around 14px.
+Divider gray (#E5E7EB)
 
-Centered text on meditation screens (“Breathe in”) uses large, bold, dark gray text for focus.
+Overall, the color contrast should feel bold but clean, emphasizing black and white with subtle injections of orange and blue for vibrance.
 
-🎨 Color Palette
+🔤 Typography
 
-The color scheme is warm, cheerful, and balanced:
+Primary Font: Instrument Sans
 
-Element	Color	Description
-Primary Yellow	#FFCC00	Bright, positive tone for highlights and cards
-Headspace Orange	#FF9B42	Used in meditation characters and backgrounds
-Soft Beige / Cream	#FFF9F3	Background tone to soften contrast
-Light Gray	#F2F2F7	Card or inactive background color
-Accent Blue	#007AFF	Call-to-action buttons like “Start Course”
-Text Black	#1C1C1E	Primary text
-Text Gray	#8E8E93	Secondary text
+Clean geometric feel, fits both editorial and tech branding.
 
-The color contrast feels intentionally low and soothing — not overly bright or sharp.
+Alternative Option: Space Grotesk
+ for stronger geometric identity.
 
-🖼️ Imagery and Illustration Style
+Use bold weights for headings, regular for body text.
 
-Illustrations are flat, vector-based, and rounded — similar to modern cartoons.
+Avoid decorative or rounded fonts to maintain a professional tone.
 
-Use simple geometric shapes (circles, arcs) and minimal facial features (eyes, smile).
+🧱 Corner Rounding & Shapes
 
-The orange blob character with closed eyes symbolizes calm and meditation.
+Keep medium rounding (6–8px) for cards and containers.
 
-Images are used inside rounded rectangles, with no shadows, emphasizing cleanliness.
+Use strong rounding (20–24px) only for buttons or profile images.
 
-🧱 Cards and Corner Rounding
+Avoid overly rounded corners — aim for sharp yet friendly edges like Coinbase.
 
-Cards (like “Getting Started with Headspace” or “Grounding Exercise”) use:
+🪄 Iconography
 
-Rounded corners: 20–24px radius
+Use a professional vector icon library (e.g., Lucide Icons
+ or Feather Icons
+).
 
-Subtle shadow or light gray border
+Avoid emojis — icons should represent meaning clearly with line consistency.
 
-Contain small illustrations on the right and text on the left.
+Use outlined icons for navigation and solid icons for key actions (e.g., microphone, message, add).
 
-Each card includes:
+🌐 Vibe Summary
 
-A title (bold black text)
+Feels modern, editorial, and balanced.
 
-A subtitle (activity type + duration)
+Artifact’s bold geometry and color contrasts.
 
-A small icon (e.g., video, mindful activity)
+Clubhouse’s approachable and human visual tone.
 
-A 3-dot menu button for options.
+Coinbase’s tight layout and professional polish.
+
+Minimal ornamentation — let typography, layout, and subtle color pops do the work.

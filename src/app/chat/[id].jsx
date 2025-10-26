@@ -30,7 +30,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export default function ChatDetailScreen() {
   const { id: chatId } = useLocalSearchParams();
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -145,10 +145,10 @@ export default function ChatDetailScreen() {
         )}
         <View
           style={{
-            backgroundColor: isOwnMessage ? colors.primary : colors.card,
+            backgroundColor: isOwnMessage ? colors.primary : colors.accentSubtle,
             paddingHorizontal: 16,
             paddingVertical: 10,
-            borderRadius: 20,
+            borderRadius: radius.input,
             maxWidth: "75%",
           }}
         >
@@ -258,8 +258,8 @@ export default function ChatDetailScreen() {
             placeholderTextColor={colors.textSecondary}
             style={{
               flex: 1,
-              backgroundColor: colors.card,
-              borderRadius: 24,
+              backgroundColor: colors.inputBackground,
+              borderRadius: radius.button,
               paddingHorizontal: 16,
               paddingVertical: 10,
               fontFamily: "Poppins_400Regular",
@@ -277,7 +277,7 @@ export default function ChatDetailScreen() {
               backgroundColor: message.trim() ? colors.primary : colors.border,
               width: 44,
               height: 44,
-              borderRadius: 22,
+              borderRadius: radius.button,
               justifyContent: "center",
               alignItems: "center",
             }}

@@ -26,7 +26,7 @@ export default function SignupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { signUp } = useAuth();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
 
   // Get school from params or redirect to school selection
   const school = params.schoolId ? {
@@ -134,10 +134,10 @@ export default function SignupScreen() {
       >
         {/* Logo/Title */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
-            Join HearSay Japan 🎉
+          <Text style={[styles.title, { color: colors.text }]}>
+            Join HearSay Japan
           </Text>
-          <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             {school ? school.displayName : 'Create your account'}
           </Text>
         </View>
@@ -148,10 +148,11 @@ export default function SignupScreen() {
             style={[
               styles.input,
               { 
-                backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                color: isDark ? '#FFFFFF' : '#1C1C1E',
+                backgroundColor: colors.inputBackground,
+                color: colors.text,
+                borderRadius: radius.input,
                 borderWidth: emailError ? 2 : 0,
-                borderColor: emailError ? '#FF6B6B' : 'transparent',
+                borderColor: emailError ? colors.error : 'transparent',
               }
             ]}
             placeholder={
@@ -161,7 +162,7 @@ export default function SignupScreen() {
                   ? `Email (e.g., you@${school.domain})` 
                   : "School email"
             }
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+            placeholderTextColor={colors.textSecondary}
             value={email}
             onChangeText={(text) => {
               setEmail(text);
@@ -173,19 +174,20 @@ export default function SignupScreen() {
             autoComplete="email"
           />
           {emailError ? (
-            <Text style={styles.fieldError}>{emailError}</Text>
+            <Text style={[styles.fieldError, { color: colors.error }]}>{emailError}</Text>
           ) : null}
 
           <TextInput
             style={[
               styles.input,
               { 
-                backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                color: isDark ? '#FFFFFF' : '#1C1C1E'
+                backgroundColor: colors.inputBackground,
+                color: colors.text,
+                borderRadius: radius.input,
               }
             ]}
             placeholder="Password (min 6 characters)"
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+            placeholderTextColor={colors.textSecondary}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -196,12 +198,13 @@ export default function SignupScreen() {
             style={[
               styles.input,
               { 
-                backgroundColor: isDark ? '#2D2D2D' : '#F2F2F7',
-                color: isDark ? '#FFFFFF' : '#1C1C1E'
+                backgroundColor: colors.inputBackground,
+                color: colors.text,
+                borderRadius: radius.input,
               }
             ]}
             placeholder="Confirm Password"
-            placeholderTextColor={isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93'}
+            placeholderTextColor={colors.textSecondary}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -209,11 +212,15 @@ export default function SignupScreen() {
           />
 
           {error ? (
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
           ) : null}
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary, borderRadius: radius.button },
+              loading && styles.buttonDisabled
+            ]}
             onPress={handleSignup}
             disabled={loading}
           >
@@ -224,18 +231,18 @@ export default function SignupScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={[styles.disclaimer, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+          <Text style={[styles.disclaimer, { color: colors.textTertiary }]}>
             By signing up, you agree to our Terms of Service and Privacy Policy
           </Text>
         </View>
 
         {/* Sign In Link */}
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             Already have an account?{' '}
           </Text>
           <TouchableOpacity onPress={() => router.push('/login')}>
-            <Text style={[styles.linkText, { color: isDark ? '#FF6B47' : '#E75424' }]}>
+            <Text style={[styles.linkText, { color: colors.primary }]}>
               Sign In
             </Text>
           </TouchableOpacity>
@@ -244,7 +251,7 @@ export default function SignupScreen() {
         {/* Wrong School Link */}
         <View style={[styles.footer, { marginTop: 8 }]}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={[styles.linkText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+            <Text style={[styles.linkText, { color: colors.textTertiary }]}>
               ← Wrong school? Go back
             </Text>
           </TouchableOpacity>
@@ -264,14 +271,15 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 48,
     alignItems: 'center',
   },
   title: {
     fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 12,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -282,15 +290,12 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    borderRadius: 20,
     paddingHorizontal: 20,
     fontSize: 16,
     marginBottom: 16,
   },
   button: {
     height: 56,
-    backgroundColor: '#FFCC00',
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
@@ -301,20 +306,18 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   errorText: {
-    color: '#FF6B6B',
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'center',
   },
   fieldError: {
-    color: '#FF6B6B',
     fontSize: 12,
-    marginTop: 4,
-    marginBottom: 8,
+    marginTop: -12,
+    marginBottom: 12,
     marginLeft: 4,
   },
   disclaimer: {
@@ -328,10 +331,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 15,
   },
   linkText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
   },
 });

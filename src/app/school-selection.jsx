@@ -13,7 +13,7 @@ import { SCHOOLS, GUEST_OPTION } from '../utils/schools';
 
 export default function SchoolSelectionScreen() {
   const router = useRouter();
-  const { colors, isDark } = useTheme();
+  const { colors, radius, isDark } = useTheme();
 
   const handleSchoolSelect = (school) => {
     // Navigate to signup with school data
@@ -40,15 +40,15 @@ export default function SchoolSelectionScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Text style={[styles.backText, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+            <Text style={[styles.backText, { color: colors.text }]}>
               ← Back
             </Text>
           </TouchableOpacity>
           
-          <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
-            Select Your School 🎓
+          <Text style={[styles.title, { color: colors.text }]}>
+            Select Your School
           </Text>
-          <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Choose your university to continue
           </Text>
         </View>
@@ -61,25 +61,26 @@ export default function SchoolSelectionScreen() {
               style={[
                 styles.schoolCard,
                 { 
-                  backgroundColor: isDark ? '#2D2D2D' : '#FFFFFF',
-                  borderColor: isDark ? '#3D3D3D' : '#E5E5EA',
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderRadius: radius.card,
                 }
               ]}
               onPress={() => handleSchoolSelect(school)}
               activeOpacity={0.7}
             >
               <View style={styles.schoolInfo}>
-                <Text style={[styles.schoolName, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+                <Text style={[styles.schoolName, { color: colors.text }]}>
                   {school.displayName}
                 </Text>
-                <Text style={[styles.schoolDescription, { color: isDark ? 'rgba(255,255,255,0.6)' : '#8E8E93' }]}>
+                <Text style={[styles.schoolDescription, { color: colors.textSecondary }]}>
                   {school.description}
                 </Text>
-                <Text style={[styles.schoolDomain, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+                <Text style={[styles.schoolDomain, { color: colors.textTertiary }]}>
                   @{school.domain}
                 </Text>
               </View>
-              <Text style={[styles.arrow, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
+              <Text style={[styles.arrow, { color: colors.text }]}>
                 →
               </Text>
             </TouchableOpacity>
@@ -91,26 +92,27 @@ export default function SchoolSelectionScreen() {
               styles.schoolCard,
               styles.guestCard,
               { 
-                backgroundColor: isDark ? '#1C1C1C' : '#F9F9F9',
-                borderColor: isDark ? '#444444' : '#D1D1D6',
+                backgroundColor: colors.sectionBackground,
+                borderColor: colors.border,
                 borderStyle: 'dashed',
+                borderRadius: radius.card,
               }
             ]}
             onPress={() => handleSchoolSelect(GUEST_OPTION)}
             activeOpacity={0.7}
           >
             <View style={styles.schoolInfo}>
-              <Text style={[styles.schoolName, { color: isDark ? 'rgba(255,255,255,0.8)' : '#5C5C5C' }]}>
-                👤 {GUEST_OPTION.displayName}
+              <Text style={[styles.schoolName, { color: colors.textSecondary }]}>
+                {GUEST_OPTION.displayName}
               </Text>
-              <Text style={[styles.schoolDescription, { color: isDark ? 'rgba(255,255,255,0.5)' : '#999999' }]}>
+              <Text style={[styles.schoolDescription, { color: colors.textTertiary }]}>
                 {GUEST_OPTION.description}
               </Text>
-              <Text style={[styles.guestNote, { color: isDark ? 'rgba(255,255,255,0.4)' : '#B0B0B0' }]}>
+              <Text style={[styles.guestNote, { color: colors.textTertiary }]}>
                 For testing • No school email required
               </Text>
             </View>
-            <Text style={[styles.arrow, { color: isDark ? 'rgba(255,255,255,0.6)' : '#999999' }]}>
+            <Text style={[styles.arrow, { color: colors.textSecondary }]}>
               →
             </Text>
           </TouchableOpacity>
@@ -118,10 +120,10 @@ export default function SchoolSelectionScreen() {
 
         {/* Help Text */}
         <View style={styles.helpContainer}>
-          <Text style={[styles.helpText, { color: isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2' }]}>
+          <Text style={[styles.helpText, { color: colors.textSecondary }]}>
             Don't see your school?
           </Text>
-          <Text style={[styles.helpSubtext, { color: isDark ? 'rgba(255,255,255,0.4)' : '#C7C7CC' }]}>
+          <Text style={[styles.helpSubtext, { color: colors.textTertiary }]}>
             More universities coming soon. Check back later!
           </Text>
         </View>
@@ -151,8 +153,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
@@ -167,13 +170,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 20,
-    borderRadius: 20,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 1,
   },
   schoolInfo: {
     flex: 1,

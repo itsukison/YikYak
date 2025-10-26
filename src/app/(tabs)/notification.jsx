@@ -33,7 +33,7 @@ import { subscribeToNotifications } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function NotificationScreen() {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -183,12 +183,12 @@ export default function NotificationScreen() {
       <TouchableOpacity
         onPress={() => handleNotificationPress(item)}
         style={{
-          backgroundColor: item.is_read ? colors.card : colors.primary + "10",
+          backgroundColor: item.is_read ? colors.card : colors.primarySubtle,
           paddingHorizontal: 16,
           paddingVertical: 14,
           marginHorizontal: 16,
           marginBottom: 8,
-          borderRadius: 16,
+          borderRadius: radius.card,
           flexDirection: "row",
           alignItems: "center",
           borderLeftWidth: 3,
@@ -200,8 +200,8 @@ export default function NotificationScreen() {
           style={{
             width: 40,
             height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.primary + "20",
+            borderRadius: radius.avatar,
+            backgroundColor: colors.primarySubtle,
             justifyContent: "center",
             alignItems: "center",
             marginRight: 12,

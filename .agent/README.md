@@ -132,6 +132,14 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - ✅ Real-time Updates
 - ✅ Anonymous Mode
 
+**Recent Features** ✨
+
+- ✅ User Discovery (2025-10-27): Search users by username/ID from Messages screen
+  - Find Users button in Messages header
+  - Real-time search with debouncing
+  - Follow status badges in results
+  - Direct navigation to user profiles
+
 **Future Enhancements** 🚀
 
 - Push notifications (Expo Notifications)

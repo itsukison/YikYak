@@ -190,7 +190,7 @@ export default function UserProfileScreen() {
                   onPress={() => router.push(`/user/followers/${targetUserId}`)}
                   style={{ alignItems: "center" }}
                 >
-                  <Heading variant="h3" style={{ color: colors.accent }}>
+                  <Heading variant="h3">
                     {targetStats?.followerCount || 0}
                   </Heading>
                   <Caption color="secondary">Followers</Caption>
@@ -199,7 +199,7 @@ export default function UserProfileScreen() {
                   onPress={() => router.push(`/user/following/${targetUserId}`)}
                   style={{ alignItems: "center" }}
                 >
-                  <Heading variant="h3" style={{ color: colors.accent }}>
+                  <Heading variant="h3">
                     {targetStats?.followingCount || 0}
                   </Heading>
                   <Caption color="secondary">Following</Caption>

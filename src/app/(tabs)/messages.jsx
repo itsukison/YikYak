@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { MessageCircle } from "lucide-react-native";
+import { MessageCircle, UserPlus } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
@@ -62,10 +62,35 @@ export default function MessagesScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
+        
+        {/* Header with Find Users Button */}
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 60,
+            paddingBottom: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Heading variant="h1">Messages</Heading>
+          <TouchableOpacity
+            onPress={() => router.push("/search-users")}
+            style={{
+              backgroundColor: colors.accentSubtle,
+              padding: 12,
+              borderRadius: 24,
+            }}
+          >
+            <UserPlus size={20} color={colors.accent} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+
         <EmptyState
           Icon={MessageCircle}
           title="No Direct Messages"
-          description="You can message students you follow. Follow someone from their posts to start a conversation!"
+          description="You can message students you follow. Tap the + button above to find users!"
         />
       </AppBackground>
     );
@@ -147,8 +172,27 @@ export default function MessagesScreen() {
 
       {/* Header */}
       <Container padding="none">
-        <View style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 }}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 60,
+            paddingBottom: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Heading variant="h1">Messages</Heading>
+          <TouchableOpacity
+            onPress={() => router.push("/search-users")}
+            style={{
+              backgroundColor: colors.accentSubtle,
+              padding: 12,
+              borderRadius: 24,
+            }}
+          >
+            <UserPlus size={20} color={colors.accent} strokeWidth={2} />
+          </TouchableOpacity>
         </View>
 
         {/* Chat List */}

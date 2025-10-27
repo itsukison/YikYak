@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  View,
   Switch,
-  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../utils/auth/useAuth';
 import { useTheme } from '../utils/theme';
 import { supabase } from '../utils/supabase';
+import { Button, Input, Card, Section } from '../components/ui';
+import { Heading, Body, Caption } from '../components/ui/Text';
+import AppBackground from '../components/AppBackground';
 
 export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
@@ -28,9 +27,8 @@ export default function OnboardingScreen() {
   
   const router = useRouter();
   const { updateProfile, user, profile, setProfile, fetchProfile } = useAuth();
-  const { colors, radius, isDark } = useTheme();
+  const { colors, spacing, radius } = useTheme();
 
-  // Validate username format
   const validateUsername = (value) => {
     if (!value) return 'Username is required';
     if (value.length < 3) return 'Username must be at least 3 characters';
@@ -39,7 +37,6 @@ export default function OnboardingScreen() {
     return null;
   };
 
-  // Check username uniqueness (case-insensitive)
   const checkUsernameAvailability = async (value) => {
     if (!value || validateUsername(value)) return false;
     
@@ -48,13 +45,12 @@ export default function OnboardingScreen() {
       const { data, error } = await supabase
         .from('users')
         .select('username')
-        .ilike('username', value) // Case-insensitive match
-        .maybeSingle(); // Returns null if not found, doesn't throw error
+        .ilike('username', value)
+        .maybeSingle();
       
       setCheckingUsername(false);
       
       if (error) {
-        console.error('Error checking username:', error);
         setUsernameError('Error checking username availability');
         return false;
       }
@@ -67,7 +63,6 @@ export default function OnboardingScreen() {
       setUsernameError('');
       return true;
     } catch (error) {
-      console.error('Error checking username:', error);
       setCheckingUsername(false);
       setUsernameError('Error checking username availability');
       return false;
@@ -75,14 +70,12 @@ export default function OnboardingScreen() {
   };
 
   const handleComplete = async () => {
-    // Validate username
     const usernameValidation = validateUsername(username);
     if (usernameValidation) {
       setError(usernameValidation);
       return;
     }
 
-    // Validate nickname
     if (!nickname.trim()) {
       setError('Please enter a nickname');
       return;
@@ -93,13 +86,11 @@ export default function OnboardingScreen() {
       return;
     }
 
-    // Validate bio
     if (bio.length > 150) {
       setError('Bio must be 150 characters or less');
       return;
     }
 
-    // Check username availability one final time
     const isAvailable = await checkUsernameAvailability(username);
     if (!isAvailable) {
       setError('Username is already taken');
@@ -109,7 +100,6 @@ export default function OnboardingScreen() {
     setLoading(true);
     setError('');
 
-    // Optimistically update profile state immediately (before database call)
     const optimisticProfile = {
       ...profile,
       username: username.toLowerCase().trim(),
@@ -119,11 +109,8 @@ export default function OnboardingScreen() {
       onboarding_completed: true,
     };
     
-    console.log('Onboarding: Optimistically updating profile state');
     setProfile(optimisticProfile);
 
-    // Then update the database
-    console.log('Onboarding: Updating profile in database');
     const { data, error: updateError } = await updateProfile({
       username: username.toLowerCase().trim(),
       nickname: nickname.trim(),
@@ -132,19 +119,13 @@ export default function OnboardingScreen() {
       onboarding_completed: true,
     });
 
-    console.log('Onboarding: Profile updated', { data, error: updateError });
-
     if (updateError) {
-      // Revert optimistic update on error by refetching actual state
-      console.error('Onboarding: Database update failed, reverting optimistic update');
       if (user?.id) {
         await fetchProfile(user.id);
       }
       setError(updateError.message || 'Failed to update profile');
       setLoading(false);
     } else {
-      // Navigation will happen automatically due to optimistic update
-      console.log('Onboarding: Success, navigating to home');
       router.replace('/(tabs)/home');
     }
   };
@@ -152,10 +133,8 @@ export default function OnboardingScreen() {
   const handleSkip = async () => {
     setLoading(true);
     
-    // Generate random username
     const randomUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
     
-    // Optimistically update profile state immediately (before database call)
     const optimisticProfile = {
       ...profile,
       username: randomUsername,
@@ -165,10 +144,8 @@ export default function OnboardingScreen() {
       onboarding_completed: true,
     };
     
-    console.log('Onboarding: Skip - Optimistically updating profile state');
     setProfile(optimisticProfile);
     
-    // Then update the database
     const { error: updateError } = await updateProfile({
       username: randomUsername,
       nickname: 'Anonymous User',
@@ -178,57 +155,46 @@ export default function OnboardingScreen() {
     });
 
     if (updateError) {
-      // Revert optimistic update on error by refetching actual state
-      console.error('Onboarding: Skip - Database update failed, reverting optimistic update');
       if (user?.id) {
         await fetchProfile(user.id);
       }
       setError(updateError.message || 'Failed to update profile');
       setLoading(false);
     } else {
-      // Navigation will happen automatically due to optimistic update
-      console.log('Onboarding: Skip - Success, navigating to home');
       router.replace('/(tabs)/home');
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFF9F3' }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <AppBackground>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>
-            Welcome to HearSay Japan
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Let's set up your profile
-          </Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: spacing.xl,
+            paddingVertical: spacing["5xl"],
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
+          <Section spacing="large">
+            <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
+              Welcome to HearSay Japan
+            </Heading>
+            <Body color="secondary" style={{ textAlign: 'center' }}>
+              Let's set up your profile
+            </Body>
+          </Section>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Username Input */}
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Username *
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderRadius: radius.input,
-                }
-              ]}
+          {/* Form */}
+          <Section spacing="default">
+            <Input
+              label="Username *"
               placeholder="e.g., tokyo_student"
-              placeholderTextColor={colors.textSecondary}
               value={username}
               onChangeText={(value) => {
                 const lowercaseValue = value.toLowerCase();
@@ -241,223 +207,93 @@ export default function OnboardingScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               editable={!loading}
+              error={usernameError && !checkingUsername ? usernameError : ''}
             />
             {checkingUsername && (
-              <Text style={[styles.helperText, { color: colors.textSecondary }]}>
+              <Caption color="secondary" style={{ marginTop: -spacing.md, marginBottom: spacing.lg }}>
                 Checking availability...
-              </Text>
+              </Caption>
             )}
-            {usernameError && !checkingUsername && (
-              <Text style={[styles.errorText, { color: colors.error }]}>{usernameError}</Text>
+            {!usernameError && !checkingUsername && username && (
+              <Caption color="tertiary" style={{ marginTop: -spacing.md, marginBottom: spacing.lg }}>
+                Your unique identifier (3-20 characters)
+              </Caption>
             )}
-            {!usernameError && !checkingUsername && (
-              <Text style={[styles.helperText, { color: colors.textTertiary }]}>
-                Your unique identifier (3-20 characters, letters, numbers, underscore)
-              </Text>
-            )}
-          </View>
 
-          {/* Nickname Input */}
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Nickname *
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderRadius: radius.input,
-                }
-              ]}
-              placeholder="Enter your nickname"
-              placeholderTextColor={colors.textSecondary}
-              value={nickname}
-              onChangeText={setNickname}
-              maxLength={20}
-            />
-            <Text style={[styles.charCount, { color: colors.textTertiary }]}>
-              {nickname.length}/20
-            </Text>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: colors.text }]}>
-              Bio (optional)
-            </Text>
-            <TextInput
-              style={[
-                styles.textArea,
-                { 
-                  backgroundColor: colors.inputBackground,
-                  color: colors.text,
-                  borderRadius: radius.input,
-                }
-              ]}
-              placeholder="Tell us about yourself..."
-              placeholderTextColor={colors.textSecondary}
-              value={bio}
-              onChangeText={setBio}
-              maxLength={150}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            <Text style={[styles.charCount, { color: colors.textTertiary }]}>
-              {bio.length}/150
-            </Text>
-          </View>
-
-          <View style={[
-            styles.switchContainer,
-            { backgroundColor: colors.inputBackground, borderRadius: radius.input }
-          ]}>
-            <View style={styles.switchLabel}>
-              <Text style={[styles.label, { color: colors.text }]}>
-                Anonymous Mode
-              </Text>
-              <Text style={[styles.switchDescription, { color: colors.textSecondary }]}>
-                Hide your identity in posts
-              </Text>
+            <View>
+              <Input
+                label="Nickname *"
+                placeholder="Enter your nickname"
+                value={nickname}
+                onChangeText={setNickname}
+                maxLength={20}
+              />
+              <Caption color="tertiary" style={{ textAlign: 'right', marginTop: -spacing.md, marginBottom: spacing.lg }}>
+                {nickname.length}/20
+              </Caption>
             </View>
-            <Switch
-              value={isAnonymous}
-              onValueChange={setIsAnonymous}
-              trackColor={{ false: colors.border, true: colors.primarySubtle }}
-              thumbColor={isAnonymous ? colors.primary : '#FFFFFF'}
-            />
-          </View>
 
-          {error ? (
-            <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-          ) : null}
+            <View>
+              <Input
+                label="Bio (optional)"
+                placeholder="Tell us about yourself..."
+                value={bio}
+                onChangeText={setBio}
+                maxLength={150}
+                multiline
+              />
+              <Caption color="tertiary" style={{ textAlign: 'right', marginTop: -spacing.md, marginBottom: spacing.lg }}>
+                {bio.length}/150
+              </Caption>
+            </View>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: colors.primary, borderRadius: radius.button },
-              loading && styles.buttonDisabled
-            ]}
-            onPress={handleComplete}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Get Started</Text>
-            )}
-          </TouchableOpacity>
+            <Card padding="default" style={{ marginBottom: spacing["2xl"] }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flex: 1, marginRight: spacing.md }}>
+                  <Body weight="medium" style={{ marginBottom: spacing.xs }}>
+                    Anonymous Mode
+                  </Body>
+                  <Caption color="secondary">
+                    Hide your identity in posts
+                  </Caption>
+                </View>
+                <Switch
+                  value={isAnonymous}
+                  onValueChange={setIsAnonymous}
+                  trackColor={{ false: colors.border, true: colors.primarySubtle }}
+                  thumbColor={isAnonymous ? colors.primary : '#FFFFFF'}
+                />
+              </View>
+            </Card>
 
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={handleSkip}
-            disabled={loading}
-          >
-            <Text style={[styles.skipText, { color: colors.textSecondary }]}>
-              Skip for now
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {error ? (
+              <Body style={{ textAlign: 'center', marginBottom: spacing.lg, color: colors.error }}>
+                {error}
+              </Body>
+            ) : null}
+
+            <Button
+              variant="primary"
+              fullWidth
+              onPress={handleComplete}
+              loading={loading}
+              disabled={loading}
+            >
+              Get Started
+            </Button>
+
+            <TouchableOpacity
+              style={{ padding: spacing.md, alignItems: 'center' }}
+              onPress={handleSkip}
+              disabled={loading}
+            >
+              <Body color="secondary">
+                Skip for now
+              </Body>
+            </TouchableOpacity>
+          </Section>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AppBackground>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  header: {
-    marginBottom: 48,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  form: {
-    marginBottom: 24,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    height: 56,
-    paddingHorizontal: 20,
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 100,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    fontSize: 16,
-  },
-  charCount: {
-    fontSize: 12,
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  helperText: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginBottom: 24,
-  },
-  switchLabel: {
-    flex: 1,
-    marginRight: 12,
-  },
-  switchDescription: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  button: {
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  skipButton: {
-    padding: 12,
-    alignItems: 'center',
-  },
-  skipText: {
-    fontSize: 15,
-  },
-  errorText: {
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-});

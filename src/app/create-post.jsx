@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   Alert,
@@ -13,17 +12,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, MapPin, User, UserX } from 'lucide-react-native';
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-} from '@expo-google-fonts/poppins';
 import { router } from 'expo-router';
 import { useTheme } from '../utils/theme';
 import { useAuth } from '../utils/auth/useAuth';
 import { supabase } from '../utils/supabase';
 import * as Location from 'expo-location';
+import { Button, Card, Heading, Body, Caption } from '../components/ui';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
@@ -35,12 +29,6 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const focusedPadding = 12;
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-  });
 
   const paddingAnimation = useRef(
     new Animated.Value(insets.bottom + focusedPadding)
@@ -153,7 +141,7 @@ export default function CreatePost() {
   const isOverLimit = characterCount > maxCharacters;
 
   // Handle loading and auth states
-  const showLoading = !fontsLoaded || !user || !profile;
+  const showLoading = !user || !profile;
 
   return (
     <KeyboardAvoidingView
@@ -165,13 +153,7 @@ export default function CreatePost() {
 
         {showLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ 
-              fontFamily: fontsLoaded ? 'Poppins_400Regular' : undefined, 
-              fontSize: 16, 
-              color: colors.text 
-            }}>
-              Loading...
-            </Text>
+            <Body>Loading...</Body>
           </View>
         ) : (
           <>
@@ -179,7 +161,7 @@ export default function CreatePost() {
             <View
               style={{
                 paddingTop: insets.top,
-                paddingHorizontal: 16,
+                paddingHorizontal: 20,
                 paddingBottom: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -188,151 +170,98 @@ export default function CreatePost() {
                 borderBottomColor: colors.border,
               }}
             >
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity 
+                onPress={() => router.back()}
+                style={{ 
+                  width: 48, 
+                  height: 48, 
+                  justifyContent: 'center', 
+                  alignItems: 'flex-start' 
+                }}
+              >
                 <ArrowLeft size={24} color={colors.text} />
               </TouchableOpacity>
 
-              <Text
-                style={{
-                  fontFamily: 'Poppins_600SemiBold',
-                  fontSize: 18,
-                  color: colors.text,
-                }}
-              >
-                Create Post
-              </Text>
+              <Heading variant="h2">Create Post</Heading>
 
-              <TouchableOpacity
+              <Button
+                variant="primary"
+                size="small"
                 onPress={handleCreatePost}
                 disabled={loading || !content.trim() || isOverLimit}
-                style={{
-                  backgroundColor: 
-                    loading || !content.trim() || isOverLimit 
-                      ? colors.inputBackground 
-                      : colors.primary,
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: radius.button,
-                }}
+                style={{ minWidth: 80 }}
               >
-                <Text
-                  style={{
-                    fontFamily: 'Poppins_500Medium',
-                    fontSize: 14,
-                    color: 
-                      loading || !content.trim() || isOverLimit 
-                        ? colors.textSecondary 
-                        : '#FFFFFF',
-                  }}
-                >
-                  {loading ? 'Posting...' : 'Post'}
-                </Text>
-              </TouchableOpacity>
+                {loading ? 'Posting...' : 'Post'}
+              </Button>
             </View>
 
             {/* Content */}
             <ScrollView style={{ flex: 1 }}>
-              <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
+              <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
                 {/* Anonymous Toggle */}
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: 20,
-                    backgroundColor: colors.surface,
-                    borderRadius: radius.card,
-                    padding: 16,
-                  }}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {isAnonymous ? (
-                      <UserX size={20} color={colors.textSecondary} />
-                    ) : (
-                      <User size={20} color={colors.primary} />
-                    )}
-                    <Text
+                <Card style={{ marginBottom: 20 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                      {isAnonymous ? (
+                        <UserX size={20} color={colors.textSecondary} />
+                      ) : (
+                        <User size={20} color={colors.primary} />
+                      )}
+                      <Body weight="medium" style={{ marginLeft: 12 }}>
+                        {isAnonymous ? 'Post anonymously' : `Post as ${profile?.nickname || 'User'}`}
+                      </Body>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => setIsAnonymous(!isAnonymous)}
                       style={{
-                        fontFamily: 'Poppins_500Medium',
-                        fontSize: 16,
-                        color: colors.text,
-                        marginLeft: 12,
+                        width: 50,
+                        height: 30,
+                        borderRadius: 15,
+                        backgroundColor: isAnonymous ? colors.primary : colors.inputBackground,
+                        justifyContent: 'center',
+                        alignItems: isAnonymous ? 'flex-end' : 'flex-start',
+                        paddingHorizontal: 2,
                       }}
                     >
-                      {isAnonymous ? 'Post anonymously' : `Post as ${profile?.nickname || 'User'}`}
-                    </Text>
+                      <View
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 13,
+                          backgroundColor: '#FFFFFF',
+                          shadowColor: colors.shadow,
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.2,
+                          shadowRadius: 4,
+                          elevation: 4,
+                        }}
+                      />
+                    </TouchableOpacity>
                   </View>
-
-                  <TouchableOpacity
-                    onPress={() => setIsAnonymous(!isAnonymous)}
-                    style={{
-                      width: 50,
-                      height: 30,
-                      borderRadius: 15,
-                      backgroundColor: isAnonymous ? colors.primary : colors.inputBackground,
-                      justifyContent: 'center',
-                      alignItems: isAnonymous ? 'flex-end' : 'flex-start',
-                      paddingHorizontal: 2,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: 13,
-                        backgroundColor: '#FFFFFF',
-                        shadowColor: colors.shadow,
-                        shadowOffset: { width: 0, height: 2 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 4,
-                        elevation: 4,
-                      }}
-                    />
-                  </TouchableOpacity>
-                </View>
+                </Card>
 
                 {/* Location Display */}
                 {location && (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginBottom: 20,
-                      backgroundColor: colors.surface,
-                      borderRadius: radius.card,
-                      padding: 16,
-                    }}
-                  >
-                    <MapPin size={20} color={colors.accent} strokeWidth={2} />
-                    <Text
-                      style={{
-                        fontFamily: 'Poppins_400Regular',
-                        fontSize: 14,
-                        color: colors.textSecondary,
-                        marginLeft: 12,
-                      }}
-                    >
-                      University of Tokyo • Visible to nearby students
-                    </Text>
-                  </View>
+                  <Card style={{ marginBottom: 20 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <MapPin size={20} color={colors.accent} strokeWidth={2} />
+                      <Body variant="small" color="secondary" style={{ marginLeft: 12, flex: 1 }}>
+                        University of Tokyo • Visible to nearby students
+                      </Body>
+                    </View>
+                  </Card>
                 )}
 
                 {/* Text Input */}
-                <View
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderRadius: radius.card,
-                    padding: 20,
-                    minHeight: 200,
-                  }}
-                >
+                <Card style={{ minHeight: 200 }}>
                   <TextInput
                     style={{
-                      fontFamily: 'Poppins_400Regular',
                       fontSize: 18,
                       color: colors.text,
                       textAlignVertical: 'top',
                       minHeight: 120,
+                      fontWeight: '400',
                     }}
                     placeholder="What's happening on campus?"
                     placeholderTextColor={colors.textSecondary}
@@ -346,52 +275,24 @@ export default function CreatePost() {
 
                   {/* Character Count */}
                   <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
-                    <Text
-                      style={{
-                        fontFamily: 'Poppins_400Regular',
-                        fontSize: 12,
-                        color: isOverLimit ? colors.error : colors.textSecondary,
-                      }}
-                    >
+                    <Caption style={{ color: isOverLimit ? colors.error : colors.textSecondary }}>
                       {characterCount}/{maxCharacters}
-                    </Text>
+                    </Caption>
                   </View>
-                </View>
+                </Card>
 
                 {/* Guidelines */}
-                <View
-                  style={{
-                    backgroundColor: colors.surface,
-                    borderRadius: radius.card,
-                    padding: 16,
-                    marginTop: 16,
-                    marginBottom: 20,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: 'Poppins_500Medium',
-                      fontSize: 14,
-                      color: colors.text,
-                      marginBottom: 8,
-                    }}
-                  >
+                <Card style={{ marginTop: 20, marginBottom: 24, backgroundColor: colors.inputBackground }}>
+                  <Body weight="medium" style={{ marginBottom: 8 }}>
                     Guidelines:
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: 'Poppins_400Regular',
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                      lineHeight: 18,
-                    }}
-                  >
+                  </Body>
+                  <Caption color="secondary" style={{ lineHeight: 18 }}>
                     • Be respectful and kind to fellow students{'\n'}
                     • No spam, harassment, or inappropriate content{'\n'}
                     • Share university-related thoughts and experiences{'\n'}
                     • Your post will be visible to students within 5km
-                  </Text>
-                </View>
+                  </Caption>
+                </Card>
               </View>
             </ScrollView>
 

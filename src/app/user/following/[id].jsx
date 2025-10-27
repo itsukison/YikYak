@@ -1,7 +1,6 @@
 import React from "react";
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -9,11 +8,6 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Users } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../../components/AppBackground";
 import EmptyState from "../../../components/EmptyState";
 import { useTheme } from "../../../utils/theme";
@@ -24,6 +18,7 @@ import {
   useFollowMutation,
   useUnfollowMutation,
 } from "../../../utils/queries/follows";
+import { Heading, Body, Card, Avatar, Button } from "../../../components/ui";
 
 export default function FollowingScreen() {
   const { id: userId } = useLocalSearchParams();
@@ -34,15 +29,6 @@ export default function FollowingScreen() {
   const { data: following, isLoading } = useFollowingQuery(userId);
   const followMutation = useFollowMutation();
   const unfollowMutation = useUnfollowMutation();
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user) {
     return (
@@ -123,19 +109,19 @@ export default function FollowingScreen() {
             borderBottomColor: colors.border,
           }}
         >
-          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text
-            style={{
-              fontFamily: "Poppins_600SemiBold",
-              fontSize: 20,
-              color: colors.text,
-              flex: 1,
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={{ 
+              marginRight: 12,
+              width: 48,
+              height: 48,
+              justifyContent: 'center',
+              alignItems: 'flex-start'
             }}
           >
-            Following
-          </Text>
+            <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Heading variant="h2" style={{ flex: 1 }}>Following</Heading>
         </View>
 
         <EmptyState
@@ -154,7 +140,7 @@ export default function FollowingScreen() {
       {/* Header */}
       <View
         style={{
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
           paddingTop: 60,
           paddingBottom: 16,
           flexDirection: "row",
@@ -163,19 +149,19 @@ export default function FollowingScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 20,
-            color: colors.text,
-            flex: 1,
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={{ 
+            marginRight: 12,
+            width: 48,
+            height: 48,
+            justifyContent: 'center',
+            alignItems: 'flex-start'
           }}
         >
-          Following
-        </Text>
+          <ArrowLeft size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Heading variant="h2" style={{ flex: 1 }}>Following</Heading>
       </View>
 
       {/* Following List */}
@@ -205,85 +191,51 @@ function FollowingItem({
     useFollowStatusQuery(currentUserId, followingUser.id);
 
   return (
-    <TouchableOpacity
+    <Card
+      interactive
       onPress={() => router.push(`/user/${followingUser.id}`)}
-      style={{
-        backgroundColor: colors.card,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        marginHorizontal: 16,
-        marginBottom: 8,
-        borderRadius: 16,
-        flexDirection: "row",
-        alignItems: "center",
-      }}
+      style={{ marginHorizontal: 20, marginBottom: 12 }}
     >
-      {/* Avatar */}
-      <View
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: colors.primary + "20",
-          justifyContent: "center",
-          alignItems: "center",
-          marginRight: 12,
-        }}
-      >
-        <Text style={{ fontSize: 20, color: colors.primary }}>
-          {displayName[0].toUpperCase()}
-        </Text>
-      </View>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        {/* Avatar */}
+        <Avatar 
+          name={displayName}
+          size="medium"
+          style={{ marginRight: 12 }}
+        />
 
-      {/* User Info */}
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 16,
-            color: colors.text,
-          }}
-        >
-          {displayName}
-        </Text>
-      </View>
+        {/* User Info */}
+        <View style={{ flex: 1 }}>
+          <Body weight="semibold">{displayName}</Body>
+        </View>
 
-      {/* Follow Button */}
-      {!isOwnProfile && (
-        <TouchableOpacity
-          onPress={() => onFollowToggle(followingUser.id, isFollowing)}
-          disabled={
-            followMutation.isPending ||
+        {/* Follow Button */}
+        {!isOwnProfile && (
+          <Button
+            variant={isFollowing ? "ghost" : "primary"}
+            size="small"
+            onPress={(e) => {
+              e.stopPropagation();
+              onFollowToggle(followingUser.id, isFollowing);
+            }}
+            disabled={
+              followMutation.isPending ||
+              unfollowMutation.isPending ||
+              followStatusLoading
+            }
+            style={{ minWidth: 90 }}
+          >
+            {followMutation.isPending ||
             unfollowMutation.isPending ||
-            followStatusLoading
-          }
-          style={{
-            backgroundColor: isFollowing ? colors.border : colors.primary,
-            paddingHorizontal: 20,
-            paddingVertical: 8,
-            borderRadius: 20,
-            minWidth: 90,
-            alignItems: "center",
-          }}
-        >
-          {followMutation.isPending ||
-          unfollowMutation.isPending ||
-          followStatusLoading ? (
-            <ActivityIndicator size="small" color={colors.text} />
-          ) : (
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 14,
-                color: isFollowing ? colors.text : "#FFFFFF",
-              }}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Text>
-          )}
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
+            followStatusLoading ? (
+              <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
+            ) : (
+              isFollowing ? "Following" : "Follow"
+            )}
+          </Button>
+        )}
+      </View>
+    </Card>
   );
 }
 

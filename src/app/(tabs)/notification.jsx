@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -15,11 +14,6 @@ import {
   Mail,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
 import { useTheme } from "../../utils/theme";
@@ -31,6 +25,7 @@ import {
 } from "../../utils/queries/notifications";
 import { subscribeToNotifications } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
+import { Container, Heading, Body, Caption, Card, Button } from "../../components/ui";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -41,11 +36,6 @@ export default function NotificationScreen() {
   const { data: notifications, isLoading } = useNotificationsQuery(user?.id);
   const markReadMutation = useMarkNotificationReadMutation();
   const markAllReadMutation = useMarkAllReadMutation();
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
 
   // Subscribe to new notifications
   useEffect(() => {
@@ -58,10 +48,6 @@ export default function NotificationScreen() {
 
     return unsubscribe;
   }, [user?.id, queryClient]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user) {
     return (
@@ -180,90 +166,72 @@ export default function NotificationScreen() {
     const notificationText = getNotificationText(item);
 
     return (
-      <TouchableOpacity
+      <Card
+        interactive
         onPress={() => handleNotificationPress(item)}
         style={{
-          backgroundColor: item.is_read ? colors.card : colors.primarySubtle,
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          marginHorizontal: 16,
-          marginBottom: 8,
-          borderRadius: radius.card,
-          flexDirection: "row",
-          alignItems: "center",
+          marginHorizontal: 20,
+          marginBottom: 12,
+          backgroundColor: item.is_read ? colors.surface : colors.accentSubtle,
           borderLeftWidth: 3,
-          borderLeftColor: item.is_read ? "transparent" : colors.primary,
+          borderLeftColor: item.is_read ? "transparent" : colors.accent,
         }}
       >
-        {/* Icon */}
-        <View
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: radius.avatar,
-            backgroundColor: colors.primarySubtle,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: 12,
-          }}
-        >
-          <Icon size={20} color={colors.primary} />
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: item.is_read
-                ? "Poppins_400Regular"
-                : "Poppins_600SemiBold",
-              fontSize: 14,
-              color: colors.text,
-              marginBottom: 4,
-            }}
-          >
-            {notificationText}
-          </Text>
-
-          {/* Preview text for comments */}
-          {item.type === "comment" && item.comment?.content && (
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 13,
-                color: colors.textSecondary,
-                marginBottom: 4,
-              }}
-            >
-              "{item.comment.content}"
-            </Text>
-          )}
-
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 12,
-              color: colors.textSecondary,
-            }}
-          >
-            {formatTime(item.created_at)}
-          </Text>
-        </View>
-
-        {/* Unread indicator */}
-        {!item.is_read && (
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* Icon */}
           <View
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: colors.primary,
-              marginLeft: 8,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: colors.inputBackground,
+              justifyContent: "center",
+              alignItems: "center",
+              marginRight: 12,
             }}
-          />
-        )}
-      </TouchableOpacity>
+          >
+            <Icon size={20} color={colors.accent} strokeWidth={2} />
+          </View>
+
+          {/* Content */}
+          <View style={{ flex: 1 }}>
+            <Body 
+              weight={item.is_read ? "regular" : "semibold"}
+              style={{ marginBottom: 4 }}
+            >
+              {notificationText}
+            </Body>
+
+            {/* Preview text for comments */}
+            {item.type === "comment" && item.comment?.content && (
+              <Caption 
+                numberOfLines={1}
+                color="secondary"
+                style={{ marginBottom: 4 }}
+              >
+                "{item.comment.content}"
+              </Caption>
+            )}
+
+            <Caption color="secondary">
+              {formatTime(item.created_at)}
+            </Caption>
+          </View>
+
+          {/* Unread indicator */}
+          {!item.is_read && (
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: colors.accent,
+                marginLeft: 8,
+              }}
+            />
+          )}
+        </View>
+      </Card>
     );
   };
 
@@ -272,51 +240,39 @@ export default function NotificationScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingTop: 60,
-          paddingBottom: 16,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Text
+      <Container padding="none">
+        <View
           style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 28,
-            color: colors.text,
+            paddingHorizontal: 20,
+            paddingTop: 60,
+            paddingBottom: 20,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          Notifications
-        </Text>
+          <Heading variant="h1">Notifications</Heading>
 
-        {unreadCount > 0 && (
-          <TouchableOpacity
-            onPress={handleMarkAllRead}
-            disabled={markAllReadMutation.isPending}
-          >
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 14,
-                color: colors.primary,
-              }}
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="small"
+              onPress={handleMarkAllRead}
+              disabled={markAllReadMutation.isPending}
             >
               Mark all read
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            </Button>
+          )}
+        </View>
 
-      {/* Notifications List */}
-      <FlatList
-        data={notifications}
-        renderItem={renderNotification}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+        {/* Notifications List */}
+        <FlatList
+          data={notifications}
+          renderItem={renderNotification}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      </Container>
     </AppBackground>
   );
 }

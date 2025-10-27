@@ -1,8 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../utils/theme';
+import { Heading, Body } from './ui/Text';
 
+/**
+ * EmptyState component - Clean, minimal empty state design
+ * Artifact-inspired with generous spacing and bold typography
+ */
 export default function EmptyState({ 
   Icon, 
   title, 
@@ -11,7 +16,7 @@ export default function EmptyState({
   style 
 }) {
   const insets = useSafeAreaInsets();
-  const { colors, radius } = useTheme();
+  const { colors, radius, spacing } = useTheme();
 
   return (
     <View
@@ -20,7 +25,7 @@ export default function EmptyState({
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          paddingHorizontal: 32,
+          paddingHorizontal: spacing["3xl"],
           paddingTop: insets.top,
           paddingBottom: insets.bottom,
         },
@@ -36,43 +41,34 @@ export default function EmptyState({
           backgroundColor: colors.accentSubtle,
           justifyContent: 'center',
           alignItems: 'center',
-          marginBottom: 24,
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 1,
-          shadowRadius: 3,
-          elevation: 2,
+          marginBottom: spacing["3xl"],
         }}
       >
-        <Icon size={36} color={iconColor || colors.accent} strokeWidth={1.5} />
+        <Icon size={36} color={iconColor || colors.accent} strokeWidth={2} />
       </View>
 
       {/* Empty state title */}
-      <Text
+      <Heading
+        variant="h2"
         style={{
-          fontFamily: 'Poppins_600SemiBold',
-          fontSize: 20,
-          color: colors.text,
           textAlign: 'center',
-          marginBottom: 8,
+          marginBottom: spacing.sm,
         }}
       >
         {title}
-      </Text>
+      </Heading>
 
       {/* Empty state description */}
-      <Text
+      <Body
+        variant="body"
+        color={colors.textSecondary}
         style={{
-          fontFamily: 'Poppins_400Regular',
-          fontSize: 15,
-          color: colors.textSecondary,
           textAlign: 'center',
-          lineHeight: 22,
-          letterSpacing: 0.2,
+          maxWidth: 300,
         }}
       >
         {description}
-      </Text>
+      </Body>
     </View>
   );
 }

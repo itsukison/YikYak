@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   RefreshControl,
@@ -19,37 +18,30 @@ import {
   MapPin,
   School,
 } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery, useVotePostMutation } from "../../utils/queries/posts";
 import { subscribeToNewPosts } from "../../utils/realtime";
 import AppBackground from "../../components/AppBackground";
+import { Card } from "../../components/ui";
+import { Heading, Body, Caption } from "../../components/ui/Text";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { colors, radius, isDark } = useTheme();
+  const { colors, radius, isDark, spacing } = useTheme();
   const { user, profile } = useAuth();
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
+  const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
   const [location, setLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
-  
+
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
 
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-  });
+
 
   // Fetch posts from Supabase
   const { data: posts = [], isLoading, refetch } = usePostsQuery(
@@ -57,6 +49,7 @@ export default function HomeScreen() {
     location?.coords.longitude,
     locationRadius,
     activeTab,
+    timeFilter,
     !!location
   );
 
@@ -94,7 +87,7 @@ export default function HomeScreen() {
     try {
       setLocationError(null);
       let { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== "granted") {
         setLocationError("Location permission denied");
         Alert.alert(
@@ -108,7 +101,7 @@ export default function HomeScreen() {
       let currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      
+
       setLocation(currentLocation);
       setLocationError(null);
     } catch (error) {
@@ -172,205 +165,155 @@ export default function HomeScreen() {
 
   const renderPost = (post) => {
     const userVote = userVotes[post.id] || null;
-    
+
     const navigateToPost = () => {
       router.push({
         pathname: `/post/${post.id}`,
         params: { post: JSON.stringify(post) },
       });
     };
-    
+
     return (
-    <TouchableOpacity
-      key={post.id}
-      onPress={navigateToPost}
-      activeOpacity={0.8}
-      style={{
-        backgroundColor: colors.surface,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderRadius: radius.card,
-        padding: 16,
-        shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 1,
-        shadowRadius: 3,
-        elevation: 2,
-      }}
-    >
-      {/* Post Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
+      <Card
+        key={post.id}
+        interactive
+        onPress={navigateToPost}
+        padding="default"
+        style={{ marginHorizontal: spacing.lg, marginBottom: spacing.md }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              if (!post.is_anonymous && post.user_id) {
-                router.push(`/user/${post.user_id}`);
-              }
-            }}
-            disabled={post.is_anonymous}
-          >
-            <Text
+        {/* Post Header */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: spacing.md,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                if (!post.is_anonymous && post.user_id) {
+                  router.push(`/user/${post.user_id}`);
+                }
+              }}
+              disabled={post.is_anonymous}
+            >
+              <Body weight="medium" style={{ color: colors.primary }}>
+                {post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+              </Body>
+            </TouchableOpacity>
+            <Caption color="secondary" style={{ marginLeft: spacing.sm }}>
+              • {formatTimeAgo(post.created_at)}
+            </Caption>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <MapPin size={12} color={colors.accent} />
+            <Caption color="secondary" style={{ marginLeft: spacing.xs }}>
+              {post.location_name || formatDistance(post.distance)}
+            </Caption>
+          </View>
+        </View>
+
+        {/* Post Content */}
+        <Body style={{ marginBottom: spacing.lg }}>
+          {post.content}
+        </Body>
+
+        {/* Post Actions */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                handleVote(post.id, 1);
+              }}
               style={{
-                fontFamily: "Poppins_500Medium",
-                fontSize: 14,
-                color: colors.primary,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingVertical: spacing.sm,
+                paddingHorizontal: spacing.md,
+                borderRadius: radius.pill,
+                backgroundColor:
+                  userVote === 1
+                    ? colors.accentSubtle
+                    : colors.inputBackground,
               }}
             >
-              {post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
-            </Text>
-          </TouchableOpacity>
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 12,
-              color: colors.textSecondary,
-              marginLeft: 8,
-            }}
-          >
-            • {formatTimeAgo(post.created_at)}
-          </Text>
-        </View>
+              <ChevronUp
+                size={18}
+                color={
+                  userVote === 1 ? colors.accent : colors.textSecondary
+                }
+                strokeWidth={2}
+              />
+              <Body
+                variant="small"
+                weight="medium"
+                style={{
+                  marginLeft: spacing.xs,
+                  color: userVote === 1 ? colors.accent : colors.textSecondary
+                }}
+              >
+                {post.score || 0}
+              </Body>
+            </TouchableOpacity>
 
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <MapPin size={12} color={colors.accent} />
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 12,
-              color: colors.textSecondary,
-              marginLeft: 4,
-            }}
-          >
-            {post.location_name || formatDistance(post.distance)}
-          </Text>
-        </View>
-      </View>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                handleVote(post.id, -1);
+              }}
+              style={{
+                paddingVertical: spacing.sm,
+                paddingHorizontal: spacing.sm,
+                marginLeft: spacing.xs,
+              }}
+            >
+              <ChevronDown
+                size={18}
+                color={userVote === -1 ? colors.error : colors.textSecondary}
+                strokeWidth={2}
+              />
+            </TouchableOpacity>
+          </View>
 
-      {/* Post Content */}
-      <Text
-        style={{
-          fontFamily: "Poppins_400Regular",
-          fontSize: 16,
-          color: colors.text,
-          lineHeight: 24,
-          marginBottom: 16,
-        }}
-      >
-        {post.content}
-      </Text>
-
-      {/* Post Actions */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
-              handleVote(post.id, 1);
+              navigateToPost();
             }}
             style={{
               flexDirection: "row",
               alignItems: "center",
-              paddingVertical: 8,
-              paddingHorizontal: 12,
-              borderRadius: radius.button,
-              backgroundColor:
-                userVote === 1
-                  ? colors.primarySubtle
-                  : colors.inputBackground,
+              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.md,
             }}
           >
-            <ChevronUp
-              size={18}
-              color={
-                userVote === 1 ? colors.primary : colors.textSecondary
-              }
-            />
-            <Text
-              style={{
-                fontFamily: "Poppins_500Medium",
-                fontSize: 14,
-                color:
-                  userVote === 1 ? colors.primary : colors.textSecondary,
-                marginLeft: 4,
-              }}
-            >
-              {post.score || 0}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              handleVote(post.id, -1);
-            }}
-            style={{
-              paddingVertical: 8,
-              paddingHorizontal: 8,
-              marginLeft: 4,
-            }}
-          >
-            <ChevronDown
-              size={18}
-              color={userVote === -1 ? colors.error : colors.textSecondary}
-            />
+            <MessageCircle size={16} color={colors.textSecondary} strokeWidth={2} />
+            <Caption color="secondary" style={{ marginLeft: spacing.sm }}>
+              {post.comment_count || 0}
+            </Caption>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          onPress={(e) => {
-            e.stopPropagation();
-            navigateToPost();
-          }}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-          }}
-        >
-          <MessageCircle size={16} color={colors.textSecondary} />
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 14,
-              color: colors.textSecondary,
-              marginLeft: 6,
-            }}
-          >
-            {post.comment_count || 0}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
+      </Card>
     );
   };
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   // If no user, show loading (root layout will handle redirect)
   if (!user) {
     return (
       <AppBackground>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Poppins_400Regular', fontSize: 16, color: colors.text }}>
-            Loading...
-          </Text>
+          <Body>Loading...</Body>
         </View>
       </AppBackground>
     );
@@ -404,28 +347,14 @@ export default function HomeScreen() {
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <School size={28} color={colors.primary} strokeWidth={2} />
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 28,
-                color: colors.text,
-                marginLeft: 8,
-              }}
-            >
+            <Heading variant="h1" style={{ marginLeft: 8 }}>
               Campus Feed
-            </Text>
+            </Heading>
           </View>
           {location && (
-            <Text
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 12,
-                color: colors.textSecondary,
-                marginTop: 2,
-              }}
-            >
+            <Caption color="secondary" style={{ marginTop: 2 }}>
               Posts within {locationRadius / 1000}km
-            </Text>
+            </Caption>
           )}
         </View>
 
@@ -439,15 +368,9 @@ export default function HomeScreen() {
               marginBottom: 12,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 12,
-                color: colors.error || "#D32F2F",
-              }}
-            >
+            <Caption style={{ color: colors.error || "#D32F2F" }}>
               📍 {locationError}
-            </Text>
+            </Caption>
           </View>
         )}
 
@@ -475,18 +398,18 @@ export default function HomeScreen() {
           >
             <Clock
               size={16}
-              color={activeTab === "new" ? "#FFFFFF" : colors.textSecondary}
+              color={activeTab === "new" ? colors.primaryText : colors.textSecondary}
             />
-            <Text
+            <Body
+              variant="small"
+              weight="medium"
               style={{
-                fontFamily: "Poppins_500Medium",
-                fontSize: 14,
-                color: activeTab === "new" ? "#FFFFFF" : colors.textSecondary,
+                color: activeTab === "new" ? colors.primaryText : colors.textSecondary,
                 marginLeft: 6,
               }}
             >
               New
-            </Text>
+            </Body>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -504,28 +427,65 @@ export default function HomeScreen() {
           >
             <TrendingUp
               size={16}
-              color={activeTab === "popular" ? "#FFFFFF" : colors.textSecondary}
+              color={activeTab === "popular" ? colors.primaryText : colors.textSecondary}
             />
-            <Text
+            <Body
+              variant="small"
+              weight="medium"
               style={{
-                fontFamily: "Poppins_500Medium",
-                fontSize: 14,
-                color:
-                  activeTab === "popular" ? "#FFFFFF" : colors.textSecondary,
+                color: activeTab === "popular" ? colors.primaryText : colors.textSecondary,
                 marginLeft: 6,
               }}
             >
               Popular
-            </Text>
+            </Body>
           </TouchableOpacity>
         </View>
+
+        {/* Time Filter - Only visible when Popular tab is active */}
+        {activeTab === "popular" && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: 8,
+              gap: 6,
+            }}
+          >
+            {["day", "week", "month"].map((filter) => (
+              <TouchableOpacity
+                key={filter}
+                onPress={() => setTimeFilter(filter)}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 6,
+                  borderRadius: 6,
+                  backgroundColor:
+                    timeFilter === filter
+                      ? colors.primary
+                      : "transparent",
+                }}
+              >
+                <Caption
+                  weight="medium"
+                  style={{
+                    color: timeFilter === filter ? colors.primaryText : colors.textSecondary,
+                  }}
+                >
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                </Caption>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Posts Feed */}
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: insets.top + 160, // Account for fixed header
+          paddingTop: insets.top + (activeTab === "popular" ? 200 : 160), // Account for fixed header + time filter
           paddingBottom: insets.bottom + 20,
         }}
         showsVerticalScrollIndicator={false}
@@ -548,15 +508,9 @@ export default function HomeScreen() {
               paddingVertical: 40,
             }}
           >
-            <Text
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 16,
-                color: colors.textSecondary,
-              }}
-            >
+            <Body color="secondary">
               Loading posts...
-            </Text>
+            </Body>
           </View>
         ) : posts.length === 0 ? (
           <View
@@ -568,30 +522,26 @@ export default function HomeScreen() {
             }}
           >
             <MessageCircle size={48} color={colors.accent} strokeWidth={1.5} />
-            <Text
+            <Heading
+              variant="h2"
               style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 20,
-                color: colors.text,
                 textAlign: "center",
                 marginTop: 16,
                 marginBottom: 8,
               }}
             >
               No Posts Yet
-            </Text>
-            <Text
+            </Heading>
+            <Body
+              color="secondary"
               style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 15,
-                color: colors.textSecondary,
                 textAlign: "center",
                 lineHeight: 22,
               }}
             >
               Be the first to share what's happening on campus! Tap the + button
               to create a post.
-            </Text>
+            </Body>
           </View>
         ) : (
           posts.map(renderPost)
@@ -618,7 +568,7 @@ export default function HomeScreen() {
           elevation: 6,
         }}
       >
-        <Plus size={28} color="#FFFFFF" strokeWidth={2.5} />
+        <Plus size={28} color={colors.primaryText} strokeWidth={2.5} />
       </TouchableOpacity>
     </AppBackground>
   );

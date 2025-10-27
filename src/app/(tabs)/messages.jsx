@@ -1,13 +1,8 @@
 import React, { useEffect } from "react";
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { MessageCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
 import { useTheme } from "../../utils/theme";
@@ -15,6 +10,7 @@ import { useAuth } from "../../utils/auth/useAuth";
 import { useChatsQuery } from "../../utils/queries/chats";
 import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
+import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../components/ui";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -23,11 +19,6 @@ export default function MessagesScreen() {
   const queryClient = useQueryClient();
 
   const { data: chats, isLoading } = useChatsQuery(user?.id);
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
 
   // Subscribe to new messages for all chats
   useEffect(() => {
@@ -44,10 +35,6 @@ export default function MessagesScreen() {
       unsubscribers.forEach((unsub) => unsub());
     };
   }, [chats, user?.id, queryClient]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user) {
     return (
@@ -109,98 +96,48 @@ export default function MessagesScreen() {
       : "";
 
     return (
-      <TouchableOpacity
+      <Card 
+        interactive
         onPress={() => router.push(`/chat/${item.id}`)}
-        style={{
-          backgroundColor: colors.card,
-          padding: 16,
-          marginHorizontal: 16,
-          marginBottom: 12,
-          borderRadius: radius.card,
-          flexDirection: "row",
-          alignItems: "center",
-        }}
+        style={{ marginHorizontal: 20, marginBottom: 12 }}
       >
-        {/* Avatar */}
-        <View
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: radius.avatar,
-            backgroundColor: colors.primarySubtle,
-            justifyContent: "center",
-            alignItems: "center",
-            marginRight: 12,
-          }}
-        >
-          <Text style={{ fontSize: 20, color: colors.primary }}>
-            {displayName[0].toUpperCase()}
-          </Text>
-        </View>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {/* Avatar */}
+          <Avatar 
+            name={displayName}
+            size="medium"
+            style={{ marginRight: 12 }}
+          />
 
-        {/* Chat Info */}
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 16,
-                color: colors.text,
-              }}
-            >
-              {displayName}
-            </Text>
-            {lastMessageTime && (
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                }}
+          {/* Chat Info */}
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+              <Body weight="semibold">{displayName}</Body>
+              {lastMessageTime && (
+                <Caption color="secondary">{lastMessageTime}</Caption>
+              )}
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <Caption 
+                numberOfLines={1}
+                color="secondary"
+                style={{ flex: 1 }}
               >
-                {lastMessageTime}
-              </Text>
-            )}
-          </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 14,
-                color: colors.textSecondary,
-                flex: 1,
-              }}
-            >
-              {lastMessageText}
-            </Text>
-            {item.unreadCount > 0 && (
-              <View
-                style={{
-                  backgroundColor: colors.primary,
-                  borderRadius: radius.avatar,
-                  minWidth: 20,
-                  height: 20,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  paddingHorizontal: 6,
-                  marginLeft: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Poppins_600SemiBold",
-                    fontSize: 12,
-                    color: "#FFFFFF",
-                  }}
+                {lastMessageText}
+              </Caption>
+              {item.unreadCount > 0 && (
+                <Badge 
+                  variant="primary"
+                  size="sm"
+                  style={{ marginLeft: 8 }}
                 >
                   {item.unreadCount}
-                </Text>
-              </View>
-            )}
+                </Badge>
+              )}
+            </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </Card>
     );
   };
 
@@ -209,25 +146,19 @@ export default function MessagesScreen() {
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 60, paddingBottom: 16 }}>
-        <Text
-          style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 28,
-            color: colors.text,
-          }}
-        >
-          Messages
-        </Text>
-      </View>
+      <Container padding="none">
+        <View style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 }}>
+          <Heading variant="h1">Messages</Heading>
+        </View>
 
-      {/* Chat List */}
-      <FlatList
-        data={chats}
-        renderItem={renderChatItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
+        {/* Chat List */}
+        <FlatList
+          data={chats}
+          renderItem={renderChatItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      </Container>
     </AppBackground>
   );
 }

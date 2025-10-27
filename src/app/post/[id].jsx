@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -18,11 +17,6 @@ import {
   Send,
   MapPin,
 } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -32,6 +26,7 @@ import {
   useCreateCommentMutation,
   useVoteCommentMutation,
 } from "../../utils/queries/comments";
+import { Heading, Body, Caption, Card } from "../../components/ui";
 
 export default function PostDetailScreen() {
   const { id: postId, post: postJson } = useLocalSearchParams();
@@ -50,20 +45,11 @@ export default function PostDetailScreen() {
   const createCommentMutation = useCreateCommentMutation();
   const voteCommentMutation = useVoteCommentMutation();
 
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
-
   useEffect(() => {
     if (userVotes) {
       setLocalVotes(userVotes);
     }
   }, [userVotes]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user || !post) {
     return (
@@ -167,7 +153,7 @@ export default function PostDetailScreen() {
         {/* Header */}
         <View
           style={{
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             paddingTop: 60,
             paddingBottom: 16,
             flexDirection: "row",
@@ -176,32 +162,24 @@ export default function PostDetailScreen() {
             borderBottomColor: colors.border,
           }}
         >
-          <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-          <Text
-            style={{
-              fontFamily: "Poppins_600SemiBold",
-              fontSize: 20,
-              color: colors.text,
-              flex: 1,
+          <TouchableOpacity 
+            onPress={() => router.back()} 
+            style={{ 
+              marginRight: 12,
+              width: 48,
+              height: 48,
+              justifyContent: 'center',
+              alignItems: 'flex-start'
             }}
           >
-            Post
-          </Text>
+            <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Heading variant="h2" style={{ flex: 1 }}>Post</Heading>
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
           {/* Post Card */}
-          <View
-            style={{
-              backgroundColor: colors.card,
-              marginHorizontal: 16,
-              marginTop: 16,
-              padding: 16,
-              borderRadius: radius.card,
-            }}
-          >
+          <Card style={{ marginHorizontal: 20, marginTop: 20 }}>
             {/* Post Header */}
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
               <TouchableOpacity
@@ -212,96 +190,45 @@ export default function PostDetailScreen() {
                 }}
                 disabled={post.is_anonymous}
               >
-                <Text
-                  style={{
-                    fontFamily: "Poppins_600SemiBold",
-                    fontSize: 15,
-                    color: colors.text,
-                  }}
-                >
-                  {displayName}
-                </Text>
+                <Body weight="semibold">{displayName}</Body>
               </TouchableOpacity>
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                }}
-              >
-                {formatTime(post.created_at)}
-              </Text>
+              <Caption color="secondary">{formatTime(post.created_at)}</Caption>
             </View>
 
             {/* Post Content */}
-            <Text
-              style={{
-                fontFamily: "Poppins_400Regular",
-                fontSize: 16,
-                color: colors.text,
-                lineHeight: 24,
-                marginBottom: 12,
-              }}
-            >
+            <Body style={{ lineHeight: 24, marginBottom: 12 }}>
               {post.content}
-            </Text>
+            </Body>
 
             {/* Location */}
             {post.location_name && (
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
                 <MapPin size={14} color={colors.textSecondary} />
-                <Text
-                  style={{
-                    fontFamily: "Poppins_400Regular",
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    marginLeft: 4,
-                  }}
-                >
+                <Caption color="secondary" style={{ marginLeft: 4 }}>
                   {post.location_name} • {formatDistance(post.distance)}
-                </Text>
+                </Caption>
               </View>
             )}
 
             {/* Post Stats */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ArrowBigUp size={20} color={colors.primary} />
-                <Text
-                  style={{
-                    fontFamily: "Poppins_600SemiBold",
-                    fontSize: 14,
-                    color: colors.text,
-                    marginLeft: 4,
-                  }}
-                >
+                <ArrowBigUp size={20} color={colors.primary} strokeWidth={2} />
+                <Body weight="semibold" variant="small" style={{ marginLeft: 4 }}>
                   {post.score || 0}
-                </Text>
+                </Body>
               </View>
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                }}
-              >
+              <Caption color="secondary">
                 {post.comment_count || 0} comments
-              </Text>
+              </Caption>
             </View>
-          </View>
+          </Card>
 
           {/* Comments Section */}
-          <View style={{ marginTop: 24, paddingHorizontal: 16 }}>
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 18,
-                color: colors.text,
-                marginBottom: 16,
-              }}
-            >
+          <View style={{ marginTop: 32, paddingHorizontal: 20 }}>
+            <Heading variant="h3" style={{ marginBottom: 16 }}>
               Comments
-            </Text>
+            </Heading>
 
             {commentsLoading ? (
               <ActivityIndicator size="large" color={colors.primary} />
@@ -311,15 +238,7 @@ export default function PostDetailScreen() {
                 const displayScore = commentItem.score;
 
                 return (
-                  <View
-                    key={commentItem.id}
-                    style={{
-                      backgroundColor: colors.card,
-                      padding: 12,
-                      borderRadius: radius.card,
-                      marginBottom: 12,
-                    }}
-                  >
+                  <Card key={commentItem.id} style={{ marginBottom: 12 }}>
                     {/* Comment Header */}
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                       <TouchableOpacity
@@ -330,39 +249,19 @@ export default function PostDetailScreen() {
                         }}
                         disabled={commentItem.author.is_anonymous}
                       >
-                        <Text
-                          style={{
-                            fontFamily: "Poppins_600SemiBold",
-                            fontSize: 14,
-                            color: colors.text,
-                          }}
-                        >
+                        <Body weight="semibold" variant="small">
                           {commentItem.author_nickname}
-                        </Text>
+                        </Body>
                       </TouchableOpacity>
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_400Regular",
-                          fontSize: 12,
-                          color: colors.textSecondary,
-                        }}
-                      >
+                      <Caption color="secondary">
                         {formatTime(commentItem.created_at)}
-                      </Text>
+                      </Caption>
                     </View>
 
                     {/* Comment Content */}
-                    <Text
-                      style={{
-                        fontFamily: "Poppins_400Regular",
-                        fontSize: 14,
-                        color: colors.text,
-                        lineHeight: 20,
-                        marginBottom: 8,
-                      }}
-                    >
+                    <Body variant="small" style={{ lineHeight: 20, marginBottom: 8 }}>
                       {commentItem.content}
-                    </Text>
+                    </Body>
 
                     {/* Comment Votes */}
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -372,45 +271,33 @@ export default function PostDetailScreen() {
                       >
                         <ArrowBigUp
                           size={18}
-                          color={userVote === 1 ? colors.primary : colors.textSecondary}
-                          fill={userVote === 1 ? colors.primary : "transparent"}
+                          color={userVote === 1 ? colors.accent : colors.textSecondary}
+                          fill={userVote === 1 ? colors.accent : "transparent"}
+                          strokeWidth={2}
                         />
                       </TouchableOpacity>
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_600SemiBold",
-                          fontSize: 13,
-                          color: colors.text,
-                        }}
-                      >
+                      <Caption weight="semibold">
                         {displayScore}
-                      </Text>
+                      </Caption>
                       <TouchableOpacity
                         onPress={() => handleVoteComment(commentItem.id, -1)}
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
                         <ArrowBigDown
                           size={18}
-                          color={userVote === -1 ? "#FF3B30" : colors.textSecondary}
-                          fill={userVote === -1 ? "#FF3B30" : "transparent"}
+                          color={userVote === -1 ? colors.error : colors.textSecondary}
+                          fill={userVote === -1 ? colors.error : "transparent"}
+                          strokeWidth={2}
                         />
                       </TouchableOpacity>
                     </View>
-                  </View>
+                  </Card>
                 );
               })
             ) : (
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 14,
-                  color: colors.textSecondary,
-                  textAlign: "center",
-                  marginTop: 20,
-                }}
-              >
+              <Caption color="secondary" style={{ textAlign: "center", marginTop: 20 }}>
                 No comments yet. Be the first to comment!
-              </Text>
+              </Caption>
             )}
           </View>
         </ScrollView>
@@ -420,8 +307,8 @@ export default function PostDetailScreen() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
             borderTopWidth: 1,
             borderTopColor: colors.border,
             backgroundColor: colors.background,
@@ -435,13 +322,13 @@ export default function PostDetailScreen() {
             style={{
               flex: 1,
               backgroundColor: colors.inputBackground,
-              borderRadius: radius.button,
+              borderRadius: 24,
               paddingHorizontal: 16,
-              paddingVertical: 10,
-              fontFamily: "Poppins_400Regular",
-              fontSize: 15,
+              paddingVertical: 12,
+              fontSize: 16,
               color: colors.text,
-              marginRight: 8,
+              marginRight: 12,
+              minHeight: 48,
             }}
             multiline
             maxLength={300}
@@ -451,17 +338,17 @@ export default function PostDetailScreen() {
             disabled={!comment.trim() || createCommentMutation.isPending}
             style={{
               backgroundColor: comment.trim() ? colors.primary : colors.border,
-              width: 44,
-              height: 44,
-              borderRadius: radius.button,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
             {createCommentMutation.isPending ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
-              <Send size={20} color="#FFFFFF" />
+              <Send size={20} color={colors.primaryText} strokeWidth={2} />
             )}
           </TouchableOpacity>
         </View>

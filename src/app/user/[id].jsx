@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -9,11 +8,6 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, MessageCircle, MapPin } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -26,6 +20,7 @@ import {
 } from "../../utils/queries/follows";
 import { useProfileStatsQuery } from "../../utils/queries/profile";
 import { useCreateChatMutation } from "../../utils/queries/chats";
+import { Heading, Body, Caption, Card, Avatar, Button } from "../../components/ui";
 
 export default function UserProfileScreen() {
   const { id: targetUserId } = useLocalSearchParams();
@@ -44,15 +39,6 @@ export default function UserProfileScreen() {
   const followMutation = useFollowMutation();
   const unfollowMutation = useUnfollowMutation();
   const createChatMutation = useCreateChatMutation();
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user) {
     return (
@@ -131,7 +117,7 @@ export default function UserProfileScreen() {
       {/* Header */}
       <View
         style={{
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
           paddingTop: 60,
           paddingBottom: 16,
           flexDirection: "row",
@@ -140,19 +126,19 @@ export default function UserProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 12 }}>
-          <ArrowLeft size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 20,
-            color: colors.text,
-            flex: 1,
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={{ 
+            marginRight: 12,
+            width: 48,
+            height: 48,
+            justifyContent: 'center',
+            alignItems: 'flex-start'
           }}
         >
-          Profile
-        </Text>
+          <ArrowLeft size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Heading variant="h2" style={{ flex: 1 }}>Profile</Heading>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -163,55 +149,24 @@ export default function UserProfileScreen() {
         ) : (
           <>
             {/* Profile Header */}
-            <View style={{ padding: 20, alignItems: "center" }}>
+            <Card style={{ margin: 20, alignItems: "center" }}>
               {/* Avatar */}
-              <View
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: radius.avatar,
-                  backgroundColor: colors.accentSubtle,
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginBottom: 16,
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "Poppins_600SemiBold",
-                    fontSize: 32,
-                    color: colors.accent,
-                  }}
-                >
-                  {displayName[0].toUpperCase()}
-                </Text>
-              </View>
+              <Avatar 
+                name={displayName}
+                size="xlarge"
+                style={{ marginBottom: 16 }}
+              />
 
               {/* Name */}
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 24,
-                  color: colors.text,
-                  marginBottom: 8,
-                }}
-              >
+              <Heading variant="h2" style={{ marginBottom: 8 }}>
                 {displayName}
-              </Text>
+              </Heading>
 
               {/* Bio */}
               {targetProfile?.bio && !targetProfile?.is_anonymous && (
-                <Text
-                  style={{
-                    fontFamily: "Poppins_400Regular",
-                    fontSize: 14,
-                    color: colors.textSecondary,
-                    textAlign: "center",
-                    marginBottom: 16,
-                  }}
-                >
+                <Body variant="small" color="secondary" style={{ textAlign: "center", marginBottom: 20 }}>
                   {targetProfile.bio}
-                </Text>
+                </Body>
               )}
 
               {/* Stats */}
@@ -220,104 +175,52 @@ export default function UserProfileScreen() {
                   flexDirection: "row",
                   gap: 32,
                   marginBottom: 20,
+                  paddingTop: 16,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
+                  width: '100%',
+                  justifyContent: 'space-around',
                 }}
               >
                 <View style={{ alignItems: "center" }}>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_600SemiBold",
-                      fontSize: 20,
-                      color: colors.text,
-                    }}
-                  >
-                    {targetStats?.postCount || 0}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_400Regular",
-                      fontSize: 14,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    Posts
-                  </Text>
+                  <Heading variant="h3">{targetStats?.postCount || 0}</Heading>
+                  <Caption color="secondary">Posts</Caption>
                 </View>
                 <TouchableOpacity
                   onPress={() => router.push(`/user/followers/${targetUserId}`)}
                   style={{ alignItems: "center" }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_600SemiBold",
-                      fontSize: 20,
-                      color: colors.accent,
-                    }}
-                  >
+                  <Heading variant="h3" style={{ color: colors.accent }}>
                     {targetStats?.followerCount || 0}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_400Regular",
-                      fontSize: 14,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    Followers
-                  </Text>
+                  </Heading>
+                  <Caption color="secondary">Followers</Caption>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push(`/user/following/${targetUserId}`)}
                   style={{ alignItems: "center" }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_600SemiBold",
-                      fontSize: 20,
-                      color: colors.accent,
-                    }}
-                  >
+                  <Heading variant="h3" style={{ color: colors.accent }}>
                     {targetStats?.followingCount || 0}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_400Regular",
-                      fontSize: 14,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    Following
-                  </Text>
+                  </Heading>
+                  <Caption color="secondary">Following</Caption>
                 </TouchableOpacity>
               </View>
 
               {/* Action Buttons */}
               {!isOwnProfile && (
                 <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
-                  <TouchableOpacity
+                  <Button
+                    variant={isFollowing ? "ghost" : "primary"}
                     onPress={handleFollowToggle}
                     disabled={followMutation.isPending || unfollowMutation.isPending}
-                    style={{
-                      flex: 1,
-                      backgroundColor: isFollowing ? colors.inputBackground : colors.primary,
-                      paddingVertical: 12,
-                      borderRadius: radius.button,
-                      alignItems: "center",
-                    }}
+                    style={{ flex: 1 }}
                   >
                     {followMutation.isPending || unfollowMutation.isPending ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
+                      <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
                     ) : (
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_600SemiBold",
-                          fontSize: 16,
-                          color: isFollowing ? colors.text : "#FFFFFF",
-                        }}
-                      >
-                        {isFollowing ? "Following" : "Follow"}
-                      </Text>
+                      isFollowing ? "Following" : "Follow"
                     )}
-                  </TouchableOpacity>
+                  </Button>
 
                   <TouchableOpacity
                     onPress={handleMessage}
@@ -326,52 +229,42 @@ export default function UserProfileScreen() {
                       backgroundColor: colors.accentSubtle,
                       paddingVertical: 12,
                       paddingHorizontal: 20,
-                      borderRadius: radius.button,
+                      borderRadius: 24,
                       alignItems: "center",
                       justifyContent: "center",
+                      minHeight: 48,
                     }}
                   >
                     {createChatMutation.isPending ? (
                       <ActivityIndicator size="small" color={colors.accent} />
                     ) : (
-                      <MessageCircle size={20} color={colors.accent} />
+                      <MessageCircle size={20} color={colors.accent} strokeWidth={2} />
                     )}
                   </TouchableOpacity>
                 </View>
               )}
-            </View>
+            </Card>
 
             {/* User's Posts */}
-            <View style={{ paddingHorizontal: 16 }}>
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 18,
-                  color: colors.text,
-                  marginBottom: 16,
-                }}
-              >
+            <View style={{ paddingHorizontal: 20 }}>
+              <Heading variant="h3" style={{ marginBottom: 16 }}>
                 Posts
-              </Text>
+              </Heading>
 
               {postsLoading ? (
                 <ActivityIndicator size="large" color={colors.primary} />
               ) : targetPosts && targetPosts.length > 0 ? (
                 targetPosts.map((post) => (
-                  <TouchableOpacity
+                  <Card
                     key={post.id}
+                    interactive
                     onPress={() =>
                       router.push({
                         pathname: `/post/${post.id}`,
                         params: { post: JSON.stringify(post) },
                       })
                     }
-                    style={{
-                      backgroundColor: colors.card,
-                      padding: 16,
-                      borderRadius: radius.card,
-                      marginBottom: 12,
-                    }}
+                    style={{ marginBottom: 12 }}
                   >
                     {/* Post Header */}
                     <View
@@ -381,29 +274,15 @@ export default function UserProfileScreen() {
                         marginBottom: 8,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_400Regular",
-                          fontSize: 12,
-                          color: colors.textSecondary,
-                        }}
-                      >
+                      <Caption color="secondary">
                         {formatTime(post.created_at)}
-                      </Text>
+                      </Caption>
                     </View>
 
                     {/* Post Content */}
-                    <Text
-                      style={{
-                        fontFamily: "Poppins_400Regular",
-                        fontSize: 15,
-                        color: colors.text,
-                        lineHeight: 22,
-                        marginBottom: 8,
-                      }}
-                    >
+                    <Body style={{ lineHeight: 22, marginBottom: 8 }}>
                       {post.content}
-                    </Text>
+                    </Body>
 
                     {/* Location */}
                     {post.location_name && (
@@ -415,54 +294,27 @@ export default function UserProfileScreen() {
                         }}
                       >
                         <MapPin size={12} color={colors.textSecondary} />
-                        <Text
-                          style={{
-                            fontFamily: "Poppins_400Regular",
-                            fontSize: 12,
-                            color: colors.textSecondary,
-                            marginLeft: 4,
-                          }}
-                        >
+                        <Caption color="secondary" style={{ marginLeft: 4 }}>
                           {post.location_name}
-                        </Text>
+                        </Caption>
                       </View>
                     )}
 
                     {/* Stats */}
                     <View style={{ flexDirection: "row", gap: 16 }}>
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_400Regular",
-                          fontSize: 13,
-                          color: colors.textSecondary,
-                        }}
-                      >
+                      <Caption color="secondary">
                         {post.score || 0} votes
-                      </Text>
-                      <Text
-                        style={{
-                          fontFamily: "Poppins_400Regular",
-                          fontSize: 13,
-                          color: colors.textSecondary,
-                        }}
-                      >
+                      </Caption>
+                      <Caption color="secondary">
                         {post.comment_count || 0} comments
-                      </Text>
+                      </Caption>
                     </View>
-                  </TouchableOpacity>
+                  </Card>
                 ))
               ) : (
-                <Text
-                  style={{
-                    fontFamily: "Poppins_400Regular",
-                    fontSize: 14,
-                    color: colors.textSecondary,
-                    textAlign: "center",
-                    marginTop: 20,
-                  }}
-                >
+                <Caption color="secondary" style={{ textAlign: "center", marginTop: 20 }}>
                   No posts yet
-                </Text>
+                </Caption>
               )}
             </View>
           </>

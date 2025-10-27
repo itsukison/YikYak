@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   View,
-  Text,
   FlatList,
   TextInput,
   TouchableOpacity,
@@ -12,11 +11,6 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Send } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -27,6 +21,7 @@ import {
 } from "../../utils/queries/chats";
 import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
+import { Heading, Body, Caption } from "../../components/ui";
 
 export default function ChatDetailScreen() {
   const { id: chatId } = useLocalSearchParams();
@@ -41,11 +36,6 @@ export default function ChatDetailScreen() {
   const { data: messages, isLoading } = useChatMessagesQuery(chatId);
   const sendMessageMutation = useSendMessageMutation();
   const markReadMutation = useMarkMessagesReadMutation();
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_600SemiBold,
-  });
 
   // Subscribe to new messages
   useEffect(() => {
@@ -73,10 +63,6 @@ export default function ChatDetailScreen() {
       }, 100);
     }
   }, [messages]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   if (!user) {
     return (
@@ -125,53 +111,46 @@ export default function ChatDetailScreen() {
     return (
       <View
         style={{
-          marginBottom: 12,
-          paddingHorizontal: 16,
+          marginBottom: 16,
+          paddingHorizontal: 20,
           alignItems: isOwnMessage ? "flex-end" : "flex-start",
         }}
       >
         {showSenderName && (
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 12,
-              color: colors.textSecondary,
-              marginBottom: 4,
-              marginLeft: isOwnMessage ? 0 : 12,
-            }}
+          <Caption 
+            color="secondary"
+            style={{ marginBottom: 4, marginLeft: isOwnMessage ? 0 : 12 }}
           >
             {displayName}
-          </Text>
+          </Caption>
         )}
         <View
           style={{
-            backgroundColor: isOwnMessage ? colors.primary : colors.accentSubtle,
+            backgroundColor: isOwnMessage ? colors.primary : colors.inputBackground,
             paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderRadius: radius.input,
+            paddingVertical: 12,
+            borderRadius: 16,
             maxWidth: "75%",
           }}
         >
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 15,
-              color: isOwnMessage ? "#FFFFFF" : colors.text,
+          <Body 
+            style={{ 
+              color: isOwnMessage ? colors.primaryText : colors.text,
               lineHeight: 22,
             }}
           >
             {item.content}
-          </Text>
-          <Text
+          </Body>
+          <Caption
             style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 11,
-              color: isOwnMessage ? "#FFFFFF99" : colors.textSecondary,
+              color: isOwnMessage 
+                ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
+                : colors.textSecondary,
               marginTop: 4,
             }}
           >
             {formatTime(item.created_at)}
-          </Text>
+          </Caption>
         </View>
       </View>
     );
@@ -196,7 +175,7 @@ export default function ChatDetailScreen() {
         {/* Header */}
         <View
           style={{
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             paddingTop: 60,
             paddingBottom: 16,
             flexDirection: "row",
@@ -207,20 +186,19 @@ export default function ChatDetailScreen() {
         >
           <TouchableOpacity
             onPress={() => router.back()}
-            style={{ marginRight: 12 }}
+            style={{ 
+              marginRight: 12,
+              width: 48,
+              height: 48,
+              justifyContent: 'center',
+              alignItems: 'flex-start'
+            }}
           >
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text
-            style={{
-              fontFamily: "Poppins_600SemiBold",
-              fontSize: 20,
-              color: colors.text,
-              flex: 1,
-            }}
-          >
+          <Heading variant="h2" style={{ flex: 1 }}>
             {otherUserName}
-          </Text>
+          </Heading>
         </View>
 
         {/* Messages List */}
@@ -244,8 +222,8 @@ export default function ChatDetailScreen() {
           style={{
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 16,
             borderTopWidth: 1,
             borderTopColor: colors.border,
             backgroundColor: colors.background,
@@ -259,13 +237,13 @@ export default function ChatDetailScreen() {
             style={{
               flex: 1,
               backgroundColor: colors.inputBackground,
-              borderRadius: radius.button,
+              borderRadius: 24,
               paddingHorizontal: 16,
-              paddingVertical: 10,
-              fontFamily: "Poppins_400Regular",
-              fontSize: 15,
+              paddingVertical: 12,
+              fontSize: 16,
               color: colors.text,
-              marginRight: 8,
+              marginRight: 12,
+              minHeight: 48,
             }}
             multiline
             maxLength={500}
@@ -275,17 +253,17 @@ export default function ChatDetailScreen() {
             disabled={!message.trim() || sendMessageMutation.isPending}
             style={{
               backgroundColor: message.trim() ? colors.primary : colors.border,
-              width: 44,
-              height: 44,
-              borderRadius: radius.button,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
             {sendMessageMutation.isPending ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
-              <Send size={20} color="#FFFFFF" />
+              <Send size={20} color={colors.primaryText} strokeWidth={2} />
             )}
           </TouchableOpacity>
         </View>

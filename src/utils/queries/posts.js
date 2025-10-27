@@ -2,15 +2,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 
 // Fetch posts within radius
-export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new', enabled = true) {
+export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new', timeFilter = 'week', enabled = true) {
   return useQuery({
-    queryKey: ['posts', latitude, longitude, radius, sortBy],
+    queryKey: ['posts', latitude, longitude, radius, sortBy, timeFilter],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_posts_within_radius', {
         user_lat: latitude,
         user_lon: longitude,
         radius_meters: radius,
         sort_by: sortBy,
+        time_filter: timeFilter,
         limit_count: 20,
       });
 

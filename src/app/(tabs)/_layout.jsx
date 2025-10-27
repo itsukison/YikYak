@@ -1,25 +1,17 @@
 import { Tabs, useRouter } from "expo-router";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import { Home, MessageCircle, Bell, User } from "lucide-react-native";
-import { useFonts, Poppins_600SemiBold } from "@expo-google-fonts/poppins";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { useUnreadCountQuery } from "../../utils/queries/notifications";
 import { useEffect } from "react";
+import { Badge } from "../../components/ui";
 
 export default function TabLayout() {
   const { colors, radius } = useTheme();
   const { user, loading } = useAuth();
   const router = useRouter();
   const { data: unreadCount } = useUnreadCountQuery(user?.id);
-
-  const [fontsLoaded] = useFonts({
-    Poppins_600SemiBold,
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   // Root layout handles auth routing, just show loading if needed
   if (loading || !user) {
@@ -33,15 +25,16 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.tabBarBackground,
           borderTopWidth: 1,
-          borderTopColor: colors.tabBarBorder,
+          borderTopColor: colors.border,
           paddingBottom: 8,
           paddingTop: 8,
+          height: 64,
         },
-        tabBarActiveTintColor: colors.tabBarActive,
-        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
-          fontFamily: "Poppins_600SemiBold",
           fontSize: 12,
+          fontWeight: '600',
           marginTop: 4,
         },
         tabBarIconStyle: {
@@ -72,32 +65,19 @@ export default function TabLayout() {
         options={{
           title: "Notifications",
           tabBarIcon: ({ color, size }) => (
-            <View>
+            <View style={{ position: 'relative' }}>
               <Bell color={color} size={24} strokeWidth={2} />
               {unreadCount > 0 && (
                 <View
                   style={{
                     position: "absolute",
-                    top: -4,
-                    right: -8,
-                    backgroundColor: colors.error,
-                    borderRadius: radius.avatar,
-                    minWidth: 18,
-                    height: 18,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingHorizontal: 4,
+                    top: -6,
+                    right: -10,
                   }}
                 >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 11,
-                      fontFamily: "Poppins_600SemiBold",
-                    }}
-                  >
+                  <Badge variant="error" size="sm">
                     {unreadCount > 99 ? "99+" : unreadCount}
-                  </Text>
+                  </Badge>
                 </View>
               )}
             </View>

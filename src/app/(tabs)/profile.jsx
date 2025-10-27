@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
   ScrollView,
   Alert,
   Switch,
@@ -17,21 +16,14 @@ import {
   User,
   UserX,
   MapPin,
-  Users,
-  FileText,
 } from "lucide-react-native";
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-} from "@expo-google-fonts/poppins";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { useProfileStatsQuery } from "../../utils/queries/profile";
 import { useQueryClient } from "@tanstack/react-query";
 import AppBackground from "../../components/AppBackground";
 import MenuItem from "../../components/MenuItem";
+import { Container, Section, Heading, Body, Caption, Card, Avatar } from "../../components/ui";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -44,12 +36,6 @@ export default function ProfileScreen() {
   const [locationRadius, setLocationRadius] = useState(
     profile?.location_radius ? profile.location_radius / 1000 : 5
   );
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-  });
 
   // Fetch real stats from database
   const { data: stats } = useProfileStatsQuery(user?.id);
@@ -80,18 +66,12 @@ export default function ProfileScreen() {
     }
   }, [profile?.location_radius]);
 
-  if (!fontsLoaded) {
-    return null;
-  }
-
   // If no user or profile, show loading (root layout will handle redirect)
   if (!user || !profile) {
     return (
       <AppBackground>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Poppins_400Regular', fontSize: 16, color: colors.text }}>
-            Loading profile...
-          </Text>
+          <Body>Loading profile...</Body>
         </View>
       </AppBackground>
     );
@@ -262,17 +242,9 @@ export default function ProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Text
-          style={{
-            fontFamily: "Poppins_600SemiBold",
-            fontSize: 28,
-            color: colors.text,
-            textAlign: "center",
-            paddingHorizontal: 16,
-          }}
-        >
+        <Heading variant="h1" style={{ textAlign: "center", paddingHorizontal: 16 }}>
           Profile
-        </Text>
+        </Heading>
       </View>
 
       <ScrollView
@@ -287,71 +259,23 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
       >
         {/* Profile Header */}
-        <View
-          style={{
-            alignItems: "center",
-            marginBottom: 24,
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            padding: 24,
-            shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 1,
-            shadowRadius: 3,
-            elevation: 2,
-          }}
-        >
+        <Card style={{ alignItems: "center", marginBottom: 24 }}>
           {/* Profile Avatar */}
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              backgroundColor: colors.primary,
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            {isAnonymous ? (
-              <UserX size={32} color="#FFFFFF" strokeWidth={2} />
-            ) : (
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 28,
-                  color: "#FFFFFF",
-                }}
-              >
-                {currentUser.nickname.charAt(0).toUpperCase()}
-              </Text>
-            )}
-          </View>
+          <Avatar
+            size="xlarge"
+            name={currentUser.nickname}
+            style={{ marginBottom: 16 }}
+          />
 
           {/* User Name */}
-          <Text
-            style={{
-              fontFamily: "Poppins_600SemiBold",
-              fontSize: 22,
-              color: colors.text,
-              marginBottom: 4,
-            }}
-          >
+          <Heading variant="h2" style={{ marginBottom: 4 }}>
             {isAnonymous ? "Anonymous User" : currentUser.nickname}
-          </Text>
+          </Heading>
 
           {/* User Email/Bio */}
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 14,
-              color: colors.textSecondary,
-              textAlign: "center",
-              marginBottom: 16,
-            }}
-          >
+          <Body variant="small" color="secondary" style={{ textAlign: "center", marginBottom: 20 }}>
             {isAnonymous ? "Your identity is hidden" : currentUser.bio}
-          </Text>
+          </Body>
 
           {/* Stats */}
           <View
@@ -359,112 +283,45 @@ export default function ProfileScreen() {
               flexDirection: "row",
               justifyContent: "space-around",
               width: "100%",
+              paddingTop: 16,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
             }}
           >
-            <View style={{ alignItems: "center" }}>
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 18,
-                  color: colors.text,
-                }}
-              >
-                {currentUser.post_count}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                }}
-              >
-                Posts
-              </Text>
+            <View style={{ alignItems: "center", flex: 1 }}>
+              <Heading variant="h2">{currentUser.post_count}</Heading>
+              <Caption color="secondary">Posts</Caption>
             </View>
 
             <TouchableOpacity
               onPress={() => router.push(`/user/following/${user.id}`)}
-              style={{ alignItems: "center" }}
+              style={{ alignItems: "center", flex: 1 }}
             >
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 18,
-                  color: colors.accent,
-                }}
-              >
+              <Heading variant="h2" style={{ color: colors.accent }}>
                 {currentUser.following_count}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                }}
-              >
-                Following
-              </Text>
+              </Heading>
+              <Caption color="secondary">Following</Caption>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push(`/user/followers/${user.id}`)}
-              style={{ alignItems: "center" }}
+              style={{ alignItems: "center", flex: 1 }}
             >
-              <Text
-                style={{
-                  fontFamily: "Poppins_600SemiBold",
-                  fontSize: 18,
-                  color: colors.accent,
-                }}
-              >
+              <Heading variant="h2" style={{ color: colors.accent }}>
                 {currentUser.follower_count}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: "Poppins_400Regular",
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                }}
-              >
-                Followers
-              </Text>
+              </Heading>
+              <Caption color="secondary">Followers</Caption>
             </TouchableOpacity>
           </View>
-        </View>
+        </Card>
 
         {/* Account Settings */}
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            paddingVertical: 8,
-            marginBottom: 16,
-            shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 1,
-            shadowRadius: 3,
-            elevation: 2,
-          }}
-        >
-          <View
-            style={{
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.border,
-              marginBottom: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Poppins_600SemiBold",
-                fontSize: 16,
-                color: colors.text,
-              }}
-            >
-              Account Settings
-            </Text>
-          </View>
+        <Section spacing="md">
+          <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+            Account Settings
+          </Heading>
+          
+          <Card style={{ paddingVertical: 8 }}>
 
           {accountMenuItems.map((item, index) => (
             <View key={index}>
@@ -497,26 +354,12 @@ export default function ProfileScreen() {
 
                 {/* Text Content */}
                 <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_500Medium",
-                      fontSize: 16,
-                      color: colors.text,
-                      marginBottom: 2,
-                    }}
-                  >
+                  <Body weight="medium" style={{ marginBottom: 2 }}>
                     {item.title}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Poppins_400Regular",
-                      fontSize: 13,
-                      color: colors.textSecondary,
-                      lineHeight: 18,
-                    }}
-                  >
+                  </Body>
+                  <Caption color="secondary">
                     {item.subtitle}
-                  </Text>
+                  </Caption>
                 </View>
 
                 {/* Right Component */}
@@ -524,15 +367,9 @@ export default function ProfileScreen() {
                   item.rightComponent
                 ) : item.showChevron !== false ? (
                   <TouchableOpacity onPress={item.onPress}>
-                    <Text
-                      style={{
-                        fontFamily: "Poppins_500Medium",
-                        fontSize: 14,
-                        color: colors.primary,
-                      }}
-                    >
+                    <Body variant="small" weight="medium" style={{ color: colors.primary }}>
                       Change
-                    </Text>
+                    </Body>
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -548,21 +385,16 @@ export default function ProfileScreen() {
               )}
             </View>
           ))}
-        </View>
+          </Card>
+        </Section>
 
         {/* App Settings */}
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: radius.card,
-            paddingVertical: 8,
-            shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 1,
-            shadowRadius: 3,
-            elevation: 2,
-          }}
-        >
+        <Section spacing="md">
+          <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+            App Settings
+          </Heading>
+          
+          <Card style={{ paddingVertical: 8 }}>
           {appMenuItems.map((item, index) => (
             <MenuItem
               key={index}
@@ -573,25 +405,20 @@ export default function ProfileScreen() {
               showDivider={index < appMenuItems.length - 1}
             />
           ))}
-        </View>
+          </Card>
+        </Section>
 
         {/* App Version */}
         <View
           style={{
             alignItems: "center",
-            marginTop: 32,
+            marginTop: 48,
+            marginBottom: 20,
           }}
         >
-          <Text
-            style={{
-              fontFamily: "Poppins_400Regular",
-              fontSize: 12,
-              color: colors.textTertiary,
-              letterSpacing: 0.5,
-            }}
-          >
+          <Caption color="tertiary" style={{ letterSpacing: 0.5 }}>
             HearSay Japan v1.0.0
-          </Text>
+          </Caption>
         </View>
       </ScrollView>
     </AppBackground>

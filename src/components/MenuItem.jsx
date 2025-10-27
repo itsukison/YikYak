@@ -1,8 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { useTheme } from '../utils/theme';
+import { Body, Caption } from './ui/Text';
 
+/**
+ * MenuItem component - Clean menu item with icon and text
+ * Artifact-inspired with proper spacing and typography
+ */
 export default function MenuItem({ 
   Icon, 
   title, 
@@ -11,17 +16,18 @@ export default function MenuItem({
   showDivider = false,
   showChevron = true 
 }) {
-  const { colors, radius } = useTheme();
+  const { colors, radius, spacing } = useTheme();
 
   return (
     <>
       <TouchableOpacity
         onPress={onPress}
+        activeOpacity={0.7}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          paddingVertical: 16,
-          paddingHorizontal: 16,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.lg,
         }}
       >
         {/* Icon */}
@@ -33,41 +39,27 @@ export default function MenuItem({
             backgroundColor: colors.inputBackground,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 12,
+            marginRight: spacing.md,
           }}
         >
-          <Icon size={20} color={colors.accent} strokeWidth={1.5} />
+          <Icon size={20} color={colors.text} strokeWidth={2} />
         </View>
 
         {/* Text Content */}
         <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              fontFamily: 'Poppins_500Medium',
-              fontSize: 16,
-              color: colors.text,
-              marginBottom: 2,
-            }}
-          >
+          <Body variant="bodyMedium" style={{ marginBottom: spacing.xs }}>
             {title}
-          </Text>
+          </Body>
           {subtitle && (
-            <Text
-              style={{
-                fontFamily: 'Poppins_400Regular',
-                fontSize: 13,
-                color: colors.textSecondary,
-                lineHeight: 18,
-              }}
-            >
+            <Caption color={colors.textSecondary}>
               {subtitle}
-            </Text>
+            </Caption>
           )}
         </View>
 
         {/* Chevron */}
         {showChevron && (
-          <ChevronRight size={20} color={colors.textSecondary} strokeWidth={1.5} />
+          <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
         )}
       </TouchableOpacity>
 

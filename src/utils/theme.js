@@ -1,9 +1,10 @@
 import { useColorScheme } from "react-native";
 
 /**
- * Artifact-inspired theme system
- * Clean, modern, spacious design with bold typography
- * Color palette: Black, White, Pale Blue (#B7D4FF), Orange (#FF5A1F)
+ * Modern theme system with layered backgrounds
+ * Sophisticated color palette with subtle shading for depth
+ * Dark mode: Layered grays (0%, 5%, 10%) with blue accents
+ * Light mode: Layered whites (100%, 95%, 90%) with blue accents
  */
 
 export const useTheme = () => {
@@ -11,64 +12,67 @@ export const useTheme = () => {
   const isDark = colorScheme === "dark";
 
   const colors = {
-    // Background colors - Artifact-inspired clean aesthetic
-    background: isDark ? "#000000" : "#F8F9FA", // Light gray for app background
-    surface: isDark ? "#1A1A1A" : "#FFFFFF", // White for cards
-    surfaceElevated: isDark ? "#1A1A1A" : "#FFFFFF",
-    sectionBackground: isDark ? "#0A0A0A" : "#F8F9FA",
+    // Background colors - layered approach for depth
+    // bg-dark (deepest/app background) → bg (cards/surfaces) → bg-light (elevated/hover)
+    background: isDark ? "hsl(0, 0%, 0%)" : "hsl(0, 0%, 100%)", // Deepest layer
+    surface: isDark ? "hsl(0, 0%, 5%)" : "hsl(0, 0%, 95%)", // Main surfaces, cards
+    surfaceElevated: isDark ? "hsl(0, 0%, 10%)" : "hsl(0, 0%, 90%)", // Elevated surfaces, hover states
+    sectionBackground: isDark ? "hsl(0, 0%, 0%)" : "hsl(0, 0%, 100%)",
 
-    // Text colors - high contrast for readability
-    text: isDark ? "#FFFFFF" : "#000000",
-    textSecondary: isDark ? "#A0A0A0" : "#6B7280",
-    textTertiary: isDark ? "#808080" : "#9CA3AF",
+    // Text colors - optimized for each mode
+    text: isDark ? "hsl(0, 0%, 95%)" : "hsl(0, 0%, 5%)",
+    textSecondary: isDark ? "hsl(0, 0%, 70%)" : "hsl(0, 0%, 30%)",
+    textTertiary: isDark ? "hsl(0, 0%, 50%)" : "hsl(0, 0%, 50%)",
 
-    // Primary CTA - Black (Artifact-inspired)
-    primary: isDark ? "#FFFFFF" : "#000000",
-    primaryText: isDark ? "#000000" : "#FFFFFF",
-    primarySubtle: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
+    // Primary CTA - Blue accent (modern, sophisticated)
+    primary: isDark ? "#60A5FA" : "#4998e9",
+    primaryText: isDark ? "hsl(0, 0%, 95%)" : "hsl(0, 0%, 100%)",
+    primarySubtle: isDark
+      ? "rgba(96, 165, 250, 0.15)"
+      : "rgba(73, 152, 233, 0.1)",
 
-    // Secondary CTA - Orange (Artifact-inspired)
-    secondary: isDark ? "#FF6B3D" : "#FF5A1F",
-    secondaryText: "#FFFFFF",
+    // Secondary CTA - Lighter blue for secondary actions
+    secondary: isDark ? "#A5B4FC" : "#ebf5fd",
+    secondaryText: isDark ? "hsl(0, 0%, 95%)" : "hsl(0, 0%, 5%)",
     secondarySubtle: isDark
-      ? "rgba(255, 107, 61, 0.2)"
-      : "rgba(255, 90, 31, 0.15)",
+      ? "rgba(165, 180, 252, 0.15)"
+      : "rgba(235, 245, 253, 0.5)",
 
-    // Accent - Pale Blue (Artifact-inspired)
-    accent: isDark ? "#A0C4FF" : "#B7D4FF",
-    accentText: isDark ? "#FFFFFF" : "#000000",
+    // Accent - Same as primary for consistency
+    accent: isDark ? "#60A5FA" : "#4998e9",
+    accentText: isDark ? "hsl(0, 0%, 95%)" : "hsl(0, 0%, 100%)",
     accentSubtle: isDark
-      ? "rgba(160, 196, 255, 0.2)"
-      : "rgba(183, 212, 255, 0.3)",
+      ? "rgba(96, 165, 250, 0.15)"
+      : "rgba(73, 152, 233, 0.1)",
 
-    // Interactive colors - clean borders
-    border: isDark ? "#2D2D2D" : "#E5E7EB",
-    borderLight: isDark ? "#1A1A1A" : "#F3F4F6",
+    // Borders - subtle, slightly lighter/darker than surface
+    border: isDark ? "hsl(0, 0%, 15%)" : "hsl(0, 0%, 85%)",
+    borderLight: isDark ? "hsl(0, 0%, 10%)" : "hsl(0, 0%, 90%)",
 
     // Status colors
-    error: isDark ? "#FF6B6B" : "#EF4444",
+    error: isDark ? "#F87171" : "#EF4444",
     errorSubtle: isDark
-      ? "rgba(255, 107, 107, 0.2)"
-      : "rgba(239, 68, 68, 0.15)",
+      ? "rgba(248, 113, 113, 0.15)"
+      : "rgba(239, 68, 68, 0.1)",
     success: isDark ? "#4ADE80" : "#10B981",
     warning: isDark ? "#FBBF24" : "#F59E0B",
 
     // Tab bar colors
-    tabBarBackground: isDark ? "#1A1A1A" : "#FFFFFF",
-    tabBarBorder: isDark ? "#2D2D2D" : "#E5E7EB",
-    tabBarActive: isDark ? "#FFFFFF" : "#000000",
-    tabBarInactive: isDark ? "#808080" : "#6B7280",
+    tabBarBackground: isDark ? "hsl(0, 0%, 5%)" : "hsl(0, 0%, 95%)",
+    tabBarBorder: isDark ? "hsl(0, 0%, 15%)" : "hsl(0, 0%, 85%)",
+    tabBarActive: isDark ? "#60A5FA" : "#4998e9",
+    tabBarInactive: isDark ? "hsl(0, 0%, 70%)" : "hsl(0, 0%, 30%)",
 
     // Card and input backgrounds
-    inputBackground: isDark ? "#1A1A1A" : "#F8F9FA",
-    cardBackground: isDark ? "#1A1A1A" : "#FFFFFF",
+    inputBackground: isDark ? "hsl(0, 0%, 5%)" : "hsl(0, 0%, 95%)",
+    cardBackground: isDark ? "hsl(0, 0%, 5%)" : "hsl(0, 0%, 95%)",
 
-    // Ghost button (light gray background)
-    ghost: isDark ? "#2D2D2D" : "#F3F4F6",
-    ghostText: isDark ? "#FFFFFF" : "#000000",
+    // Ghost button (subtle background)
+    ghost: isDark ? "hsl(0, 0%, 10%)" : "hsl(0, 0%, 90%)",
+    ghostText: isDark ? "hsl(0, 0%, 95%)" : "hsl(0, 0%, 5%)",
 
-    // Shadow colors - minimal elevation
-    shadow: isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.06)",
+    // Shadow colors - appropriate for each mode
+    shadow: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.1)",
   };
 
   // 4px-based spacing scale
@@ -210,6 +214,8 @@ export const useTheme = () => {
   };
 
   // Shadow presets
+  // Dark mode: subtle light lift effects for depth
+  // Light mode: soft black shadows for elevation
   const shadows = {
     none: {
       shadowColor: "transparent",
@@ -219,24 +225,24 @@ export const useTheme = () => {
       elevation: 0,
     },
     minimal: {
-      shadowColor: colors.shadow,
+      shadowColor: isDark ? "#FFFFFF" : "#000000",
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: isDark ? 0.5 : 0.06,
-      shadowRadius: 3,
+      shadowOpacity: isDark ? 0.05 : 0.1,
+      shadowRadius: 2,
       elevation: 1,
     },
     small: {
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.5 : 0.08,
-      shadowRadius: 4,
+      shadowColor: isDark ? "#FFFFFF" : "#000000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: isDark ? 0.05 : 0.1,
+      shadowRadius: 3,
       elevation: 2,
     },
     medium: {
-      shadowColor: colors.shadow,
+      shadowColor: isDark ? "#FFFFFF" : "#000000",
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDark ? 0.5 : 0.1,
-      shadowRadius: 8,
+      shadowOpacity: isDark ? 0.08 : 0.12,
+      shadowRadius: 12,
       elevation: 4,
     },
   };
@@ -252,43 +258,44 @@ export const useTheme = () => {
   };
 };
 
-// Gluestack UI theme configuration
+// Gluestack UI theme configuration (Light mode defaults)
 export const gluestackConfig = {
   tokens: {
     colors: {
-      // Primary colors
-      primary: "#000000",
+      // Primary colors - Blue accent
+      primary: "#4998e9",
       primaryText: "#FFFFFF",
-      
-      // Secondary colors
-      secondary: "#FF5A1F",
-      secondaryText: "#FFFFFF",
-      
-      // Accent colors
-      accent: "#B7D4FF",
-      accentText: "#000000",
-      
-      // Background colors
-      background: "#F8F9FA",
-      surface: "#FFFFFF",
-      
+
+      // Secondary colors - Light blue
+      secondary: "#ebf5fd",
+      secondaryText: "hsl(0, 0%, 5%)",
+
+      // Accent colors - Same as primary
+      accent: "#4998e9",
+      accentText: "#FFFFFF",
+
+      // Background colors - Layered whites
+      background: "hsl(0, 0%, 100%)",
+      surface: "hsl(0, 0%, 95%)",
+      surfaceElevated: "hsl(0, 0%, 90%)",
+
       // Text colors
-      text: "#000000",
-      textSecondary: "#6B7280",
-      textTertiary: "#9CA3AF",
-      
+      text: "hsl(0, 0%, 5%)",
+      textSecondary: "hsl(0, 0%, 30%)",
+      textTertiary: "hsl(0, 0%, 50%)",
+
       // Border colors
-      border: "#E5E7EB",
-      borderLight: "#F3F4F6",
-      
+      border: "hsl(0, 0%, 85%)",
+      borderLight: "hsl(0, 0%, 90%)",
+
       // Status colors
       error: "#EF4444",
       success: "#10B981",
       warning: "#F59E0B",
-      
+
       // Ghost button
-      ghost: "#F3F4F6",
-      ghostText: "#000000",
+      ghost: "hsl(0, 0%, 90%)",
+      ghostText: "hsl(0, 0%, 5%)",
     },
     space: {
       xs: 4,

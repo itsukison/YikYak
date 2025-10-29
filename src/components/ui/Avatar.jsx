@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import { useTheme } from "../../utils/theme";
 
 /**
@@ -24,39 +25,15 @@ export default function Avatar({
     xlarge: { width: 96, height: 96 },
   };
 
-  const textSizes = {
-    small: { fontSize: 14, fontWeight: "600" },
-    medium: { fontSize: 18, fontWeight: "600" },
-    large: { fontSize: 28, fontWeight: "700" },
-    xlarge: { fontSize: 40, fontWeight: "700" },
+  const iconSizes = {
+    small: 18,
+    medium: 28,
+    large: 38,
+    xlarge: 56,
   };
 
-  // Get initials from name
-  const getInitials = (name) => {
-    if (!name) return "?";
-    const parts = name.trim().split(" ");
-    if (parts.length === 1) return parts[0][0].toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
-  // Generate a consistent color based on name
-  const getColorFromName = (name) => {
-    if (!name) return colors.accent;
-    const colors_list = [
-      "#FF5A1F", // Orange
-      "#B7D4FF", // Pale Blue
-      "#10B981", // Green
-      "#F59E0B", // Yellow
-      "#EF4444", // Red
-      "#8B5CF6", // Purple
-    ];
-    const index =
-      name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-      colors_list.length;
-    return colors_list[index];
-  };
-
-  const backgroundColor = getColorFromName(name);
+  // Use theme-based background color instead of random colors
+  const backgroundColor = colors.surfaceElevated;
 
   return (
     <View
@@ -84,14 +61,11 @@ export default function Avatar({
           resizeMode="cover"
         />
       ) : (
-        <Text
-          style={{
-            color: "#FFFFFF",
-            ...textSizes[normalizedSize],
-          }}
-        >
-          {getInitials(name)}
-        </Text>
+        <MaterialIcons
+          name="person"
+          size={iconSizes[normalizedSize]}
+          color={colors.textSecondary}
+        />
       )}
     </View>
   );

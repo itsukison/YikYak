@@ -9,14 +9,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import {
-  Settings,
-  HelpCircle,
-  LogOut,
-  User,
-  UserX,
-  MapPin,
-} from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { useProfileStatsQuery } from "../../utils/queries/profile";
@@ -175,7 +168,7 @@ export default function ProfileScreen() {
 
   const accountMenuItems = [
     {
-      icon: isAnonymous ? UserX : User,
+      icon: isAnonymous ? "person-off" : "person",
       title: "Anonymous Mode",
       subtitle: isAnonymous
         ? "You're posting anonymously"
@@ -195,7 +188,7 @@ export default function ProfileScreen() {
       ),
     },
     {
-      icon: MapPin,
+      icon: "place",
       title: "Location Radius",
       subtitle: `See posts within ${locationRadius}km of your location`,
       onPress: handleLocationRadius,
@@ -204,19 +197,19 @@ export default function ProfileScreen() {
 
   const appMenuItems = [
     {
-      icon: Settings,
+      icon: "settings",
       title: "Settings",
       subtitle: "Notifications, privacy, and more",
       onPress: handleSettings,
     },
     {
-      icon: HelpCircle,
+      icon: "help",
       title: "Help & Support",
       subtitle: "Get help or contact us",
       onPress: handleHelp,
     },
     {
-      icon: LogOut,
+      icon: "logout",
       title: "Sign Out",
       subtitle: "Sign out of your account",
       onPress: handleSignOut,
@@ -345,10 +338,10 @@ export default function ProfileScreen() {
                     marginRight: 12,
                   }}
                 >
-                  <item.icon
+                  <MaterialIcons
+                    name={item.icon}
                     size={20}
                     color={colors.accent}
-                    strokeWidth={1.5}
                   />
                 </View>
 

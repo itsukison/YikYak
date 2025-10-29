@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Send } from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -194,7 +194,7 @@ export default function ChatDetailScreen() {
               alignItems: 'flex-start'
             }}
           >
-            <ArrowLeft size={24} color={colors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>
             {otherUserName}
@@ -263,7 +263,7 @@ export default function ChatDetailScreen() {
             {sendMessageMutation.isPending ? (
               <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
-              <Send size={20} color={colors.primaryText} strokeWidth={2} />
+              <MaterialIcons name="send" size={20} color={colors.primaryText} />
             )}
           </TouchableOpacity>
         </View>

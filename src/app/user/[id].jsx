@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, MessageCircle, MapPin } from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -136,7 +136,7 @@ export default function UserProfileScreen() {
             alignItems: 'flex-start'
           }}
         >
-          <ArrowLeft size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Heading variant="h2" style={{ flex: 1 }}>Profile</Heading>
       </View>
@@ -238,7 +238,7 @@ export default function UserProfileScreen() {
                     {createChatMutation.isPending ? (
                       <ActivityIndicator size="small" color={colors.accent} />
                     ) : (
-                      <MessageCircle size={20} color={colors.accent} strokeWidth={2} />
+                      <MaterialIcons name="chat-bubble" size={20} color={colors.accent} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -293,7 +293,7 @@ export default function UserProfileScreen() {
                           marginBottom: 8,
                         }}
                       >
-                        <MapPin size={12} color={colors.textSecondary} />
+                        <MaterialIcons name="place" size={12} color={colors.textSecondary} />
                         <Caption color="secondary" style={{ marginLeft: 4 }}>
                           {post.location_name}
                         </Caption>

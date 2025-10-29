@@ -1,5 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../utils/theme';
 import { Heading, Body } from './ui/Text';
@@ -44,7 +45,7 @@ export default function EmptyState({
           marginBottom: spacing["3xl"],
         }}
       >
-        <Icon size={36} color={iconColor || colors.accent} strokeWidth={2} />
+        <MaterialIcons name={Icon} size={36} color={iconColor || colors.accent} />
       </View>
 
       {/* Empty state title */}

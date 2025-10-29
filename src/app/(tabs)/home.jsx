@@ -8,16 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import {
-  Plus,
-  TrendingUp,
-  Clock,
-  MessageCircle,
-  ChevronUp,
-  ChevronDown,
-  MapPin,
-  School,
-} from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery, useVotePostMutation } from "../../utils/queries/posts";
@@ -210,7 +201,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <MapPin size={12} color={colors.accent} />
+            <MaterialIcons name="place" size={12} color={colors.accent} />
             <Caption color="secondary" style={{ marginLeft: spacing.xs }}>
               {post.location_name || formatDistance(post.distance)}
             </Caption>
@@ -248,12 +239,12 @@ export default function HomeScreen() {
                     : colors.inputBackground,
               }}
             >
-              <ChevronUp
+              <MaterialIcons
+                name="keyboard-arrow-up"
                 size={18}
                 color={
                   userVote === 1 ? colors.accent : colors.textSecondary
                 }
-                strokeWidth={2}
               />
               <Body
                 variant="small"
@@ -278,10 +269,10 @@ export default function HomeScreen() {
                 marginLeft: spacing.xs,
               }}
             >
-              <ChevronDown
+              <MaterialIcons
+                name="keyboard-arrow-down"
                 size={18}
                 color={userVote === -1 ? colors.error : colors.textSecondary}
-                strokeWidth={2}
               />
             </TouchableOpacity>
           </View>
@@ -298,7 +289,7 @@ export default function HomeScreen() {
               paddingHorizontal: spacing.md,
             }}
           >
-            <MessageCircle size={16} color={colors.textSecondary} strokeWidth={2} />
+            <MaterialIcons name="chat-bubble" size={16} color={colors.textSecondary} />
             <Caption color="secondary" style={{ marginLeft: spacing.sm }}>
               {post.comment_count || 0}
             </Caption>
@@ -346,7 +337,7 @@ export default function HomeScreen() {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <School size={28} color={colors.primary} strokeWidth={2} />
+            <MaterialIcons name="school" size={28} color={colors.primary} />
             <Heading variant="h1" style={{ marginLeft: 8 }}>
               Campus Feed
             </Heading>
@@ -396,7 +387,8 @@ export default function HomeScreen() {
                 activeTab === "new" ? colors.primary : "transparent",
             }}
           >
-            <Clock
+            <MaterialIcons
+              name="access-time"
               size={16}
               color={activeTab === "new" ? colors.primaryText : colors.textSecondary}
             />
@@ -425,7 +417,8 @@ export default function HomeScreen() {
                 activeTab === "popular" ? colors.primary : "transparent",
             }}
           >
-            <TrendingUp
+            <MaterialIcons
+              name="trending-up"
               size={16}
               color={activeTab === "popular" ? colors.primaryText : colors.textSecondary}
             />
@@ -521,7 +514,7 @@ export default function HomeScreen() {
               paddingHorizontal: 32,
             }}
           >
-            <MessageCircle size={48} color={colors.accent} strokeWidth={1.5} />
+            <MaterialIcons name="chat-bubble" size={48} color={colors.accent} />
             <Heading
               variant="h2"
               style={{
@@ -568,7 +561,7 @@ export default function HomeScreen() {
           elevation: 6,
         }}
       >
-        <Plus size={28} color={colors.primaryText} strokeWidth={2.5} />
+        <MaterialIcons name="add" size={28} color={colors.primaryText} />
       </TouchableOpacity>
     </AppBackground>
   );

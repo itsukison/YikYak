@@ -10,13 +10,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  ArrowLeft,
-  ArrowBigUp,
-  ArrowBigDown,
-  Send,
-  MapPin,
-} from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -172,7 +166,7 @@ export default function PostDetailScreen() {
               alignItems: 'flex-start'
             }}
           >
-            <ArrowLeft size={24} color={colors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>Post</Heading>
         </View>
@@ -203,7 +197,7 @@ export default function PostDetailScreen() {
             {/* Location */}
             {post.location_name && (
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                <MapPin size={14} color={colors.textSecondary} />
+                <MaterialIcons name="place" size={14} color={colors.textSecondary} />
                 <Caption color="secondary" style={{ marginLeft: 4 }}>
                   {post.location_name} • {formatDistance(post.distance)}
                 </Caption>
@@ -213,7 +207,7 @@ export default function PostDetailScreen() {
             {/* Post Stats */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ArrowBigUp size={20} color={colors.primary} strokeWidth={2} />
+                <MaterialIcons name="arrow-upward" size={20} color={colors.primary} />
                 <Body weight="semibold" variant="small" style={{ marginLeft: 4 }}>
                   {post.score || 0}
                 </Body>
@@ -269,11 +263,10 @@ export default function PostDetailScreen() {
                         onPress={() => handleVoteComment(commentItem.id, 1)}
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
-                        <ArrowBigUp
+                        <MaterialIcons
+                          name="arrow-upward"
                           size={18}
                           color={userVote === 1 ? colors.accent : colors.textSecondary}
-                          fill={userVote === 1 ? colors.accent : "transparent"}
-                          strokeWidth={2}
                         />
                       </TouchableOpacity>
                       <Caption weight="semibold">
@@ -283,11 +276,10 @@ export default function PostDetailScreen() {
                         onPress={() => handleVoteComment(commentItem.id, -1)}
                         style={{ flexDirection: "row", alignItems: "center" }}
                       >
-                        <ArrowBigDown
+                        <MaterialIcons
+                          name="arrow-downward"
                           size={18}
                           color={userVote === -1 ? colors.error : colors.textSecondary}
-                          fill={userVote === -1 ? colors.error : "transparent"}
-                          strokeWidth={2}
                         />
                       </TouchableOpacity>
                     </View>
@@ -348,7 +340,7 @@ export default function PostDetailScreen() {
             {createCommentMutation.isPending ? (
               <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
-              <Send size={20} color={colors.primaryText} strokeWidth={2} />
+              <MaterialIcons name="send" size={20} color={colors.primaryText} />
             )}
           </TouchableOpacity>
         </View>

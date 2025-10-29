@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, MapPin, User, UserX } from 'lucide-react-native';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../utils/theme';
 import { useAuth } from '../utils/auth/useAuth';
@@ -179,7 +179,7 @@ export default function CreatePost() {
                   alignItems: 'flex-start' 
                 }}
               >
-                <ArrowLeft size={24} color={colors.text} />
+                <MaterialIcons name="arrow-back" size={24} color={colors.text} />
               </TouchableOpacity>
 
               <Heading variant="h2">Create Post</Heading>
@@ -203,9 +203,9 @@ export default function CreatePost() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                       {isAnonymous ? (
-                        <UserX size={20} color={colors.textSecondary} />
+                        <MaterialIcons name="person-off" size={20} color={colors.textSecondary} />
                       ) : (
-                        <User size={20} color={colors.primary} />
+                        <MaterialIcons name="person" size={20} color={colors.primary} />
                       )}
                       <Body weight="medium" style={{ marginLeft: 12 }}>
                         {isAnonymous ? 'Post anonymously' : `Post as ${profile?.nickname || 'User'}`}
@@ -245,7 +245,7 @@ export default function CreatePost() {
                 {location && (
                   <Card style={{ marginBottom: 20 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <MapPin size={20} color={colors.accent} strokeWidth={2} />
+                      <MaterialIcons name="place" size={20} color={colors.accent} />
                       <Body variant="small" color="secondary" style={{ marginLeft: 12, flex: 1 }}>
                         University of Tokyo • Visible to nearby students
                       </Body>

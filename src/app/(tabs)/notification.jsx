@@ -6,13 +6,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import {
-  Bell,
-  ArrowBigUp,
-  MessageCircle,
-  UserPlus,
-  Mail,
-} from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import { useRouter } from "expo-router";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
@@ -93,15 +87,15 @@ export default function NotificationScreen() {
   const getNotificationIcon = (type) => {
     switch (type) {
       case "vote":
-        return ArrowBigUp;
+        return "arrow-upward";
       case "comment":
-        return MessageCircle;
+        return "chat-bubble";
       case "follow":
-        return UserPlus;
+        return "person-add";
       case "message":
-        return Mail;
+        return "mail";
       default:
-        return Bell;
+        return "notifications";
     }
   };
 
@@ -151,7 +145,7 @@ export default function NotificationScreen() {
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
         <EmptyState
-          Icon={Bell}
+          Icon="notifications"
           title="No Notifications"
           description="You'll see notifications here when someone votes on your posts, comments, or follows you!"
         />
@@ -162,7 +156,7 @@ export default function NotificationScreen() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const renderNotification = ({ item }) => {
-    const Icon = getNotificationIcon(item.type);
+    const iconName = getNotificationIcon(item.type);
     const notificationText = getNotificationText(item);
 
     return (
@@ -190,7 +184,7 @@ export default function NotificationScreen() {
               marginRight: 12,
             }}
           >
-            <Icon size={20} color={colors.accent} strokeWidth={2} />
+            <MaterialIcons name={iconName} size={20} color={colors.accent} />
           </View>
 
           {/* Content */}

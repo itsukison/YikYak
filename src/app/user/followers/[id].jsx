@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Users } from "lucide-react-native";
+import { MaterialIcons } from "@react-native-vector-icons/material-icons";
 import AppBackground from "../../../components/AppBackground";
 import EmptyState from "../../../components/EmptyState";
 import { useTheme } from "../../../utils/theme";
@@ -119,13 +119,13 @@ export default function FollowersScreen() {
               alignItems: 'flex-start'
             }}
           >
-            <ArrowLeft size={24} color={colors.text} />
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>Followers</Heading>
         </View>
 
         <EmptyState
-          Icon={Users}
+          Icon="group"
           title="No Followers"
           description="This user doesn't have any followers yet."
         />

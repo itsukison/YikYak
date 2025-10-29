@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { MaterialIcons } from '@react-native-vector-icons/material-icons';
 import { useTheme } from '../utils/theme';
 import { Body, Caption } from './ui/Text';
 
@@ -42,7 +42,7 @@ export default function MenuItem({
             marginRight: spacing.md,
           }}
         >
-          <Icon size={20} color={colors.text} strokeWidth={2} />
+          <MaterialIcons name={Icon} size={20} color={colors.text} />
         </View>
 
         {/* Text Content */}
@@ -59,7 +59,7 @@ export default function MenuItem({
 
         {/* Chevron */}
         {showChevron && (
-          <ChevronRight size={20} color={colors.textSecondary} strokeWidth={2} />
+          <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
         )}
       </TouchableOpacity>
 

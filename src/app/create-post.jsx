@@ -18,6 +18,9 @@ import { useAuth } from '../utils/auth/useAuth';
 import { supabase } from '../utils/supabase';
 import * as Location from 'expo-location';
 import { Button, Card, Heading, Body, Caption } from '../components/ui';
+import PhotoPicker from '../components/PhotoPicker';
+import { compressImages } from '../services/storage/imageCompression';
+import { uploadPhotos } from '../services/storage/photoUpload';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
@@ -28,6 +31,7 @@ export default function CreatePost() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const focusedPadding = 12;
 
   const paddingAnimation = useRef(
@@ -93,8 +97,8 @@ export default function CreatePost() {
       return;
     }
 
-    if (content.trim().length > 500) {
-      Alert.alert('Error', 'Post content must be 500 characters or less.');
+    if (content.trim().length > 200) {
+      Alert.alert('Error', 'Post content must be 200 characters or less.');
       return;
     }
 
@@ -111,7 +115,31 @@ export default function CreatePost() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // Step 1: Compress and upload photos if any
+      let photoUrls = [];
+      if (photos.length > 0) {
+        const compressed = await compressImages(photos, {
+          maxWidth: 1920,
+          quality: 0.8,
+        });
+        
+        const compressedUris = compressed.map(img => img.uri);
+        const { urls, errors } = await uploadPhotos(user.id, compressedUris);
+        
+        if (errors.length > 0) {
+          console.error('Photo upload errors:', errors);
+          Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
+            { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+            { text: 'Continue', onPress: () => createPostWithPhotos(urls) },
+          ]);
+          return;
+        }
+        
+        photoUrls = urls;
+      }
+
+      // Step 2: Create post
+      const { data: post, error: postError } = await supabase
         .from('posts')
         .insert({
           user_id: user.id,
@@ -123,7 +151,25 @@ export default function CreatePost() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (postError) throw postError;
+
+      // Step 3: Insert photo records if any
+      if (photoUrls.length > 0) {
+        const photoRecords = photoUrls.map((url, index) => ({
+          post_id: post.id,
+          photo_url: url,
+          photo_order: index,
+        }));
+
+        const { error: photoError } = await supabase
+          .from('post_photos')
+          .insert(photoRecords);
+
+        if (photoError) {
+          console.error('Photo record error:', photoError);
+          // Post created but photos failed - still show success
+        }
+      }
       
       Alert.alert('Success', 'Your post has been created!', [
         { text: 'OK', onPress: () => router.back() }
@@ -137,8 +183,9 @@ export default function CreatePost() {
   };
 
   const characterCount = content.length;
-  const maxCharacters = 500;
+  const maxCharacters = 200;
   const isOverLimit = characterCount > maxCharacters;
+  const isNearLimit = characterCount >= 180;
 
   // Handle loading and auth states
   const showLoading = !user || !profile;
@@ -253,6 +300,9 @@ export default function CreatePost() {
                   </Card>
                 )}
 
+                {/* Photo Picker */}
+                <PhotoPicker photos={photos} onPhotosChange={setPhotos} />
+
                 {/* Text Input */}
                 <Card style={{ minHeight: 200 }}>
                   <TextInput
@@ -270,12 +320,16 @@ export default function CreatePost() {
                     onChangeText={setContent}
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
-                    maxLength={maxCharacters + 50}
+                    maxLength={maxCharacters}
                   />
 
                   {/* Character Count */}
                   <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
-                    <Caption style={{ color: isOverLimit ? colors.error : colors.textSecondary }}>
+                    <Caption 
+                      style={{ 
+                        color: isOverLimit ? colors.error : isNearLimit ? colors.error : colors.textSecondary 
+                      }}
+                    >
                       {characterCount}/{maxCharacters}
                     </Caption>
                   </View>

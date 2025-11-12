@@ -16,6 +16,7 @@ import { subscribeToNewPosts } from "../../utils/realtime";
 import AppBackground from "../../components/AppBackground";
 import { Card } from "../../components/ui";
 import { Heading, Body, Caption } from "../../components/ui/Text";
+import PhotoGrid from "../../components/PhotoGrid";
 import * as Location from "expo-location";
 import { router } from "expo-router";
 
@@ -154,8 +155,9 @@ export default function HomeScreen() {
     return `${(distance / 1000).toFixed(1)}km`;
   };
 
-  const renderPost = (post) => {
+  const renderPost = (post, index) => {
     const userVote = userVotes[post.id] || null;
+    const isLastPost = index === posts.length - 1;
 
     const navigateToPost = () => {
       router.push({
@@ -165,12 +167,17 @@ export default function HomeScreen() {
     };
 
     return (
-      <Card
+      <TouchableOpacity
         key={post.id}
-        interactive
         onPress={navigateToPost}
-        padding="default"
-        style={{ marginHorizontal: spacing.lg, marginBottom: spacing.md }}
+        style={{
+          backgroundColor: colors.surface,
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+          borderBottomWidth: isLastPost ? 0 : 0.5,
+          borderBottomColor: colors.border,
+        }}
+        activeOpacity={0.7}
       >
         {/* Post Header */}
         <View
@@ -209,9 +216,16 @@ export default function HomeScreen() {
         </View>
 
         {/* Post Content */}
-        <Body style={{ marginBottom: spacing.lg }}>
+        <Body style={{ marginBottom: post.photos?.length > 0 ? spacing.sm : spacing.lg }}>
           {post.content}
         </Body>
+
+        {/* Post Photos */}
+        {post.photos && post.photos.length > 0 && (
+          <View style={{ marginBottom: spacing.lg }}>
+            <PhotoGrid photos={post.photos} />
+          </View>
+        )}
 
         {/* Post Actions */}
         <View
@@ -295,7 +309,7 @@ export default function HomeScreen() {
             </Caption>
           </TouchableOpacity>
         </View>
-      </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -537,7 +551,7 @@ export default function HomeScreen() {
             </Body>
           </View>
         ) : (
-          posts.map(renderPost)
+          posts.map((post, index) => renderPost(post, index))
         )}
       </ScrollView>
 

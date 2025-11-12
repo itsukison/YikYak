@@ -11,6 +11,7 @@ import { useChatsQuery } from "../../utils/queries/chats";
 import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../components/ui";
+import { useMultiplePresence } from "../../utils/hooks/usePresence";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -19,6 +20,10 @@ export default function MessagesScreen() {
   const queryClient = useQueryClient();
 
   const { data: chats, isLoading } = useChatsQuery(user?.id);
+
+  // Track online status for all chat participants
+  const otherUserIds = chats?.map((chat) => chat.otherUser.id) || [];
+  const { onlineUsers } = useMultiplePresence(otherUserIds);
 
   // Subscribe to new messages for all chats
   useEffect(() => {
@@ -111,7 +116,7 @@ export default function MessagesScreen() {
     return date.toLocaleDateString();
   };
 
-  const renderChatItem = ({ item }) => {
+  const renderChatItem = ({ item, index }) => {
     const displayName = item.otherUser.is_anonymous
       ? "Anonymous"
       : item.otherUser.nickname || "User";
@@ -119,20 +124,44 @@ export default function MessagesScreen() {
     const lastMessageTime = item.lastMessage?.created_at
       ? formatTime(item.lastMessage.created_at)
       : "";
+    const isOnline = onlineUsers[item.otherUser.id] || false;
 
     return (
-      <Card 
-        interactive
+      <TouchableOpacity
         onPress={() => router.push(`/chat/${item.id}`)}
-        style={{ marginHorizontal: 20, marginBottom: 12 }}
+        style={{
+          backgroundColor: colors.surface,
+        }}
+        activeOpacity={0.7}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {/* Avatar */}
-          <Avatar 
-            name={displayName}
-            size="medium"
-            style={{ marginRight: 12 }}
-          />
+        <View style={{ 
+          flexDirection: "row", 
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+        }}>
+          {/* Avatar with online indicator */}
+          <View style={{ position: 'relative', marginRight: 12 }}>
+            <Avatar 
+              name={displayName}
+              size="medium"
+            />
+            {isOnline && (
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  width: 14,
+                  height: 14,
+                  borderRadius: 7,
+                  backgroundColor: '#4CAF50',
+                  borderWidth: 2,
+                  borderColor: colors.surface,
+                }}
+              />
+            )}
+          </View>
 
           {/* Chat Info */}
           <View style={{ flex: 1 }}>
@@ -162,7 +191,7 @@ export default function MessagesScreen() {
             </View>
           </View>
         </View>
-      </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -200,7 +229,6 @@ export default function MessagesScreen() {
           data={chats}
           renderItem={renderChatItem}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 20 }}
         />
       </Container>
     </AppBackground>

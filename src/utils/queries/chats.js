@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../supabase";
+import * as chatStorage from "../../services/storage/chatStorage";
+import * as messageSync from "../../services/storage/messageSync";
+import * as messageRouter from "../../services/messaging/messageRouter";
 
 /**
  * Fetch all chats for the current user
@@ -48,14 +51,28 @@ export function useChatsQuery(userId) {
 }
 
 /**
- * Fetch messages for a specific chat
+ * Fetch messages for a specific chat (with local storage)
  */
-export function useChatMessagesQuery(chatId) {
+export function useChatMessagesQuery(chatId, userId) {
   return useQuery({
     queryKey: ["messages", chatId],
     queryFn: async () => {
       if (!chatId) throw new Error("Chat ID required");
 
+      // Try to load from local storage first
+      const localMessages = await chatStorage.getMessages(chatId);
+
+      // If we have local messages, return them immediately
+      if (localMessages && localMessages.length > 0) {
+        // Trigger background sync
+        messageSync.syncMessagesFromDatabase(chatId, userId).catch((error) => {
+          console.error("Background sync failed:", error);
+        });
+
+        return localMessages;
+      }
+
+      // If no local messages, fetch from database
       const { data, error } = await supabase
         .from("messages")
         .select(
@@ -68,45 +85,87 @@ export function useChatMessagesQuery(chatId) {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data;
+
+      // Store in local storage for next time
+      if (data && data.length > 0) {
+        const messagesWithSyncFlag = data.map((msg) => ({ ...msg, synced: true }));
+        await chatStorage.storeMessages(chatId, messagesWithSyncFlag);
+      }
+
+      return data || [];
     },
     enabled: !!chatId,
+    staleTime: 0, // Always consider stale to allow background sync
   });
 }
 
 /**
- * Send a new message
+ * Send a new message (with presence-based routing)
  */
 export function useSendMessageMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ chatId, senderId, content }) => {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
-          chat_id: chatId,
-          sender_id: senderId,
-          content: content.trim(),
-        })
-        .select()
-        .single();
+    mutationFn: async ({ chatId, senderId, content, senderData, recipientId }) => {
+      // Step 1: Store locally first for instant UI update
+      const localResult = await messageSync.sendMessageLocalFirst({
+        chatId,
+        senderId,
+        content,
+      });
 
-      if (error) throw error;
+      if (!localResult.success) {
+        throw new Error(localResult.error);
+      }
 
-      // Update chat's updated_at timestamp
-      await supabase
-        .from("chats")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("id", chatId);
+      const tempMessage = localResult.message;
 
-      return data;
+      // Step 2: Optimistically update the query cache
+      queryClient.setQueryData(["messages", chatId], (oldData) => {
+        if (!oldData) return [{ ...tempMessage, sender: senderData }];
+        return [...oldData, { ...tempMessage, sender: senderData }];
+      });
+
+      // Step 3: Route message based on recipient's online status
+      const routingResult = await messageRouter.sendMessage(
+        {
+          chatId,
+          senderId,
+          content,
+          senderData,
+        },
+        recipientId
+      );
+
+      if (!routingResult.success) {
+        throw new Error(routingResult.error);
+      }
+
+      // Step 4: Update local storage with real ID
+      await messageSync.markMessageSynced(
+        chatId,
+        tempMessage.tempId,
+        routingResult.message
+      );
+
+      // Add delivery info to result
+      return {
+        ...routingResult.message,
+        deliveryMethod: routingResult.deliveryMethod,
+        recipientOnline: routingResult.recipientOnline,
+      };
     },
     onSuccess: (data, variables) => {
-      // Invalidate messages query to refetch
-      queryClient.invalidateQueries(["messages", variables.chatId]);
       // Invalidate chats query to update last message
       queryClient.invalidateQueries(["chats"]);
+      
+      // Refetch messages to ensure consistency
+      queryClient.invalidateQueries(["messages", variables.chatId]);
+    },
+    onError: (error, variables) => {
+      console.error("Error sending message:", error);
+      // Revert optimistic update on error
+      queryClient.invalidateQueries(["messages", variables.chatId]);
     },
   });
 }

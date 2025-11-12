@@ -138,7 +138,9 @@ export default function UserProfileScreen() {
         >
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Heading variant="h2" style={{ flex: 1 }}>Profile</Heading>
+        <Heading variant="h2" style={{ flex: 1 }}>
+          {isOwnProfile ? "My Posts" : "Profile"}
+        </Heading>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
@@ -148,8 +150,9 @@ export default function UserProfileScreen() {
           </View>
         ) : (
           <>
-            {/* Profile Header */}
-            <Card style={{ margin: 20, alignItems: "center" }}>
+            {/* Profile Header - Only show for other users */}
+            {!isOwnProfile && (
+              <Card style={{ margin: 20, alignItems: "center" }}>
               {/* Avatar */}
               <Avatar 
                 name={displayName}
@@ -244,12 +247,15 @@ export default function UserProfileScreen() {
                 </View>
               )}
             </Card>
+            )}
 
             {/* User's Posts */}
-            <View style={{ paddingHorizontal: 20 }}>
-              <Heading variant="h3" style={{ marginBottom: 16 }}>
-                Posts
-              </Heading>
+            <View style={{ paddingHorizontal: 20, marginTop: isOwnProfile ? 20 : 0 }}>
+              {!isOwnProfile && (
+                <Heading variant="h3" style={{ marginBottom: 16 }}>
+                  Posts
+                </Heading>
+              )}
 
               {postsLoading ? (
                 <ActivityIndicator size="large" color={colors.primary} />

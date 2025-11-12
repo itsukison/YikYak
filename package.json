@@ -42,6 +42,7 @@
 		"expo-gl": "~15.1.6",
 		"expo-haptics": "~14.1.4",
 		"expo-image": "~2.2.1",
+		"expo-image-manipulator": "^14.0.7",
 		"expo-image-picker": "~16.1.4",
 		"expo-linear-gradient": "~14.1.5",
 		"expo-linking": "~8.0.0",

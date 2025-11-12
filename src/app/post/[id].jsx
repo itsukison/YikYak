@@ -21,6 +21,7 @@ import {
   useVoteCommentMutation,
 } from "../../utils/queries/comments";
 import { Heading, Body, Caption, Card } from "../../components/ui";
+import PhotoGrid from "../../components/PhotoGrid";
 
 export default function PostDetailScreen() {
   const { id: postId, post: postJson } = useLocalSearchParams();
@@ -190,9 +191,16 @@ export default function PostDetailScreen() {
             </View>
 
             {/* Post Content */}
-            <Body style={{ lineHeight: 24, marginBottom: 12 }}>
+            <Body style={{ lineHeight: 24, marginBottom: post.photos?.length > 0 ? 8 : 12 }}>
               {post.content}
             </Body>
+
+            {/* Post Photos */}
+            {post.photos && post.photos.length > 0 && (
+              <View style={{ marginBottom: 12 }}>
+                <PhotoGrid photos={post.photos} />
+              </View>
+            )}
 
             {/* Location */}
             {post.location_name && (
@@ -219,20 +227,29 @@ export default function PostDetailScreen() {
           </Card>
 
           {/* Comments Section */}
-          <View style={{ marginTop: 32, paddingHorizontal: 20 }}>
-            <Heading variant="h3" style={{ marginBottom: 16 }}>
+          <View style={{ marginTop: 32 }}>
+            <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 20 }}>
               Comments
             </Heading>
 
             {commentsLoading ? (
-              <ActivityIndicator size="large" color={colors.primary} />
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+              </View>
             ) : comments && comments.length > 0 ? (
               comments.map((commentItem) => {
                 const userVote = localVotes[commentItem.id];
                 const displayScore = commentItem.score;
 
                 return (
-                  <Card key={commentItem.id} style={{ marginBottom: 12 }}>
+                  <View 
+                    key={commentItem.id}
+                    style={{
+                      backgroundColor: colors.surface,
+                      paddingHorizontal: 20,
+                      paddingVertical: 16,
+                    }}
+                  >
                     {/* Comment Header */}
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                       <TouchableOpacity
@@ -283,11 +300,11 @@ export default function PostDetailScreen() {
                         />
                       </TouchableOpacity>
                     </View>
-                  </Card>
+                  </View>
                 );
               })
             ) : (
-              <Caption color="secondary" style={{ textAlign: "center", marginTop: 20 }}>
+              <Caption color="secondary" style={{ textAlign: "center", marginTop: 20, paddingHorizontal: 20 }}>
                 No comments yet. Be the first to comment!
               </Caption>
             )}

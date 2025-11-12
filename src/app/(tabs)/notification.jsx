@@ -160,16 +160,14 @@ export default function NotificationScreen() {
     const notificationText = getNotificationText(item);
 
     return (
-      <Card
-        interactive
+      <TouchableOpacity
         onPress={() => handleNotificationPress(item)}
         style={{
-          marginHorizontal: 20,
-          marginBottom: 12,
           backgroundColor: item.is_read ? colors.surface : colors.accentSubtle,
-          borderLeftWidth: 3,
-          borderLeftColor: item.is_read ? "transparent" : colors.accent,
+          paddingHorizontal: 20,
+          paddingVertical: 16,
         }}
+        activeOpacity={0.7}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           {/* Icon */}
@@ -225,7 +223,7 @@ export default function NotificationScreen() {
             />
           )}
         </View>
-      </Card>
+      </TouchableOpacity>
     );
   };
 
@@ -264,7 +262,6 @@ export default function NotificationScreen() {
           data={notifications}
           renderItem={renderNotification}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ paddingBottom: 20 }}
         />
       </Container>
     </AppBackground>

@@ -16,6 +16,33 @@ export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new'
       });
 
       if (error) throw error;
+
+      // Fetch photos for all posts
+      if (data && data.length > 0) {
+        const postIds = data.map(post => post.id);
+        const { data: photos, error: photosError } = await supabase
+          .from('post_photos')
+          .select('*')
+          .in('post_id', postIds)
+          .order('photo_order', { ascending: true });
+
+        if (!photosError && photos) {
+          // Group photos by post_id
+          const photosByPost = {};
+          photos.forEach(photo => {
+            if (!photosByPost[photo.post_id]) {
+              photosByPost[photo.post_id] = [];
+            }
+            photosByPost[photo.post_id].push(photo);
+          });
+
+          // Attach photos to posts
+          data.forEach(post => {
+            post.photos = photosByPost[post.id] || [];
+          });
+        }
+      }
+
       return data || [];
     },
     enabled: enabled && latitude != null && longitude != null,
@@ -108,5 +135,44 @@ export function useVotePostMutation() {
       // Optionally invalidate posts to get updated scores
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     },
+  });
+}
+
+// Fetch single post with photos
+export function usePostQuery(postId) {
+  return useQuery({
+    queryKey: ['post', postId],
+    queryFn: async () => {
+      // Fetch post
+      const { data: post, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          users!posts_user_id_fkey (
+            nickname,
+            is_anonymous
+          )
+        `)
+        .eq('id', postId)
+        .single();
+
+      if (error) throw error;
+
+      // Fetch photos
+      const { data: photos, error: photosError } = await supabase
+        .from('post_photos')
+        .select('*')
+        .eq('post_id', postId)
+        .order('photo_order', { ascending: true });
+
+      if (!photosError && photos) {
+        post.photos = photos;
+      } else {
+        post.photos = [];
+      }
+
+      return post;
+    },
+    enabled: !!postId,
   });
 }

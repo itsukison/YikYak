@@ -134,6 +134,14 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 
 **Recent Features** ✨
 
+- ✅ Photo Attachments & Character Limit (2025-11-12): Users can attach photos to posts
+  - Attach up to 5 photos per post (optional)
+  - Photos stored in Supabase Storage with compression
+  - Smart photo grid layouts (1-5 photos)
+  - Character limit reduced to 200 (from 500)
+  - Live character counter turns red at 180+ chars
+  - See `/tasks/PHOTO_ATTACHMENT_CHARACTER_LIMIT.md` for details
+
 - ✅ User Discovery (2025-10-27): Search users by username/ID from Messages screen
   - Find Users button in Messages header
   - Real-time search with debouncing
@@ -147,6 +155,14 @@ Push notifications: Supabase Edge Functions + Expo Notifications
 - Group chats
 - Trending topics
 - AI moderation
+
+**Planned Architecture Improvements** 🏗️
+
+- Local storage for chat messages (AsyncStorage) - Cost optimization
+- Redis-based presence tracking - Real-time online/offline status
+- Websocket message routing - Instant delivery for online users
+- Message archival system - 30-day hot storage, cold archive for older messages
+- See `/tasks/architecture/CHAT_OPTIMIZATION.md` for detailed plan
 
 **Data Layer** ✅
 

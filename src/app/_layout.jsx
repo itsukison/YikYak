@@ -7,6 +7,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from '../utils/auth/useAuth';
 import { supabase } from '../utils/supabase';
+import { usePeriodicSync } from '../utils/hooks/useMessageSync';
+import { useTrackPresence } from '../utils/hooks/usePresence';
+import { usePendingMessages, useUpdateLastSeen } from '../utils/hooks/usePendingMessages';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,6 +28,20 @@ function RootLayoutNav() {
   const { user, profile, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // Enable periodic sync for authenticated users (every 30 seconds)
+  usePeriodicSync(30000);
+
+  // Track user's online presence
+  useTrackPresence(user?.id, {
+    deviceId: 'mobile', // Could be more specific if needed
+  });
+
+  // Sync pending messages when user comes online
+  usePendingMessages(user?.id, !!user);
+
+  // Update last seen timestamp when app goes to background
+  useUpdateLastSeen(user?.id);
 
   // Deep link handler for email verification
   useEffect(() => {

@@ -59,12 +59,13 @@ export default function FollowersScreen() {
     }
   };
 
-  const renderFollower = ({ item }) => {
+  const renderFollower = ({ item, index }) => {
     const followerUser = item.follower;
     const displayName = followerUser.is_anonymous
       ? "Anonymous"
       : followerUser.nickname || "User";
     const isOwnProfile = user.id === followerUser.id;
+    const isLastItem = index === followers.length - 1;
 
     return (
       <FollowerItem
@@ -77,6 +78,7 @@ export default function FollowersScreen() {
         router={router}
         followMutation={followMutation}
         unfollowMutation={unfollowMutation}
+        isLastItem={isLastItem}
       />
     );
   };
@@ -159,7 +161,7 @@ export default function FollowersScreen() {
             alignItems: 'flex-start'
           }}
         >
-          <ArrowLeft size={24} color={colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Heading variant="h2" style={{ flex: 1 }}>Followers</Heading>
       </View>
@@ -169,7 +171,6 @@ export default function FollowersScreen() {
         data={followers}
         renderItem={renderFollower}
         keyExtractor={(item) => item.follower_id}
-        contentContainerStyle={{ paddingTop: 8, paddingBottom: 20 }}
       />
     </AppBackground>
   );
@@ -186,17 +187,25 @@ function FollowerItem({
   router,
   followMutation,
   unfollowMutation,
+  isLastItem,
 }) {
   const { data: isFollowing, isLoading: followStatusLoading } =
     useFollowStatusQuery(currentUserId, followerUser.id);
 
   return (
-    <Card
-      interactive
+    <TouchableOpacity
       onPress={() => router.push(`/user/${followerUser.id}`)}
-      style={{ marginHorizontal: 20, marginBottom: 12 }}
+      style={{
+        backgroundColor: colors.surface,
+      }}
+      activeOpacity={0.7}
     >
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <View style={{ 
+        flexDirection: "row", 
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+      }}>
         {/* Avatar */}
         <Avatar 
           name={displayName}
@@ -235,7 +244,7 @@ function FollowerItem({
           </Button>
         )}
       </View>
-    </Card>
+    </TouchableOpacity>
   );
 }
 

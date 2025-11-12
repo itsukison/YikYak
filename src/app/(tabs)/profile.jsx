@@ -252,7 +252,13 @@ export default function ProfileScreen() {
         scrollEventThrottle={16}
       >
         {/* Profile Header */}
-        <Card style={{ alignItems: "center", marginBottom: 24 }}>
+        <View style={{ 
+          alignItems: "center", 
+          marginBottom: 24,
+          backgroundColor: colors.surface,
+          borderRadius: 16,
+          padding: 20,
+        }}>
           {/* Profile Avatar */}
           <Avatar
             size="xlarge"
@@ -281,10 +287,13 @@ export default function ProfileScreen() {
               borderTopColor: colors.border,
             }}
           >
-            <View style={{ alignItems: "center", flex: 1 }}>
+            <TouchableOpacity
+              onPress={() => router.push(`/user/${user.id}`)}
+              style={{ alignItems: "center", flex: 1 }}
+            >
               <Heading variant="h2">{currentUser.post_count}</Heading>
               <Caption color="secondary">Posts</Caption>
-            </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => router.push(`/user/following/${user.id}`)}
@@ -306,7 +315,7 @@ export default function ProfileScreen() {
               <Caption color="secondary">Followers</Caption>
             </TouchableOpacity>
           </View>
-        </Card>
+        </View>
 
         {/* Account Settings */}
         <Section spacing="md">
@@ -314,7 +323,7 @@ export default function ProfileScreen() {
             Account Settings
           </Heading>
           
-          <Card style={{ paddingVertical: 8 }}>
+          <Card style={{ paddingVertical: 8, marginBottom: 20 }}>
 
           {accountMenuItems.map((item, index) => (
             <View key={index}>

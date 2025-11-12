@@ -2,7 +2,7 @@
   "expo": {
     "name": "Create mobile app",
     "slug": "yikyak-japan",
-    "scheme": "HearSay",
+    "scheme": "yikyak",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

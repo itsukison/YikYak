@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -22,6 +23,8 @@ import {
 import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Heading, Body, Caption } from "../../components/ui";
+import { useMessageSync } from "../../utils/hooks/useMessageSync";
+import { useUserPresence } from "../../utils/hooks/usePresence";
 
 export default function ChatDetailScreen() {
   const { id: chatId } = useLocalSearchParams();
@@ -32,10 +35,18 @@ export default function ChatDetailScreen() {
   const flatListRef = useRef(null);
 
   const [message, setMessage] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: messages, isLoading } = useChatMessagesQuery(chatId);
+  const { data: messages, isLoading } = useChatMessagesQuery(chatId, user?.id);
   const sendMessageMutation = useSendMessageMutation();
   const markReadMutation = useMarkMessagesReadMutation();
+  const { syncNow } = useMessageSync(chatId, user?.id, !!chatId && !!user?.id);
+
+  // Get other user ID and track their presence
+  const otherUserId = messages && messages.length > 0
+    ? messages.find((msg) => msg.sender_id !== user?.id)?.sender_id
+    : null;
+  const { online: recipientOnline } = useUserPresence(otherUserId);
 
   // Subscribe to new messages
   useEffect(() => {
@@ -76,7 +87,7 @@ export default function ChatDetailScreen() {
   }
 
   const handleSend = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !otherUserId) return;
 
     const messageText = message.trim();
     setMessage("");
@@ -86,6 +97,12 @@ export default function ChatDetailScreen() {
         chatId,
         senderId: user.id,
         content: messageText,
+        senderData: {
+          id: user.id,
+          nickname: user.nickname,
+          is_anonymous: user.is_anonymous,
+        },
+        recipientId: otherUserId,
       });
 
       // Scroll to bottom after sending
@@ -94,7 +111,19 @@ export default function ChatDetailScreen() {
       }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
-      setMessage(messageText); // Restore message on error
+      // Message is still in local storage, so don't restore to input
+      // User can see it in the chat with a "pending" indicator if needed
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await syncNow();
+    } catch (error) {
+      console.error("Error refreshing messages:", error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -106,7 +135,8 @@ export default function ChatDetailScreen() {
   const renderMessage = ({ item, index }) => {
     const isOwnMessage = item.sender_id === user.id;
     const showSenderName = !isOwnMessage && (index === 0 || messages[index - 1].sender_id !== item.sender_id);
-    const displayName = item.sender.is_anonymous ? "Anonymous" : item.sender.nickname || "User";
+    const displayName = item.sender?.is_anonymous ? "Anonymous" : item.sender?.nickname || "User";
+    const isPending = !item.synced && item.tempId; // Message not yet synced to database
 
     return (
       <View
@@ -131,6 +161,7 @@ export default function ChatDetailScreen() {
             paddingVertical: 12,
             borderRadius: 16,
             maxWidth: "75%",
+            opacity: isPending ? 0.7 : 1, // Slightly transparent if pending
           }}
         >
           <Body 
@@ -141,16 +172,29 @@ export default function ChatDetailScreen() {
           >
             {item.content}
           </Body>
-          <Caption
-            style={{
-              color: isOwnMessage 
-                ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
-                : colors.textSecondary,
-              marginTop: 4,
-            }}
-          >
-            {formatTime(item.created_at)}
-          </Caption>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Caption
+              style={{
+                color: isOwnMessage 
+                  ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
+                  : colors.textSecondary,
+              }}
+            >
+              {formatTime(item.created_at)}
+            </Caption>
+            {isPending && (
+              <Caption
+                style={{
+                  color: isOwnMessage 
+                    ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
+                    : colors.textSecondary,
+                  marginLeft: 6,
+                }}
+              >
+                • Sending...
+              </Caption>
+            )}
+          </View>
         </View>
       </View>
     );
@@ -196,9 +240,25 @@ export default function ChatDetailScreen() {
           >
             <MaterialIcons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Heading variant="h2" style={{ flex: 1 }}>
-            {otherUserName}
-          </Heading>
+          <View style={{ flex: 1 }}>
+            <Heading variant="h2">{otherUserName}</Heading>
+            {otherUserId && (
+              <Caption color="secondary" style={{ marginTop: 2 }}>
+                {recipientOnline ? "Online" : "Offline"}
+              </Caption>
+            )}
+          </View>
+          {recipientOnline && (
+            <View
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: "#4CAF50",
+                marginLeft: 8,
+              }}
+            />
+          )}
         </View>
 
         {/* Messages List */}
@@ -211,9 +271,17 @@ export default function ChatDetailScreen() {
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => (item.id || item.tempId).toString()}
             contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
           />
         )}
 

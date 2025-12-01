@@ -14,7 +14,7 @@ import { useAuth } from "../../utils/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery, useVotePostMutation } from "../../utils/queries/posts";
 import { subscribeToNewPosts } from "../../utils/realtime";
 import AppBackground from "../../components/AppBackground";
-import { Card } from "../../components/ui";
+import { Card, Avatar } from "../../components/ui";
 import { Heading, Body, Caption } from "../../components/ui/Text";
 import PhotoGrid from "../../components/PhotoGrid";
 import * as Location from "expo-location";
@@ -24,7 +24,6 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark, spacing } = useTheme();
   const { user, profile } = useAuth();
-  const [showHeaderBorder, setShowHeaderBorder] = useState(false);
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
   const [location, setLocation] = useState(null);
@@ -131,10 +130,7 @@ export default function HomeScreen() {
     });
   };
 
-  const handleScroll = (event) => {
-    const scrollY = event.nativeEvent.contentOffset.y;
-    setShowHeaderBorder(scrollY > 10);
-  };
+
 
   const formatTimeAgo = (dateString) => {
     const now = new Date();
@@ -171,11 +167,11 @@ export default function HomeScreen() {
         key={post.id}
         onPress={navigateToPost}
         style={{
-          backgroundColor: colors.surface,
+          backgroundColor: "transparent", // Removed gray background
           paddingHorizontal: 20,
-          paddingVertical: 16,
-          borderBottomWidth: isLastPost ? 0 : 0.5,
-          borderBottomColor: colors.border,
+          paddingVertical: 24,
+          borderBottomWidth: 0.5, // Very thin separator
+          borderBottomColor: colors.borderLight,
         }}
         activeOpacity={0.7}
       >
@@ -184,11 +180,12 @@ export default function HomeScreen() {
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "flex-start", // Align to top for better multi-line handling
             marginBottom: spacing.md,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+            {/* Avatar */}
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
@@ -198,21 +195,51 @@ export default function HomeScreen() {
               }}
               disabled={post.is_anonymous}
             >
-              <Body weight="medium" style={{ color: colors.primary }}>
-                {post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
-              </Body>
+              <Avatar
+                name={post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+                size="small" // 40px
+                style={{ marginRight: 12 }} // Gap 12px
+              />
             </TouchableOpacity>
-            <Caption color="secondary" style={{ marginLeft: spacing.sm }}>
-              • {formatTimeAgo(post.created_at)}
-            </Caption>
+
+            {/* Text Stack */}
+            <View style={{ flex: 1 }}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  if (!post.is_anonymous && post.user_id) {
+                    router.push(`/user/${post.user_id}`);
+                  }
+                }}
+                disabled={post.is_anonymous}
+              >
+                <Body weight="bold" style={{ color: colors.text, lineHeight: 20 }}>
+                  {post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+                </Body>
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                {post.author_username && !post.is_anonymous && (
+                  <Caption color="secondary" style={{ marginRight: 4 }}>
+                    @{post.author_username} •
+                  </Caption>
+                )}
+                <Caption color="secondary">
+                  {formatTimeAgo(post.created_at)}
+                </Caption>
+              </View>
+            </View>
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <MaterialIcons name="place" size={12} color={colors.accent} />
-            <Caption color="secondary" style={{ marginLeft: spacing.xs }}>
-              {post.location_name || formatDistance(post.distance)}
-            </Caption>
-          </View>
+          {/* Location (Optional, kept minimal) */}
+          {post.location_name && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
+              <MaterialIcons name="place" size={12} color={colors.textTertiary} />
+              <Caption color="tertiary" style={{ marginLeft: 2 }}>
+                {post.location_name}
+              </Caption>
+            </View>
+          )}
         </View>
 
         {/* Post Content */}
@@ -221,11 +248,13 @@ export default function HomeScreen() {
         </Body>
 
         {/* Post Photos */}
-        {post.photos && post.photos.length > 0 && (
-          <View style={{ marginBottom: spacing.lg }}>
-            <PhotoGrid photos={post.photos} />
-          </View>
-        )}
+        {
+          post.photos && post.photos.length > 0 && (
+            <View style={{ marginBottom: spacing.lg }}>
+              <PhotoGrid photos={post.photos} />
+            </View>
+          )
+        }
 
         {/* Post Actions */}
         <View
@@ -244,8 +273,8 @@ export default function HomeScreen() {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.md,
+                paddingVertical: 4, // Reduced from spacing.sm (8)
+                paddingHorizontal: 8, // Reduced from spacing.md (12)
                 borderRadius: radius.pill,
                 backgroundColor:
                   userVote === 1
@@ -255,7 +284,7 @@ export default function HomeScreen() {
             >
               <MaterialIcons
                 name="keyboard-arrow-up"
-                size={18}
+                size={16} // Reduced from 18
                 color={
                   userVote === 1 ? colors.accent : colors.textSecondary
                 }
@@ -264,8 +293,9 @@ export default function HomeScreen() {
                 variant="small"
                 weight="medium"
                 style={{
-                  marginLeft: spacing.xs,
-                  color: userVote === 1 ? colors.accent : colors.textSecondary
+                  marginLeft: 4, // Reduced from spacing.xs
+                  color: userVote === 1 ? colors.accent : colors.textSecondary,
+                  fontSize: 13, // Slightly smaller text
                 }}
               >
                 {post.score || 0}
@@ -278,14 +308,14 @@ export default function HomeScreen() {
                 handleVote(post.id, -1);
               }}
               style={{
-                paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.sm,
-                marginLeft: spacing.xs,
+                paddingVertical: 4, // Reduced
+                paddingHorizontal: 6, // Reduced
+                marginLeft: 4, // Reduced
               }}
             >
               <MaterialIcons
                 name="keyboard-arrow-down"
-                size={18}
+                size={16} // Reduced from 18
                 color={userVote === -1 ? colors.error : colors.textSecondary}
               />
             </TouchableOpacity>
@@ -309,7 +339,7 @@ export default function HomeScreen() {
             </Caption>
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity >
     );
   };
 
@@ -328,176 +358,12 @@ export default function HomeScreen() {
     <AppBackground>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* Fixed Header */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          backgroundColor: colors.background,
-          paddingTop: insets.top,
-          paddingBottom: 16,
-          paddingHorizontal: 16,
-          borderBottomWidth: showHeaderBorder ? 1 : 0,
-          borderBottomColor: colors.border,
-        }}
-      >
-        <View
-          style={{
-            marginTop: 20,
-            marginBottom: 14,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <MaterialIcons name="school" size={28} color={colors.primary} />
-            <Heading variant="h1" style={{ marginLeft: 8 }}>
-              Campus Feed
-            </Heading>
-          </View>
-          {location && (
-            <Caption color="secondary" style={{ marginTop: 2 }}>
-              Posts within {locationRadius / 1000}km
-            </Caption>
-          )}
-        </View>
-
-        {/* Show location error */}
-        {locationError && (
-          <View
-            style={{
-              backgroundColor: colors.errorSubtle || "#FFE5E5",
-              borderRadius: 12,
-              padding: 8,
-              marginBottom: 12,
-            }}
-          >
-            <Caption style={{ color: colors.error || "#D32F2F" }}>
-              📍 {locationError}
-            </Caption>
-          </View>
-        )}
-
-        {/* Tab Selector */}
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: colors.inputBackground,
-            borderRadius: radius.input,
-            padding: 4,
-          }}
-        >
-          <TouchableOpacity
-            onPress={() => setActiveTab("new")}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 10,
-              borderRadius: radius.small,
-              backgroundColor:
-                activeTab === "new" ? colors.primary : "transparent",
-            }}
-          >
-            <MaterialIcons
-              name="access-time"
-              size={16}
-              color={activeTab === "new" ? colors.primaryText : colors.textSecondary}
-            />
-            <Body
-              variant="small"
-              weight="medium"
-              style={{
-                color: activeTab === "new" ? colors.primaryText : colors.textSecondary,
-                marginLeft: 6,
-              }}
-            >
-              New
-            </Body>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveTab("popular")}
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 10,
-              borderRadius: radius.small,
-              backgroundColor:
-                activeTab === "popular" ? colors.primary : "transparent",
-            }}
-          >
-            <MaterialIcons
-              name="trending-up"
-              size={16}
-              color={activeTab === "popular" ? colors.primaryText : colors.textSecondary}
-            />
-            <Body
-              variant="small"
-              weight="medium"
-              style={{
-                color: activeTab === "popular" ? colors.primaryText : colors.textSecondary,
-                marginLeft: 6,
-              }}
-            >
-              Popular
-            </Body>
-          </TouchableOpacity>
-        </View>
-
-        {/* Time Filter - Only visible when Popular tab is active */}
-        {activeTab === "popular" && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              marginTop: 8,
-              gap: 6,
-            }}
-          >
-            {["day", "week", "month"].map((filter) => (
-              <TouchableOpacity
-                key={filter}
-                onPress={() => setTimeFilter(filter)}
-                style={{
-                  paddingHorizontal: 16,
-                  paddingVertical: 6,
-                  borderRadius: 6,
-                  backgroundColor:
-                    timeFilter === filter
-                      ? colors.primary
-                      : "transparent",
-                }}
-              >
-                <Caption
-                  weight="medium"
-                  style={{
-                    color: timeFilter === filter ? colors.primaryText : colors.textSecondary,
-                  }}
-                >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                </Caption>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Posts Feed */}
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: insets.top + (activeTab === "popular" ? 200 : 160), // Account for fixed header + time filter
-          paddingBottom: insets.bottom + 20,
+          paddingBottom: insets.bottom + 80, // Extra padding for FAB
         }}
         showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
@@ -507,6 +373,148 @@ export default function HomeScreen() {
           />
         }
       >
+        {/* Scrollable Header */}
+        <View
+          style={{
+            backgroundColor: colors.background,
+            paddingTop: insets.top + 20,
+            paddingBottom: 16,
+            paddingHorizontal: 16,
+            // Removed borderBottomWidth to keep it clean
+          }}
+        >
+          {/* Title + Toggle Row */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            {/* Left: Title */}
+            <Heading variant="h2" weight="semibold">HearSay</Heading>
+
+            {/* Right: New/Popular Toggle - Simplified */}
+            <View
+              style={{
+                flexDirection: "row",
+                // Removed container background and border
+                padding: 0,
+                gap: 8,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setActiveTab("new")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: radius.pill,
+                  backgroundColor:
+                    activeTab === "new" ? colors.surface : "transparent", // Subtle background for active
+                }}
+              >
+                <Body
+                  variant="small"
+                  weight={activeTab === "new" ? "bold" : "medium"}
+                  style={{
+                    color: activeTab === "new" ? colors.text : colors.textSecondary,
+                  }}
+                >
+                  New
+                </Body>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setActiveTab("popular")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: radius.pill,
+                  backgroundColor:
+                    activeTab === "popular" ? colors.surface : "transparent",
+                }}
+              >
+                <Body
+                  variant="small"
+                  weight={activeTab === "popular" ? "bold" : "medium"}
+                  style={{
+                    color: activeTab === "popular" ? colors.text : colors.textSecondary,
+                  }}
+                >
+                  Popular
+                </Body>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Subtitle */}
+          {location && (
+            <Caption color="secondary" style={{ marginBottom: 12 }}>
+              Posts within {locationRadius / 1000}km
+            </Caption>
+          )}
+
+          {/* Show location error */}
+          {locationError && (
+            <View
+              style={{
+                backgroundColor: colors.errorSubtle || "#FFE5E5",
+                borderRadius: 12,
+                padding: 8,
+                marginBottom: 12,
+              }}
+            >
+              <Caption style={{ color: colors.error || "#D32F2F" }}>
+                📍 {locationError}
+              </Caption>
+            </View>
+          )}
+
+          {/* Time Filter - Center, only when Popular */}
+          {activeTab === "popular" && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                marginTop: 8,
+              }}
+            >
+              {["day", "week", "month"].map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  onPress={() => setTimeFilter(filter)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: radius.pill,
+                    backgroundColor:
+                      timeFilter === filter
+                        ? colors.surface
+                        : "transparent",
+                  }}
+                >
+                  <Caption
+                    weight={timeFilter === filter ? "bold" : "medium"}
+                    style={{
+                      color: timeFilter === filter ? colors.text : colors.textSecondary,
+                    }}
+                  >
+                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  </Caption>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Posts Feed */}
         {isLoading && posts.length === 0 ? (
           <View
             style={{
@@ -528,7 +536,7 @@ export default function HomeScreen() {
               paddingHorizontal: 32,
             }}
           >
-            <MaterialIcons name="chat-bubble" size={48} color={colors.accent} />
+            <MaterialIcons name="chat-bubble" size={48} color={colors.primary} />
             <Heading
               variant="h2"
               style={{
@@ -560,22 +568,22 @@ export default function HomeScreen() {
         onPress={() => router.push({ pathname: "/create-post" })}
         style={{
           position: "absolute",
-          bottom: insets.bottom,
+          bottom: insets.bottom + 0,
           right: 20,
-          width: 56,
-          height: 56,
+          width: 64,
+          height: 64,
           borderRadius: radius.button,
           backgroundColor: colors.primary,
           justifyContent: "center",
           alignItems: "center",
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 1,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
           shadowRadius: 8,
-          elevation: 6,
+          elevation: 8,
         }}
       >
-        <MaterialIcons name="add" size={28} color={colors.primaryText} />
+        <MaterialIcons name="add" size={32} color={colors.primaryText} />
       </TouchableOpacity>
     </AppBackground>
   );

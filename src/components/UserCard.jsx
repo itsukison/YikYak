@@ -8,53 +8,61 @@ import { Card, Avatar, Body, Caption, Badge } from "./ui";
  * Shows avatar, username, nickname, bio preview, and follow status
  */
 export default function UserCard({ user, isFollowing, onPress }) {
-  const { colors } = useTheme();
+  const { colors, radius, shadows, spacing } = useTheme();
 
   if (!user) return null;
 
   const displayName = user.is_anonymous
     ? "Anonymous"
     : user.nickname || "User";
-  
+
   const username = user.username ? `@${user.username}` : "";
-  const bioPreview = user.bio && !user.is_anonymous 
-    ? user.bio 
+  const bioPreview = user.bio && !user.is_anonymous
+    ? user.bio
     : user.school_name || "";
 
   return (
     <Card
       interactive
       onPress={onPress}
-      style={{ marginHorizontal: 20, marginBottom: 12 }}
+      style={{
+        marginHorizontal: spacing.xl,
+        marginBottom: spacing.md,
+        borderRadius: radius.card,
+        backgroundColor: colors.surface,
+        ...shadows.minimal,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
+      }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", padding: spacing.sm }}>
         {/* Avatar */}
         <Avatar
           name={displayName}
           size="medium"
-          style={{ marginRight: 12 }}
+          style={{ marginRight: spacing.md }}
         />
 
         {/* User Info */}
         <View style={{ flex: 1 }}>
+          {/* Display Name */}
+          <Body weight="bold" style={{ marginBottom: 2, color: colors.text }}>
+            {displayName}
+          </Body>
+
           {/* Username */}
           {username && (
-            <Caption color="secondary" style={{ marginBottom: 2 }}>
+            <Caption color="secondary" style={{ marginBottom: 4 }}>
               {username}
             </Caption>
           )}
 
-          {/* Display Name */}
-          <Body weight="semibold" style={{ marginBottom: 4 }}>
-            {displayName}
-          </Body>
-
           {/* Bio Preview */}
           {bioPreview && (
             <Caption
-              color="secondary"
+              color="tertiary"
               numberOfLines={1}
-              style={{ marginBottom: 8 }}
+              style={{ marginBottom: spacing.sm }}
             >
               {bioPreview}
             </Caption>
@@ -62,12 +70,18 @@ export default function UserCard({ user, isFollowing, onPress }) {
 
           {/* Follow Status Badge */}
           {isFollowing !== undefined && (
-            <Badge
-              variant={isFollowing ? "primary" : "ghost"}
-              size="sm"
-            >
-              {isFollowing ? "Following" : "Not Following"}
-            </Badge>
+            <View style={{ flexDirection: 'row' }}>
+              <Badge
+                variant={isFollowing ? "primary" : "ghost"}
+                size="sm"
+                style={{
+                  borderRadius: radius.pill,
+                  backgroundColor: isFollowing ? colors.primary : colors.ghost
+                }}
+              >
+                {isFollowing ? "Following" : "Not Following"}
+              </Badge>
+            </View>
           )}
         </View>
       </View>

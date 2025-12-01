@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../supabase";
 import * as chatStorage from "../../services/storage/chatStorage";
-import * as messageSync from "../../services/storage/messageSync";
-import * as messageRouter from "../../services/messaging/messageRouter";
 
 /**
  * Fetch all chats for the current user
@@ -59,20 +57,7 @@ export function useChatMessagesQuery(chatId, userId) {
     queryFn: async () => {
       if (!chatId) throw new Error("Chat ID required");
 
-      // Try to load from local storage first
-      const localMessages = await chatStorage.getMessages(chatId);
-
-      // If we have local messages, return them immediately
-      if (localMessages && localMessages.length > 0) {
-        // Trigger background sync
-        messageSync.syncMessagesFromDatabase(chatId, userId).catch((error) => {
-          console.error("Background sync failed:", error);
-        });
-
-        return localMessages;
-      }
-
-      // If no local messages, fetch from database
+      // Always fetch from database to ensure we have the latest messages
       const { data, error } = await supabase
         .from("messages")
         .select(
@@ -82,90 +67,101 @@ export function useChatMessagesQuery(chatId, userId) {
         `
         )
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: true });
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Store in local storage for next time
-      if (data && data.length > 0) {
-        const messagesWithSyncFlag = data.map((msg) => ({ ...msg, synced: true }));
-        await chatStorage.storeMessages(chatId, messagesWithSyncFlag);
-      }
+      if (error) throw error;
 
       return data || [];
     },
     enabled: !!chatId,
-    staleTime: 0, // Always consider stale to allow background sync
+    // staleTime defaults to 5 mins from global config
+    // gcTime defaults to 24 hours from global config
   });
 }
 
 /**
- * Send a new message (with presence-based routing)
+ * Send a new message (simplified for reliability)
  */
 export function useSendMessageMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ chatId, senderId, content, senderData, recipientId }) => {
-      // Step 1: Store locally first for instant UI update
-      const localResult = await messageSync.sendMessageLocalFirst({
-        chatId,
-        senderId,
-        content,
-      });
+      // Insert message to database
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender_id: senderId,
+          content: content.trim(),
+        })
+        .select(`
+          *,
+          sender:users!messages_sender_id_fkey(id, nickname, is_anonymous)
+        `)
+        .single();
 
-      if (!localResult.success) {
-        throw new Error(localResult.error);
-      }
+      if (error) throw error;
 
-      const tempMessage = localResult.message;
+      return data;
+    },
+    onMutate: async ({ chatId, senderId, content, senderData }) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ["messages", chatId] });
 
-      // Step 2: Optimistically update the query cache
-      queryClient.setQueryData(["messages", chatId], (oldData) => {
-        if (!oldData) return [{ ...tempMessage, sender: senderData }];
-        return [...oldData, { ...tempMessage, sender: senderData }];
-      });
+      // Snapshot the previous value
+      const previousMessages = queryClient.getQueryData(["messages", chatId]);
 
-      // Step 3: Route message based on recipient's online status
-      const routingResult = await messageRouter.sendMessage(
-        {
-          chatId,
-          senderId,
-          content,
-          senderData,
-        },
-        recipientId
-      );
-
-      if (!routingResult.success) {
-        throw new Error(routingResult.error);
-      }
-
-      // Step 4: Update local storage with real ID
-      await messageSync.markMessageSynced(
-        chatId,
-        tempMessage.tempId,
-        routingResult.message
-      );
-
-      // Add delivery info to result
-      return {
-        ...routingResult.message,
-        deliveryMethod: routingResult.deliveryMethod,
-        recipientOnline: routingResult.recipientOnline,
+      // Create temporary message
+      const tempMessage = {
+        tempId: `temp_${Date.now()}_${Math.random()}`,
+        chat_id: chatId,
+        sender_id: senderId,
+        content: content.trim(),
+        created_at: new Date().toISOString(),
+        synced: false,
+        is_read: false,
+        sender: senderData,
       };
+
+      // Optimistically update to the new value
+      // Note: We prepend because the list is now sorted descending (Newest first)
+      queryClient.setQueryData(["messages", chatId], (old) => {
+        if (!old) return [tempMessage];
+        return [tempMessage, ...old];
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousMessages };
     },
     onSuccess: (data, variables) => {
-      // Invalidate chats query to update last message
+      // Replace the temp message with the real one
+      queryClient.setQueryData(["messages", variables.chatId], (oldData) => {
+        if (!oldData) return [data];
+
+        // Find the temp message (it should be at the top) and replace it
+        // Or just map through to be safe
+        return oldData.map(msg => {
+          if (msg.content === data.content && msg.sender_id === data.sender_id && !msg.id) {
+            return data;
+          }
+          return msg;
+        });
+      });
+
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries(["chats"]);
-      
-      // Refetch messages to ensure consistency
       queryClient.invalidateQueries(["messages", variables.chatId]);
     },
-    onError: (error, variables) => {
-      console.error("Error sending message:", error);
-      // Revert optimistic update on error
-      queryClient.invalidateQueries(["messages", variables.chatId]);
+    onError: (err, variables, context) => {
+      console.error("Error sending message:", err);
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousMessages) {
+        queryClient.setQueryData(["messages", variables.chatId], context.previousMessages);
+      }
     },
   });
 }

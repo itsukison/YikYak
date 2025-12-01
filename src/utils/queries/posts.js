@@ -47,6 +47,7 @@ export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new'
     },
     enabled: enabled && latitude != null && longitude != null,
     staleTime: 1000 * 60, // 1 minute
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new data
   });
 }
 
@@ -78,8 +79,9 @@ export function useCreatePostMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, content, latitude, longitude, locationName }) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ userId, content, latitude, longitude, locationName, photos = [] }) => {
+      // Step 1: Insert post
+      const { data: post, error } = await supabase
         .from('posts')
         .insert({
           user_id: userId,
@@ -88,11 +90,73 @@ export function useCreatePostMutation() {
           longitude,
           location_name: locationName,
         })
-        .select()
+        .select(`
+          *,
+          sender:users!posts_user_id_fkey(id, nickname, is_anonymous)
+        `)
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Step 2: Insert photos if any
+      if (photos.length > 0) {
+        const photoRecords = photos.map((url, index) => ({
+          post_id: post.id,
+          photo_url: url,
+          photo_order: index,
+        }));
+
+        const { error: photoError } = await supabase
+          .from('post_photos')
+          .insert(photoRecords);
+
+        if (photoError) {
+          console.error('Photo record error:', photoError);
+          // We don't throw here to avoid rolling back the post creation
+        }
+      }
+
+      return { ...post, photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })) };
+    },
+    onMutate: async ({ userId, content, latitude, longitude, locationName, userNickname, userIsAnonymous, photos = [] }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['posts'] });
+
+      // Snapshot previous data
+      const previousPosts = queryClient.getQueriesData({ queryKey: ['posts'] });
+
+      // Create temp post
+      const tempPost = {
+        id: `temp_${Date.now()}`,
+        user_id: userId,
+        content: content.trim(),
+        latitude,
+        longitude,
+        location_name: locationName,
+        created_at: new Date().toISOString(),
+        upvotes: 0,
+        downvotes: 0,
+        photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })),
+        nickname: userNickname || 'User', // Fallback
+        is_anonymous: userIsAnonymous,
+        temp: true,
+      };
+
+      // Optimistically update posts lists
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old) => {
+        if (!old) return [tempPost];
+        return [tempPost, ...old];
+      });
+
+      return { previousPosts };
+    },
+    onError: (err, variables, context) => {
+      // Rollback
+      if (context?.previousPosts) {
+        context.previousPosts.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
     },
     onSuccess: () => {
       // Invalidate posts queries to refetch
@@ -129,11 +193,94 @@ export function useVotePostMutation() {
       if (error) throw error;
       return voteType;
     },
+    onMutate: async ({ userId, postId, voteType }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['posts'] });
+      await queryClient.cancelQueries({ queryKey: ['user-votes', userId] });
+      await queryClient.cancelQueries({ queryKey: ['post', postId] });
+
+      // Snapshot the previous value
+      const previousPosts = queryClient.getQueriesData({ queryKey: ['posts'] });
+      const previousUserVotes = queryClient.getQueryData(['user-votes', userId]);
+      const previousPost = queryClient.getQueryData(['post', postId]);
+
+      // Optimistically update user votes
+      queryClient.setQueryData(['user-votes', userId], (old) => {
+        const newVotes = { ...old };
+        if (voteType === null) {
+          delete newVotes[postId];
+        } else {
+          newVotes[postId] = voteType;
+        }
+        return newVotes;
+      });
+
+      // Helper to calculate score change
+      const calculateChange = (currentVote, newVote) => {
+        let upvoteChange = 0;
+        let downvoteChange = 0;
+
+        // Remove old vote effect
+        if (currentVote === 'up') upvoteChange -= 1;
+        if (currentVote === 'down') downvoteChange -= 1;
+
+        // Add new vote effect
+        if (newVote === 'up') upvoteChange += 1;
+        if (newVote === 'down') downvoteChange += 1;
+
+        return { upvoteChange, downvoteChange };
+      };
+
+      const currentVote = previousUserVotes ? previousUserVotes[postId] : null;
+      const { upvoteChange, downvoteChange } = calculateChange(currentVote, voteType);
+
+      // Optimistically update posts lists
+      queryClient.setQueriesData({ queryKey: ['posts'] }, (old) => {
+        if (!old) return old;
+        return old.map((post) => {
+          if (post.id === postId) {
+            return {
+              ...post,
+              upvotes: (post.upvotes || 0) + upvoteChange,
+              downvotes: (post.downvotes || 0) + downvoteChange,
+            };
+          }
+          return post;
+        });
+      });
+
+      // Optimistically update single post view
+      queryClient.setQueryData(['post', postId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          upvotes: (old.upvotes || 0) + upvoteChange,
+          downvotes: (old.downvotes || 0) + downvoteChange,
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousPosts, previousUserVotes, previousPost };
+    },
+    onError: (err, variables, context) => {
+      // Rollback
+      if (context?.previousUserVotes) {
+        queryClient.setQueryData(['user-votes', variables.userId], context.previousUserVotes);
+      }
+      if (context?.previousPosts) {
+        context.previousPosts.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      if (context?.previousPost) {
+        queryClient.setQueryData(['post', variables.postId], context.previousPost);
+      }
+    },
     onSuccess: (_, variables) => {
-      // Invalidate user votes to refetch
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['user-votes', variables.userId] });
-      // Optionally invalidate posts to get updated scores
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['post', variables.postId] });
     },
   });
 }

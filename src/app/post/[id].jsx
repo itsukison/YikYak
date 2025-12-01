@@ -20,7 +20,7 @@ import {
   useCreateCommentMutation,
   useVoteCommentMutation,
 } from "../../utils/queries/comments";
-import { Heading, Body, Caption, Card } from "../../components/ui";
+import { Heading, Body, Caption, Avatar } from "../../components/ui";
 import PhotoGrid from "../../components/PhotoGrid";
 
 export default function PostDetailScreen() {
@@ -153,16 +153,15 @@ export default function PostDetailScreen() {
             paddingBottom: 16,
             flexDirection: "row",
             alignItems: "center",
-            borderBottomWidth: 1,
-            borderBottomColor: colors.border,
+            // Removed borderBottomWidth
           }}
         >
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={{ 
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
               marginRight: 12,
-              width: 48,
-              height: 48,
+              width: 40,
+              height: 40,
               justifyContent: 'center',
               alignItems: 'flex-start'
             }}
@@ -173,61 +172,107 @@ export default function PostDetailScreen() {
         </View>
 
         <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          {/* Post Card */}
-          <Card style={{ marginHorizontal: 20, marginTop: 20 }}>
+          {/* Post Content - Flat Layout */}
+          <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
             {/* Post Header */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (!post.is_anonymous && post.user_id) {
-                    router.push(`/user/${post.user_id}`);
-                  }
-                }}
-                disabled={post.is_anonymous}
-              >
-                <Body weight="semibold">{displayName}</Body>
-              </TouchableOpacity>
-              <Caption color="secondary">{formatTime(post.created_at)}</Caption>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: 16,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!post.is_anonymous && post.user_id) {
+                      router.push(`/user/${post.user_id}`);
+                    }
+                  }}
+                  disabled={post.is_anonymous}
+                >
+                  <Avatar
+                    name={post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+                    size="small"
+                    style={{ marginRight: 12 }}
+                  />
+                </TouchableOpacity>
+
+                <View style={{ flex: 1 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!post.is_anonymous && post.user_id) {
+                        router.push(`/user/${post.user_id}`);
+                      }
+                    }}
+                    disabled={post.is_anonymous}
+                  >
+                    <Body weight="bold" style={{ color: colors.text, lineHeight: 20 }}>
+                      {displayName}
+                    </Body>
+                  </TouchableOpacity>
+
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                    <Caption color="secondary">
+                      {formatTime(post.created_at)}
+                    </Caption>
+                  </View>
+                </View>
+              </View>
+
+              {/* Location */}
+              {post.location_name && (
+                <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
+                  <MaterialIcons name="place" size={12} color={colors.textTertiary} />
+                  <Caption color="tertiary" style={{ marginLeft: 2 }}>
+                    {post.location_name}
+                  </Caption>
+                </View>
+              )}
             </View>
 
             {/* Post Content */}
-            <Body style={{ lineHeight: 24, marginBottom: post.photos?.length > 0 ? 8 : 12 }}>
+            <Body style={{ lineHeight: 24, marginBottom: post.photos?.length > 0 ? 12 : 20, fontSize: 18 }}>
               {post.content}
             </Body>
 
             {/* Post Photos */}
             {post.photos && post.photos.length > 0 && (
-              <View style={{ marginBottom: 12 }}>
+              <View style={{ marginBottom: 20 }}>
                 <PhotoGrid photos={post.photos} />
               </View>
             )}
 
-            {/* Location */}
-            {post.location_name && (
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-                <MaterialIcons name="place" size={14} color={colors.textSecondary} />
-                <Caption color="secondary" style={{ marginLeft: 4 }}>
-                  {post.location_name} • {formatDistance(post.distance)}
-                </Caption>
-              </View>
-            )}
-
-            {/* Post Stats */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialIcons name="arrow-upward" size={20} color={colors.primary} />
-                <Body weight="semibold" variant="small" style={{ marginLeft: 4 }}>
+            {/* Post Stats/Actions */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 24 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: colors.surface,
+                  borderRadius: radius.pill,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6
+                }}
+              >
+                <MaterialIcons name="arrow-upward" size={16} color={colors.primary} />
+                <Body weight="bold" variant="small" style={{ marginLeft: 6, color: colors.text }}>
                   {post.score || 0}
                 </Body>
               </View>
-              <Caption color="secondary">
-                {post.comment_count || 0} comments
-              </Caption>
+
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <MaterialIcons name="chat-bubble-outline" size={18} color={colors.textSecondary} />
+                <Caption color="secondary" style={{ marginLeft: 6 }}>
+                  {post.comment_count || 0} comments
+                </Caption>
+              </View>
             </View>
-          </Card>
+          </View>
 
           {/* Comments Section */}
-          <View style={{ marginTop: 32 }}>
+          <View style={{ marginTop: 12 }}>
             <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 20 }}>
               Comments
             </Heading>
@@ -242,16 +287,16 @@ export default function PostDetailScreen() {
                 const displayScore = commentItem.score;
 
                 return (
-                  <View 
+                  <View
                     key={commentItem.id}
                     style={{
-                      backgroundColor: colors.surface,
                       paddingHorizontal: 20,
                       paddingVertical: 16,
+                      // Removed background color
                     }}
                   >
-                    {/* Comment Header */}
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+                    <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                      {/* Comment Avatar */}
                       <TouchableOpacity
                         onPress={() => {
                           if (!commentItem.author.is_anonymous && commentItem.user_id) {
@@ -260,45 +305,67 @@ export default function PostDetailScreen() {
                         }}
                         disabled={commentItem.author.is_anonymous}
                       >
-                        <Body weight="semibold" variant="small">
-                          {commentItem.author_nickname}
+                        <Avatar
+                          name={commentItem.author.is_anonymous ? "Anonymous" : commentItem.author_nickname || "Unknown"}
+                          size="small"
+                          style={{ marginRight: 12 }}
+                        />
+                      </TouchableOpacity>
+
+                      <View style={{ flex: 1 }}>
+                        {/* Comment Header */}
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity
+                              onPress={() => {
+                                if (!commentItem.author.is_anonymous && commentItem.user_id) {
+                                  router.push(`/user/${commentItem.user_id}`);
+                                }
+                              }}
+                              disabled={commentItem.author.is_anonymous}
+                            >
+                              <Body weight="bold" variant="small">
+                                {commentItem.author_nickname}
+                              </Body>
+                            </TouchableOpacity>
+                            <Caption color="secondary" style={{ marginLeft: 6 }}>
+                              {formatTime(commentItem.created_at)}
+                            </Caption>
+                          </View>
+                        </View>
+
+                        {/* Comment Content */}
+                        <Body variant="small" style={{ lineHeight: 20, marginBottom: 8 }}>
+                          {commentItem.content}
                         </Body>
-                      </TouchableOpacity>
-                      <Caption color="secondary">
-                        {formatTime(commentItem.created_at)}
-                      </Caption>
-                    </View>
 
-                    {/* Comment Content */}
-                    <Body variant="small" style={{ lineHeight: 20, marginBottom: 8 }}>
-                      {commentItem.content}
-                    </Body>
+                        {/* Comment Actions */}
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                          <TouchableOpacity
+                            onPress={() => handleVoteComment(commentItem.id, 1)}
+                            style={{ flexDirection: "row", alignItems: "center" }}
+                          >
+                            <MaterialIcons
+                              name="arrow-upward"
+                              size={16}
+                              color={userVote === 1 ? colors.accent : colors.textSecondary}
+                            />
+                            <Caption weight="medium" style={{ marginLeft: 4, color: userVote === 1 ? colors.accent : colors.textSecondary }}>
+                              {displayScore}
+                            </Caption>
+                          </TouchableOpacity>
 
-                    {/* Comment Votes */}
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                      <TouchableOpacity
-                        onPress={() => handleVoteComment(commentItem.id, 1)}
-                        style={{ flexDirection: "row", alignItems: "center" }}
-                      >
-                        <MaterialIcons
-                          name="arrow-upward"
-                          size={18}
-                          color={userVote === 1 ? colors.accent : colors.textSecondary}
-                        />
-                      </TouchableOpacity>
-                      <Caption weight="semibold">
-                        {displayScore}
-                      </Caption>
-                      <TouchableOpacity
-                        onPress={() => handleVoteComment(commentItem.id, -1)}
-                        style={{ flexDirection: "row", alignItems: "center" }}
-                      >
-                        <MaterialIcons
-                          name="arrow-downward"
-                          size={18}
-                          color={userVote === -1 ? colors.error : colors.textSecondary}
-                        />
-                      </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleVoteComment(commentItem.id, -1)}
+                          >
+                            <MaterialIcons
+                              name="arrow-downward"
+                              size={16}
+                              color={userVote === -1 ? colors.error : colors.textSecondary}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 );

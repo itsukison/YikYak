@@ -6,7 +6,7 @@ import { useTheme } from '../utils/theme';
 import { Body } from './ui';
 import PhotoThumbnail from './PhotoThumbnail';
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 3;
 
 export default function PhotoPicker({ photos, onPhotosChange }) {
   const { colors } = useTheme();
@@ -80,7 +80,7 @@ export default function PhotoPicker({ photos, onPhotosChange }) {
         style={[
           styles.button,
           {
-            backgroundColor: isDisabled ? colors.inputBackground : colors.secondaryButton,
+            backgroundColor: isDisabled ? colors.surface : colors.ghost,
             opacity: isDisabled ? 0.5 : 1,
           },
         ]}
@@ -90,13 +90,12 @@ export default function PhotoPicker({ photos, onPhotosChange }) {
         <MaterialIcons
           name="image"
           size={20}
-          color={isDisabled ? colors.textSecondary : colors.text}
+          color={isDisabled ? colors.textSecondary : colors.ghostText}
         />
         <Body
-          weight="medium"
           style={[
             styles.buttonText,
-            { color: isDisabled ? colors.textSecondary : colors.text },
+            { color: isDisabled ? colors.textSecondary : colors.ghostText },
           ]}
         >
           Attach Photos ({photos.length}/{MAX_PHOTOS})
@@ -113,6 +112,7 @@ const styles = StyleSheet.create({
   thumbnailGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 16,
   },
   button: {
@@ -120,10 +120,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 24,
+    minHeight: 48,
   },
   buttonText: {
     marginLeft: 12,
+    fontWeight: '600',
   },
 });

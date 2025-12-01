@@ -4,7 +4,10 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
 import { Alert } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../utils/auth/useAuth';
 import { supabase } from '../utils/supabase';
 import { usePeriodicSync } from '../utils/hooks/useMessageSync';
@@ -17,11 +20,16 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 30, // 30 minutes
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours (formerly cacheTime)
       retry: 1,
       refetchOnWindowFocus: false,
     },
   },
+});
+
+const persister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  throttleTime: 3000, // Throttle saves to every 3 seconds
 });
 
 function RootLayoutNav() {
@@ -141,12 +149,12 @@ function RootLayoutNav() {
     const onOnboardingScreen = segments[0] === 'onboarding';
     const inProtectedRoute = segments[0] === '(tabs)' || segments[0] === 'create-post' || segments[0] === 'home';
 
-    console.log('Auth routing:', { 
-      user: !!user, 
-      profile: !!profile, 
+    console.log('Auth routing:', {
+      user: !!user,
+      profile: !!profile,
       onboarding_completed: profile?.onboarding_completed,
-      currentPath, 
-      segments 
+      currentPath,
+      segments
     });
 
     // Not authenticated - redirect to login (except for index and auth screens)
@@ -211,10 +219,13 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister }}
+    >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <RootLayoutNav />
       </GestureHandlerRootView>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

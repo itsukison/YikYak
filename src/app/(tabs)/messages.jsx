@@ -67,7 +67,7 @@ export default function MessagesScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        
+
         {/* Header with Find Users Button */}
         <View
           style={{
@@ -130,19 +130,21 @@ export default function MessagesScreen() {
       <TouchableOpacity
         onPress={() => router.push(`/chat/${item.id}`)}
         style={{
-          backgroundColor: colors.surface,
+          backgroundColor: "transparent",
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.borderLight,
         }}
         activeOpacity={0.7}
       >
-        <View style={{ 
-          flexDirection: "row", 
+        <View style={{
+          flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 20,
           paddingVertical: 16,
         }}>
           {/* Avatar with online indicator */}
           <View style={{ position: 'relative', marginRight: 12 }}>
-            <Avatar 
+            <Avatar
               name={displayName}
               size="medium"
             />
@@ -154,10 +156,10 @@ export default function MessagesScreen() {
                   right: 0,
                   width: 14,
                   height: 14,
-                  borderRadius: 7,
-                  backgroundColor: '#4CAF50',
+                  borderRadius: radius.avatar,
+                  backgroundColor: colors.success,
                   borderWidth: 2,
-                  borderColor: colors.surface,
+                  borderColor: colors.background,
                 }}
               />
             )}
@@ -172,7 +174,7 @@ export default function MessagesScreen() {
               )}
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <Caption 
+              <Caption
                 numberOfLines={1}
                 color="secondary"
                 style={{ flex: 1 }}
@@ -180,9 +182,9 @@ export default function MessagesScreen() {
                 {lastMessageText}
               </Caption>
               {item.unreadCount > 0 && (
-                <Badge 
+                <Badge
                   variant="primary"
-                  size="sm"
+                  size="small"
                   style={{ marginLeft: 8 }}
                 >
                   {item.unreadCount}
@@ -211,16 +213,19 @@ export default function MessagesScreen() {
             alignItems: "center",
           }}
         >
-          <Heading variant="h1">Messages</Heading>
+          <Heading variant="h2" weight="semibold">Messages</Heading>
           <TouchableOpacity
             onPress={() => router.push("/search-users")}
             style={{
-              backgroundColor: colors.accentSubtle,
-              padding: 12,
-              borderRadius: 24,
+              backgroundColor: colors.surface,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <MaterialIcons name="person-add" size={20} color={colors.accent} />
+            <MaterialIcons name="person-add" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 

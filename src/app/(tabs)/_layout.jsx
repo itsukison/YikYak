@@ -75,7 +75,7 @@ export default function TabLayout() {
                     right: -10,
                   }}
                 >
-                  <Badge variant="error" size="sm">
+                  <Badge variant="error" size="small">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </Badge>
                 </View>

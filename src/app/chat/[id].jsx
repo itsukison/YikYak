@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   RefreshControl,
+  Keyboard,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -23,8 +24,7 @@ import {
 import { subscribeToMessages } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Heading, Body, Caption } from "../../components/ui";
-import { useMessageSync } from "../../utils/hooks/useMessageSync";
-import { useUserPresence } from "../../utils/hooks/usePresence";
+
 
 export default function ChatDetailScreen() {
   const { id: chatId } = useLocalSearchParams();
@@ -37,16 +37,14 @@ export default function ChatDetailScreen() {
   const [message, setMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: messages, isLoading } = useChatMessagesQuery(chatId, user?.id);
+  const { data: messages, isLoading, refetch } = useChatMessagesQuery(chatId, user?.id);
   const sendMessageMutation = useSendMessageMutation();
   const markReadMutation = useMarkMessagesReadMutation();
-  const { syncNow } = useMessageSync(chatId, user?.id, !!chatId && !!user?.id);
 
-  // Get other user ID and track their presence
+  // Get other user ID
   const otherUserId = messages && messages.length > 0
     ? messages.find((msg) => msg.sender_id !== user?.id)?.sender_id
     : null;
-  const { online: recipientOnline } = useUserPresence(otherUserId);
 
   // Subscribe to new messages
   useEffect(() => {
@@ -65,15 +63,6 @@ export default function ChatDetailScreen() {
       markReadMutation.mutate({ chatId, userId: user.id });
     }
   }, [chatId, user?.id]);
-
-  // Scroll to bottom when messages load
-  useEffect(() => {
-    if (messages && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages]);
 
   if (!user) {
     return (
@@ -105,21 +94,17 @@ export default function ChatDetailScreen() {
         recipientId: otherUserId,
       });
 
-      // Scroll to bottom after sending
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
     } catch (error) {
       console.error("Error sending message:", error);
-      // Message is still in local storage, so don't restore to input
-      // User can see it in the chat with a "pending" indicator if needed
+      // Restore message to input on error
+      setMessage(messageText);
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await syncNow();
+      await refetch();
     } catch (error) {
       console.error("Error refreshing messages:", error);
     } finally {
@@ -134,8 +119,6 @@ export default function ChatDetailScreen() {
 
   const renderMessage = ({ item, index }) => {
     const isOwnMessage = item.sender_id === user.id;
-    const showSenderName = !isOwnMessage && (index === 0 || messages[index - 1].sender_id !== item.sender_id);
-    const displayName = item.sender?.is_anonymous ? "Anonymous" : item.sender?.nickname || "User";
     const isPending = !item.synced && item.tempId; // Message not yet synced to database
 
     return (
@@ -146,56 +129,65 @@ export default function ChatDetailScreen() {
           alignItems: isOwnMessage ? "flex-end" : "flex-start",
         }}
       >
-        {showSenderName && (
-          <Caption 
-            color="secondary"
-            style={{ marginBottom: 4, marginLeft: isOwnMessage ? 0 : 12 }}
-          >
-            {displayName}
-          </Caption>
-        )}
-        <View
-          style={{
-            backgroundColor: isOwnMessage ? colors.primary : colors.inputBackground,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderRadius: 16,
-            maxWidth: "75%",
-            opacity: isPending ? 0.7 : 1, // Slightly transparent if pending
-          }}
-        >
-          <Body 
-            style={{ 
-              color: isOwnMessage ? colors.primaryText : colors.text,
-              lineHeight: 22,
-            }}
-          >
-            {item.content}
-          </Body>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+        {isOwnMessage ? (
+          // Own message: timestamp on left
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
             <Caption
+              color="secondary"
+              style={{ marginRight: 8, marginBottom: 2 }}
+            >
+              {formatTime(item.created_at)}
+              {isPending && " • Sending..."}
+            </Caption>
+            <View
               style={{
-                color: isOwnMessage 
-                  ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
-                  : colors.textSecondary,
+                backgroundColor: colors.primary,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 16,
+                maxWidth: "75%",
+                opacity: isPending ? 0.7 : 1,
               }}
+            >
+              <Body
+                style={{
+                  color: colors.primaryText,
+                  lineHeight: 22,
+                }}
+              >
+                {item.content}
+              </Body>
+            </View>
+          </View>
+        ) : (
+          // Other's message: timestamp on right
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            <View
+              style={{
+                backgroundColor: colors.surfaceElevated,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 16,
+                maxWidth: "75%",
+              }}
+            >
+              <Body
+                style={{
+                  color: colors.text,
+                  lineHeight: 22,
+                }}
+              >
+                {item.content}
+              </Body>
+            </View>
+            <Caption
+              color="secondary"
+              style={{ marginLeft: 8, marginBottom: 2 }}
             >
               {formatTime(item.created_at)}
             </Caption>
-            {isPending && (
-              <Caption
-                style={{
-                  color: isOwnMessage 
-                    ? (isDark ? "rgba(0, 0, 0, 0.6)" : "rgba(255, 255, 255, 0.7)")
-                    : colors.textSecondary,
-                  marginLeft: 6,
-                }}
-              >
-                • Sending...
-              </Caption>
-            )}
           </View>
-        </View>
+        )}
       </View>
     );
   };
@@ -230,7 +222,7 @@ export default function ChatDetailScreen() {
         >
           <TouchableOpacity
             onPress={() => router.back()}
-            style={{ 
+            style={{
               marginRight: 12,
               width: 48,
               height: 48,
@@ -242,23 +234,7 @@ export default function ChatDetailScreen() {
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Heading variant="h2">{otherUserName}</Heading>
-            {otherUserId && (
-              <Caption color="secondary" style={{ marginTop: 2 }}>
-                {recipientOnline ? "Online" : "Offline"}
-              </Caption>
-            )}
           </View>
-          {recipientOnline && (
-            <View
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 5,
-                backgroundColor: "#4CAF50",
-                marginLeft: 8,
-              }}
-            />
-          )}
         </View>
 
         {/* Messages List */}
@@ -273,7 +249,7 @@ export default function ChatDetailScreen() {
             renderItem={renderMessage}
             keyExtractor={(item) => (item.id || item.tempId).toString()}
             contentContainerStyle={{ paddingTop: 16, paddingBottom: 16 }}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            inverted
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -304,14 +280,14 @@ export default function ChatDetailScreen() {
             placeholderTextColor={colors.textSecondary}
             style={{
               flex: 1,
-              backgroundColor: colors.inputBackground,
+              backgroundColor: colors.surfaceElevated,
               borderRadius: 24,
               paddingHorizontal: 16,
-              paddingVertical: 12,
+              paddingVertical: 10,
               fontSize: 16,
               color: colors.text,
               marginRight: 12,
-              minHeight: 48,
+              minHeight: 40,
             }}
             multiline
             maxLength={500}
@@ -321,9 +297,9 @@ export default function ChatDetailScreen() {
             disabled={!message.trim() || sendMessageMutation.isPending}
             style={{
               backgroundColor: message.trim() ? colors.primary : colors.border,
-              width: 48,
-              height: 48,
-              borderRadius: 24,
+              width: 40,
+              height: 40,
+              borderRadius: 20,
               justifyContent: "center",
               alignItems: "center",
             }}

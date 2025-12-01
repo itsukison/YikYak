@@ -19,7 +19,7 @@ import {
 } from "../../utils/queries/notifications";
 import { subscribeToNotifications } from "../../utils/realtime";
 import { useQueryClient } from "@tanstack/react-query";
-import { Container, Heading, Body, Caption, Card, Button } from "../../components/ui";
+import { Container, Heading, Body, Caption, Card, Button, Avatar } from "../../components/ui";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -159,44 +159,63 @@ export default function NotificationScreen() {
     const iconName = getNotificationIcon(item.type);
     const notificationText = getNotificationText(item);
 
+    // Determine avatar name (use actor name or "System")
+    const avatarName = item.actor_name || "System";
+
     return (
       <TouchableOpacity
         onPress={() => handleNotificationPress(item)}
         style={{
-          backgroundColor: item.is_read ? colors.surface : colors.accentSubtle,
+          backgroundColor: item.is_read ? "transparent" : colors.primarySubtle,
           paddingHorizontal: 20,
           paddingVertical: 16,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.borderLight,
         }}
         activeOpacity={0.7}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {/* Icon */}
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: colors.inputBackground,
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 12,
-            }}
-          >
-            <MaterialIcons name={iconName} size={20} color={colors.accent} />
+        <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+          {/* Avatar */}
+          <View style={{ marginRight: 12, position: 'relative' }}>
+            <Avatar
+              name={avatarName}
+              size="medium"
+            />
+            {/* Type Icon Badge */}
+            <View
+              style={{
+                position: 'absolute',
+                bottom: -4,
+                right: -4,
+                backgroundColor: colors.surfaceElevated,
+                borderRadius: 10,
+                width: 20,
+                height: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: colors.shadow,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+                elevation: 2,
+              }}
+            >
+              <MaterialIcons name={iconName} size={12} color={colors.primary} />
+            </View>
           </View>
 
           {/* Content */}
           <View style={{ flex: 1 }}>
-            <Body 
+            <Body
               weight={item.is_read ? "regular" : "semibold"}
-              style={{ marginBottom: 4 }}
+              style={{ marginBottom: 4, lineHeight: 20 }}
             >
               {notificationText}
             </Body>
 
             {/* Preview text for comments */}
             {item.type === "comment" && item.comment?.content && (
-              <Caption 
+              <Caption
                 numberOfLines={1}
                 color="secondary"
                 style={{ marginBottom: 4 }}
@@ -216,9 +235,10 @@ export default function NotificationScreen() {
               style={{
                 width: 8,
                 height: 8,
-                borderRadius: 4,
-                backgroundColor: colors.accent,
+                borderRadius: radius.avatar,
+                backgroundColor: colors.primary,
                 marginLeft: 8,
+                marginTop: 6,
               }}
             />
           )}
@@ -243,7 +263,7 @@ export default function NotificationScreen() {
             alignItems: "center",
           }}
         >
-          <Heading variant="h1">Notifications</Heading>
+          <Heading variant="h2" weight="semibold">Notifications</Heading>
 
           {unreadCount > 0 && (
             <Button

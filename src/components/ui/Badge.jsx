@@ -47,21 +47,21 @@ export default function Badge({
       paddingVertical: spacing.xs,
       minWidth: 20,
       minHeight: 20,
-      borderRadius: 10,
+      borderRadius: radius.avatar, // Perfect circle
     },
     medium: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       minWidth: 24,
       minHeight: 24,
-      borderRadius: 12,
+      borderRadius: radius.avatar, // Perfect circle
     },
     large: {
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
       minWidth: 32,
       minHeight: 32,
-      borderRadius: 16,
+      borderRadius: radius.avatar, // Perfect circle
     },
   };
 

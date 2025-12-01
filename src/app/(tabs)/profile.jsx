@@ -122,8 +122,8 @@ export default function ProfileScreen() {
       "Location Radius",
       "Choose how far you want to see posts from your location",
       [
-        { 
-          text: "2km", 
+        {
+          text: "2km",
           onPress: async () => {
             setLocationRadius(2);
             const { error } = await updateLocationRadius(2000);
@@ -135,8 +135,8 @@ export default function ProfileScreen() {
             }
           }
         },
-        { 
-          text: "5km", 
+        {
+          text: "5km",
           onPress: async () => {
             setLocationRadius(5);
             const { error } = await updateLocationRadius(5000);
@@ -148,8 +148,8 @@ export default function ProfileScreen() {
             }
           }
         },
-        { 
-          text: "10km", 
+        {
+          text: "10km",
           onPress: async () => {
             setLocationRadius(10);
             const { error } = await updateLocationRadius(10000);
@@ -235,7 +235,7 @@ export default function ProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Heading variant="h1" style={{ textAlign: "center", paddingHorizontal: 16 }}>
+        <Heading variant="h2" weight="semibold" style={{ textAlign: "left", paddingHorizontal: 20 }}>
           Profile
         </Heading>
       </View>
@@ -245,118 +245,183 @@ export default function ProfileScreen() {
         contentContainerStyle={{
           paddingTop: insets.top + 60, // Account for fixed header
           paddingBottom: insets.bottom + 20,
-          paddingHorizontal: 16,
+          paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
         {/* Profile Header */}
-        <View style={{ 
-          alignItems: "center", 
-          marginBottom: 24,
-          backgroundColor: colors.surface,
-          borderRadius: 16,
-          padding: 20,
+        <View style={{
+          marginBottom: 24, // Reduced from 32
+          paddingHorizontal: 0,
         }}>
-          {/* Profile Avatar */}
-          <Avatar
-            size="xlarge"
-            name={currentUser.nickname}
-            style={{ marginBottom: 16 }}
-          />
+          {/* Top Section: Avatar + Name + Stats */}
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            {/* Profile Avatar */}
+            <Avatar
+              size="xlarge" // Increased from large
+              name={currentUser.nickname}
+            />
 
-          {/* User Name */}
-          <Heading variant="h2" style={{ marginBottom: 4 }}>
-            {isAnonymous ? "Anonymous User" : currentUser.nickname}
-          </Heading>
+            {/* Right Column: Name + Stats */}
+            <View style={{ flex: 1, marginLeft: 20, justifyContent: "center" }}>
+              {/* User Name */}
+              <Body weight="bold" style={{ marginBottom: 8, fontSize: 18 }}>
+                {isAnonymous ? "Anonymous User" : currentUser.nickname}
+              </Body>
+
+              {/* Stats Row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  paddingRight: 20,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => router.push(`/user/${user.id}`)}
+                  style={{ alignItems: "center" }}
+                >
+                  <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>{currentUser.post_count}</Heading>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Posts</Caption>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => router.push(`/user/following/${user.id}`)}
+                  style={{ alignItems: "center" }}
+                >
+                  <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
+                    {currentUser.following_count}
+                  </Heading>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Following</Caption>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => router.push(`/user/followers/${user.id}`)}
+                  style={{ alignItems: "center" }}
+                >
+                  <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
+                    {currentUser.follower_count}
+                  </Heading>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Followers</Caption>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
 
           {/* User Email/Bio */}
-          <Body variant="small" color="secondary" style={{ textAlign: "center", marginBottom: 20 }}>
+          <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 16 }}>
             {isAnonymous ? "Your identity is hidden" : currentUser.bio}
           </Body>
-
-          {/* Stats */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-around",
-              width: "100%",
-              paddingTop: 16,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => router.push(`/user/${user.id}`)}
-              style={{ alignItems: "center", flex: 1 }}
-            >
-              <Heading variant="h2">{currentUser.post_count}</Heading>
-              <Caption color="secondary">Posts</Caption>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push(`/user/following/${user.id}`)}
-              style={{ alignItems: "center", flex: 1 }}
-            >
-              <Heading variant="h2">
-                {currentUser.following_count}
-              </Heading>
-              <Caption color="secondary">Following</Caption>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push(`/user/followers/${user.id}`)}
-              style={{ alignItems: "center", flex: 1 }}
-            >
-              <Heading variant="h2">
-                {currentUser.follower_count}
-              </Heading>
-              <Caption color="secondary">Followers</Caption>
-            </TouchableOpacity>
-          </View>
         </View>
 
         {/* Account Settings */}
-        <Section spacing="md">
+        <Section spacing="lg">
           <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
             Account Settings
           </Heading>
-          
-          <Card style={{ paddingVertical: 8, marginBottom: 20 }}>
 
-          {accountMenuItems.map((item, index) => (
-            <View key={index}>
-              <View
+          <View style={{ marginBottom: 20 }}>
+            {accountMenuItems.map((item, index) => (
+              <View key={index}>
+                <TouchableOpacity
+                  onPress={item.onPress}
+                  activeOpacity={0.7}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 16,
+                    paddingHorizontal: 4,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.borderLight,
+                  }}
+                >
+                  {/* Icon */}
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: radius.pill,
+                      backgroundColor: colors.surface,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: 16,
+                    }}
+                  >
+                    <MaterialIcons
+                      name={item.icon}
+                      size={22}
+                      color={colors.text}
+                    />
+                  </View>
+
+                  {/* Text Content */}
+                  <View style={{ flex: 1 }}>
+                    <Body weight="bold" style={{ marginBottom: 2 }}>
+                      {item.title}
+                    </Body>
+                    <Caption color="secondary">
+                      {item.subtitle}
+                    </Caption>
+                  </View>
+
+                  {/* Right Component */}
+                  {item.rightComponent ? (
+                    item.rightComponent
+                  ) : item.showChevron !== false ? (
+                    <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+                  ) : null}
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </Section>
+
+        {/* App Settings */}
+        <Section spacing="lg">
+          <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+            App Settings
+          </Heading>
+
+          <View>
+            {appMenuItems.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={item.onPress}
+                activeOpacity={0.7}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
                   paddingVertical: 16,
-                  paddingHorizontal: 16,
+                  paddingHorizontal: 4,
+                  borderBottomWidth: 0.5,
+                  borderBottomColor: colors.borderLight,
                 }}
               >
                 {/* Icon */}
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: colors.inputBackground,
+                    width: 44,
+                    height: 44,
+                    borderRadius: radius.pill,
+                    backgroundColor: colors.surface,
                     justifyContent: "center",
                     alignItems: "center",
-                    marginRight: 12,
+                    marginRight: 16,
                   }}
                 >
                   <MaterialIcons
                     name={item.icon}
-                    size={20}
-                    color={colors.accent}
+                    size={22}
+                    color={colors.text}
                   />
                 </View>
 
                 {/* Text Content */}
                 <View style={{ flex: 1 }}>
-                  <Body weight="medium" style={{ marginBottom: 2 }}>
+                  <Body weight="bold" style={{ marginBottom: 2 }}>
                     {item.title}
                   </Body>
                   <Caption color="secondary">
@@ -364,50 +429,10 @@ export default function ProfileScreen() {
                   </Caption>
                 </View>
 
-                {/* Right Component */}
-                {item.rightComponent ? (
-                  item.rightComponent
-                ) : item.showChevron !== false ? (
-                  <TouchableOpacity onPress={item.onPress}>
-                    <Body variant="small" weight="medium" style={{ color: colors.primary }}>
-                      Change
-                    </Body>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-
-              {index < accountMenuItems.length - 1 && (
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: colors.border,
-                    marginLeft: 68,
-                  }}
-                />
-              )}
-            </View>
-          ))}
-          </Card>
-        </Section>
-
-        {/* App Settings */}
-        <Section spacing="md">
-          <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
-            App Settings
-          </Heading>
-          
-          <Card style={{ paddingVertical: 8 }}>
-          {appMenuItems.map((item, index) => (
-            <MenuItem
-              key={index}
-              Icon={item.icon}
-              title={item.title}
-              subtitle={item.subtitle}
-              onPress={item.onPress}
-              showDivider={index < appMenuItems.length - 1}
-            />
-          ))}
-          </Card>
+                <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+              </TouchableOpacity>
+            ))}
+          </View>
         </Section>
 
         {/* App Version */}

@@ -126,9 +126,9 @@ export default function UserProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={{ 
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
             marginRight: 12,
             width: 48,
             height: 48,
@@ -152,101 +152,109 @@ export default function UserProfileScreen() {
           <>
             {/* Profile Header - Only show for other users */}
             {!isOwnProfile && (
-              <Card style={{ margin: 20, alignItems: "center" }}>
-              {/* Avatar */}
-              <Avatar 
-                name={displayName}
-                size="xlarge"
-                style={{ marginBottom: 16 }}
-              />
+              <View style={{ margin: 20 }}>
+                {/* Top Section: Avatar + Name + Stats */}
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                  {/* Avatar */}
+                  <Avatar
+                    name={displayName}
+                    size="xlarge"
+                  />
 
-              {/* Name */}
-              <Heading variant="h2" style={{ marginBottom: 8 }}>
-                {displayName}
-              </Heading>
+                  {/* Right Column: Name + Stats */}
+                  <View style={{ flex: 1, marginLeft: 20, justifyContent: "center" }}>
+                    {/* Name */}
+                    <Body weight="bold" style={{ marginBottom: 8, fontSize: 18 }}>
+                      {displayName}
+                    </Body>
 
-              {/* Bio */}
-              {targetProfile?.bio && !targetProfile?.is_anonymous && (
-                <Body variant="small" color="secondary" style={{ textAlign: "center", marginBottom: 20 }}>
-                  {targetProfile.bio}
-                </Body>
-              )}
-
-              {/* Stats */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: 32,
-                  marginBottom: 20,
-                  paddingTop: 16,
-                  borderTopWidth: 1,
-                  borderTopColor: colors.border,
-                  width: '100%',
-                  justifyContent: 'space-around',
-                }}
-              >
-                <View style={{ alignItems: "center" }}>
-                  <Heading variant="h3">{targetStats?.postCount || 0}</Heading>
-                  <Caption color="secondary">Posts</Caption>
+                    {/* Stats Row */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        paddingRight: 20,
+                      }}
+                    >
+                      <View style={{ alignItems: "center" }}>
+                        <Heading variant="h3" style={{ fontSize: 16 }}>{targetStats?.postCount || 0}</Heading>
+                        <Caption color="secondary" style={{ fontSize: 12 }}>Posts</Caption>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/user/followers/${targetUserId}`)}
+                        style={{ alignItems: "center" }}
+                      >
+                        <Heading variant="h3" style={{ fontSize: 16 }}>
+                          {targetStats?.followerCount || 0}
+                        </Heading>
+                        <Caption color="secondary" style={{ fontSize: 12 }}>Followers</Caption>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => router.push(`/user/following/${targetUserId}`)}
+                        style={{ alignItems: "center" }}
+                      >
+                        <Heading variant="h3" style={{ fontSize: 16 }}>
+                          {targetStats?.followingCount || 0}
+                        </Heading>
+                        <Caption color="secondary" style={{ fontSize: 12 }}>Following</Caption>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-                <TouchableOpacity
-                  onPress={() => router.push(`/user/followers/${targetUserId}`)}
-                  style={{ alignItems: "center" }}
-                >
-                  <Heading variant="h3">
-                    {targetStats?.followerCount || 0}
-                  </Heading>
-                  <Caption color="secondary">Followers</Caption>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push(`/user/following/${targetUserId}`)}
-                  style={{ alignItems: "center" }}
-                >
-                  <Heading variant="h3">
-                    {targetStats?.followingCount || 0}
-                  </Heading>
-                  <Caption color="secondary">Following</Caption>
-                </TouchableOpacity>
+
+                {/* Bio */}
+                {targetProfile?.bio && !targetProfile?.is_anonymous && (
+                  <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 16 }}>
+                    {targetProfile.bio}
+                  </Body>
+                )}
+
+                {/* Action Buttons */}
+                {!isOwnProfile && (
+                  <View style={{ flexDirection: "row", gap: 12, width: "100%", marginTop: 4 }}>
+                    <Button
+                      variant={isFollowing ? "ghost" : "primary"}
+                      onPress={handleFollowToggle}
+                      disabled={followMutation.isPending || unfollowMutation.isPending}
+                      style={{
+                        flex: 1,
+                        borderRadius: radius.pill,
+                        paddingVertical: 8, // Reduced padding
+                        height: 40, // Fixed height for smaller look
+                      }}
+                      textStyle={{
+                        fontSize: 14, // Smaller text
+                      }}
+                    >
+                      {followMutation.isPending || unfollowMutation.isPending ? (
+                        <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
+                      ) : (
+                        isFollowing ? "Following" : "Follow"
+                      )}
+                    </Button>
+
+                    <TouchableOpacity
+                      onPress={handleMessage}
+                      disabled={createChatMutation.isPending}
+                      style={{
+                        backgroundColor: colors.surface,
+                        width: 40, // Reduced size
+                        height: 40, // Reduced size
+                        borderRadius: 20,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {createChatMutation.isPending ? (
+                        <ActivityIndicator size="small" color={colors.text} />
+                      ) : (
+                        <MaterialIcons name="chat-bubble-outline" size={18} color={colors.text} />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-
-              {/* Action Buttons */}
-              {!isOwnProfile && (
-                <View style={{ flexDirection: "row", gap: 12, width: "100%" }}>
-                  <Button
-                    variant={isFollowing ? "ghost" : "primary"}
-                    onPress={handleFollowToggle}
-                    disabled={followMutation.isPending || unfollowMutation.isPending}
-                    style={{ flex: 1 }}
-                  >
-                    {followMutation.isPending || unfollowMutation.isPending ? (
-                      <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
-                    ) : (
-                      isFollowing ? "Following" : "Follow"
-                    )}
-                  </Button>
-
-                  <TouchableOpacity
-                    onPress={handleMessage}
-                    disabled={createChatMutation.isPending}
-                    style={{
-                      backgroundColor: colors.accentSubtle,
-                      paddingVertical: 12,
-                      paddingHorizontal: 20,
-                      borderRadius: 24,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      minHeight: 48,
-                    }}
-                  >
-                    {createChatMutation.isPending ? (
-                      <ActivityIndicator size="small" color={colors.accent} />
-                    ) : (
-                      <MaterialIcons name="chat-bubble" size={20} color={colors.accent} />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Card>
             )}
 
             {/* User's Posts */}
@@ -261,16 +269,20 @@ export default function UserProfileScreen() {
                 <ActivityIndicator size="large" color={colors.primary} />
               ) : targetPosts && targetPosts.length > 0 ? (
                 targetPosts.map((post) => (
-                  <Card
+                  <TouchableOpacity
                     key={post.id}
-                    interactive
                     onPress={() =>
                       router.push({
                         pathname: `/post/${post.id}`,
                         params: { post: JSON.stringify(post) },
                       })
                     }
-                    style={{ marginBottom: 12 }}
+                    style={{
+                      marginBottom: 24,
+                      borderBottomWidth: 1,
+                      borderBottomColor: colors.borderLight,
+                      paddingBottom: 24
+                    }}
                   >
                     {/* Post Header */}
                     <View
@@ -286,7 +298,7 @@ export default function UserProfileScreen() {
                     </View>
 
                     {/* Post Content */}
-                    <Body style={{ lineHeight: 22, marginBottom: 8 }}>
+                    <Body style={{ lineHeight: 22, marginBottom: 12 }}>
                       {post.content}
                     </Body>
 
@@ -296,7 +308,7 @@ export default function UserProfileScreen() {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          marginBottom: 8,
+                          marginBottom: 12,
                         }}
                       >
                         <MaterialIcons name="place" size={12} color={colors.textSecondary} />
@@ -308,14 +320,20 @@ export default function UserProfileScreen() {
 
                     {/* Stats */}
                     <View style={{ flexDirection: "row", gap: 16 }}>
-                      <Caption color="secondary">
-                        {post.score || 0} votes
-                      </Caption>
-                      <Caption color="secondary">
-                        {post.comment_count || 0} comments
-                      </Caption>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <MaterialIcons name="arrow-upward" size={16} color={colors.textSecondary} />
+                        <Caption color="secondary" style={{ marginLeft: 4 }}>
+                          {post.score || 0}
+                        </Caption>
+                      </View>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <MaterialIcons name="chat-bubble-outline" size={16} color={colors.textSecondary} />
+                        <Caption color="secondary" style={{ marginLeft: 4 }}>
+                          {post.comment_count || 0}
+                        </Caption>
+                      </View>
                     </View>
-                  </Card>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <Caption color="secondary" style={{ textAlign: "center", marginTop: 20 }}>

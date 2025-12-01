@@ -21,12 +21,14 @@ import { Button, Card, Heading, Body, Caption } from '../components/ui';
 import PhotoPicker from '../components/PhotoPicker';
 import { compressImages } from '../services/storage/imageCompression';
 import { uploadPhotos } from '../services/storage/photoUpload';
+import { useCreatePostMutation } from '../utils/queries/posts';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark } = useTheme();
   const { user, profile } = useAuth();
-  
+  const createPostMutation = useCreatePostMutation();
+
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,7 +61,7 @@ export default function CreatePost() {
     }
     animateTo(insets.bottom + focusedPadding);
   };
-  
+
   // Use profile's anonymous setting as initial state
   useEffect(() => {
     if (profile) {
@@ -122,63 +124,50 @@ export default function CreatePost() {
           maxWidth: 1920,
           quality: 0.8,
         });
-        
+
         const compressedUris = compressed.map(img => img.uri);
         const { urls, errors } = await uploadPhotos(user.id, compressedUris);
-        
+
         if (errors.length > 0) {
           console.error('Photo upload errors:', errors);
           Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
             { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
-            { text: 'Continue', onPress: () => createPostWithPhotos(urls) },
+            { text: 'Continue', onPress: () => createPostWithMutation(urls) },
           ]);
           return;
         }
-        
+
         photoUrls = urls;
       }
 
-      // Step 2: Create post
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          user_id: user.id,
-          content: content.trim(),
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          location_name: 'University of Tokyo',
-        })
-        .select()
-        .single();
+      await createPostWithMutation(photoUrls);
 
-      if (postError) throw postError;
-
-      // Step 3: Insert photo records if any
-      if (photoUrls.length > 0) {
-        const photoRecords = photoUrls.map((url, index) => ({
-          post_id: post.id,
-          photo_url: url,
-          photo_order: index,
-        }));
-
-        const { error: photoError } = await supabase
-          .from('post_photos')
-          .insert(photoRecords);
-
-        if (photoError) {
-          console.error('Photo record error:', photoError);
-          // Post created but photos failed - still show success
-        }
-      }
-      
-      Alert.alert('Success', 'Your post has been created!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
     } catch (error) {
       console.error('Error creating post:', error);
       Alert.alert('Error', 'Failed to create post. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createPostWithMutation = async (photoUrls) => {
+    try {
+      await createPostMutation.mutateAsync({
+        userId: user.id,
+        content: content.trim(),
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        locationName: 'University of Tokyo',
+        userNickname: profile?.nickname,
+        userIsAnonymous: isAnonymous,
+        photos: photoUrls,
+      });
+
+      Alert.alert('Success', 'Your post has been created!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error) {
+      throw error;
     }
   };
 
@@ -217,13 +206,13 @@ export default function CreatePost() {
                 borderBottomColor: colors.border,
               }}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => router.back()}
-                style={{ 
-                  width: 48, 
-                  height: 48, 
-                  justifyContent: 'center', 
-                  alignItems: 'flex-start' 
+                style={{
+                  width: 48,
+                  height: 48,
+                  justifyContent: 'center',
+                  alignItems: 'flex-start'
                 }}
               >
                 <MaterialIcons name="arrow-back" size={24} color={colors.text} />
@@ -245,29 +234,80 @@ export default function CreatePost() {
             {/* Content */}
             <ScrollView style={{ flex: 1 }}>
               <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-                {/* Anonymous Toggle */}
-                <Card style={{ marginBottom: 20 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* Text Input - Main Focus */}
+                <TextInput
+                  style={{
+                    fontSize: 24,
+                    color: colors.text,
+                    textAlignVertical: 'top',
+                    minHeight: 150,
+                    fontWeight: '400',
+                    marginBottom: 24,
+                  }}
+                  placeholder="What's happening?"
+                  placeholderTextColor={colors.textTertiary}
+                  multiline
+                  value={content}
+                  onChangeText={setContent}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  maxLength={maxCharacters}
+                  autoFocus
+                />
+
+                {/* Photo Picker */}
+                <View style={{ marginBottom: 24 }}>
+                  <PhotoPicker photos={photos} onPhotosChange={setPhotos} />
+                </View>
+
+                {/* Options Section */}
+                <View style={{ gap: 20 }}>
+                  {/* Anonymous Toggle */}
+                  <TouchableOpacity
+                    onPress={() => setIsAnonymous(!isAnonymous)}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingVertical: 12,
+                    }}
+                  >
                     <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                      {isAnonymous ? (
-                        <MaterialIcons name="person-off" size={20} color={colors.textSecondary} />
-                      ) : (
-                        <MaterialIcons name="person" size={20} color={colors.primary} />
-                      )}
-                      <Body weight="medium" style={{ marginLeft: 12 }}>
-                        {isAnonymous ? 'Post anonymously' : `Post as ${profile?.nickname || 'User'}`}
-                      </Body>
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          backgroundColor: isAnonymous ? colors.surface : colors.primarySubtle,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12
+                        }}
+                      >
+                        <MaterialIcons
+                          name={isAnonymous ? "person-off" : "person"}
+                          size={20}
+                          color={isAnonymous ? colors.textSecondary : colors.primary}
+                        />
+                      </View>
+                      <View>
+                        <Body weight="medium">
+                          {isAnonymous ? 'Anonymous' : 'Public'}
+                        </Body>
+                        <Caption color="secondary">
+                          {isAnonymous ? 'Your identity is hidden' : `Posting as ${profile?.nickname || 'User'}`}
+                        </Caption>
+                      </View>
                     </View>
 
-                    <TouchableOpacity
-                      onPress={() => setIsAnonymous(!isAnonymous)}
+                    <View
                       style={{
                         width: 50,
                         height: 30,
                         borderRadius: 15,
-                        backgroundColor: isAnonymous ? colors.primary : colors.inputBackground,
+                        backgroundColor: isAnonymous ? colors.surface : colors.primary,
                         justifyContent: 'center',
-                        alignItems: isAnonymous ? 'flex-end' : 'flex-start',
+                        alignItems: isAnonymous ? 'flex-start' : 'flex-end',
                         paddingHorizontal: 2,
                       }}
                     >
@@ -284,69 +324,45 @@ export default function CreatePost() {
                           elevation: 4,
                         }}
                       />
-                    </TouchableOpacity>
-                  </View>
-                </Card>
-
-                {/* Location Display */}
-                {location && (
-                  <Card style={{ marginBottom: 20 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <MaterialIcons name="place" size={20} color={colors.accent} />
-                      <Body variant="small" color="secondary" style={{ marginLeft: 12, flex: 1 }}>
-                        University of Tokyo • Visible to nearby students
-                      </Body>
                     </View>
-                  </Card>
-                )}
+                  </TouchableOpacity>
 
-                {/* Photo Picker */}
-                <PhotoPicker photos={photos} onPhotosChange={setPhotos} />
+                  {/* Location Display */}
+                  {location && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
+                      <View
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
+                          backgroundColor: colors.surface,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12
+                        }}
+                      >
+                        <MaterialIcons name="place" size={20} color={colors.textSecondary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Body weight="medium">Location</Body>
+                        <Caption color="secondary">
+                          University of Tokyo • Visible to nearby students
+                        </Caption>
+                      </View>
+                    </View>
+                  )}
+                </View>
 
-                {/* Text Input */}
-                <Card style={{ minHeight: 200 }}>
-                  <TextInput
+                {/* Character Count */}
+                <View style={{ alignItems: 'flex-end', marginTop: 24 }}>
+                  <Caption
                     style={{
-                      fontSize: 18,
-                      color: colors.text,
-                      textAlignVertical: 'top',
-                      minHeight: 120,
-                      fontWeight: '400',
+                      color: isOverLimit ? colors.error : isNearLimit ? colors.error : colors.textSecondary
                     }}
-                    placeholder="What's happening on campus?"
-                    placeholderTextColor={colors.textSecondary}
-                    multiline
-                    value={content}
-                    onChangeText={setContent}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                    maxLength={maxCharacters}
-                  />
-
-                  {/* Character Count */}
-                  <View style={{ alignItems: 'flex-end', marginTop: 12 }}>
-                    <Caption 
-                      style={{ 
-                        color: isOverLimit ? colors.error : isNearLimit ? colors.error : colors.textSecondary 
-                      }}
-                    >
-                      {characterCount}/{maxCharacters}
-                    </Caption>
-                  </View>
-                </Card>
-
-                {/* Guidelines */}
-                <Card style={{ marginTop: 20, marginBottom: 24, backgroundColor: colors.inputBackground }}>
-                  <Body weight="medium" style={{ marginBottom: 8 }}>
-                    Guidelines:
-                  </Body>
-                  <Caption color="secondary" style={{ lineHeight: 18 }}>
-                    • Be respectful and kind to fellow students{'\n'}
-                    • No spam, harassment, or inappropriate content{'\n'}
-                    • Share university-related thoughts and experiences{'\n'}
-                    • Your post will be visible to students within 5km
+                  >
+                    {characterCount}/{maxCharacters}
                   </Caption>
-                </Card>
+                </View>
               </View>
             </ScrollView>
 

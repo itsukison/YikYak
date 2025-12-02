@@ -255,6 +255,17 @@ export default function CreatePost() {
                   autoFocus
                 />
 
+                {/* Character Count */}
+                <View style={{ alignItems: 'flex-end', marginBottom: 24 }}>
+                  <Caption
+                    style={{
+                      color: isOverLimit ? colors.error : isNearLimit ? colors.error : colors.textSecondary
+                    }}
+                  >
+                    {characterCount}/{maxCharacters}
+                  </Caption>
+                </View>
+
                 {/* Photo Picker */}
                 <View style={{ marginBottom: 24 }}>
                   <PhotoPicker photos={photos} onPhotosChange={setPhotos} />
@@ -278,7 +289,7 @@ export default function CreatePost() {
                           width: 40,
                           height: 40,
                           borderRadius: 20,
-                          backgroundColor: isAnonymous ? colors.surface : colors.primarySubtle,
+                          backgroundColor: colors.surfaceElevated,
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 12
@@ -287,7 +298,7 @@ export default function CreatePost() {
                         <MaterialIcons
                           name={isAnonymous ? "person-off" : "person"}
                           size={20}
-                          color={isAnonymous ? colors.textSecondary : colors.primary}
+                          color={colors.textSecondary}
                         />
                       </View>
                       <View>
@@ -353,16 +364,7 @@ export default function CreatePost() {
                   )}
                 </View>
 
-                {/* Character Count */}
-                <View style={{ alignItems: 'flex-end', marginTop: 24 }}>
-                  <Caption
-                    style={{
-                      color: isOverLimit ? colors.error : isNearLimit ? colors.error : colors.textSecondary
-                    }}
-                  >
-                    {characterCount}/{maxCharacters}
-                  </Caption>
-                </View>
+
               </View>
             </ScrollView>
 

@@ -20,6 +20,11 @@ import {
   useCreateCommentMutation,
   useVoteCommentMutation,
 } from "../../utils/queries/comments";
+import {
+  usePostQuery,
+  useVotePostMutation,
+  useUserVotesQuery,
+} from "../../utils/queries/posts";
 import { Heading, Body, Caption, Avatar } from "../../components/ui";
 import PhotoGrid from "../../components/PhotoGrid";
 
@@ -32,13 +37,20 @@ export default function PostDetailScreen() {
   const [comment, setComment] = useState("");
   const [localVotes, setLocalVotes] = useState({});
 
-  // Parse post data from params
-  const post = postJson ? JSON.parse(postJson) : null;
+  // Parse initial post data from params
+  const initialPost = postJson ? JSON.parse(postJson) : null;
+
+  // Fetch fresh post data
+  const { data: fetchedPost, isLoading: postLoading } = usePostQuery(postId);
+  const post = fetchedPost || initialPost;
 
   const { data: comments, isLoading: commentsLoading } = useCommentsQuery(postId);
   const { data: userVotes } = useCommentVotesQuery(postId, user?.id);
+  const { data: postVotes } = useUserVotesQuery(user?.id);
+
   const createCommentMutation = useCreateCommentMutation();
   const voteCommentMutation = useVoteCommentMutation();
+  const votePostMutation = useVotePostMutation();
 
   useEffect(() => {
     if (userVotes) {
@@ -46,7 +58,7 @@ export default function PostDetailScreen() {
     }
   }, [userVotes]);
 
-  if (!user || !post) {
+  if (!user || (!post && postLoading)) {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
@@ -112,6 +124,21 @@ export default function PostDetailScreen() {
     }
   };
 
+  const handleVotePost = async (voteType) => {
+    const currentVote = postVotes?.[postId];
+    const newVote = currentVote === voteType ? null : voteType;
+
+    try {
+      await votePostMutation.mutateAsync({
+        userId: user.id,
+        postId,
+        voteType: newVote,
+      });
+    } catch (error) {
+      console.error("Error voting on post:", error);
+    }
+  };
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -127,14 +154,8 @@ export default function PostDetailScreen() {
     return date.toLocaleDateString();
   };
 
-  const formatDistance = (meters) => {
-    if (meters < 1000) {
-      return `${Math.round(meters)}m away`;
-    }
-    return `${(meters / 1000).toFixed(1)}km away`;
-  };
-
   const displayName = post.is_anonymous ? "Anonymous" : post.author_nickname || "User";
+  const userPostVote = postVotes?.[postId];
 
   return (
     <AppBackground>
@@ -153,7 +174,6 @@ export default function PostDetailScreen() {
             paddingBottom: 16,
             flexDirection: "row",
             alignItems: "center",
-            // Removed borderBottomWidth
           }}
         >
           <TouchableOpacity
@@ -232,6 +252,51 @@ export default function PostDetailScreen() {
               )}
             </View>
 
+            {/* Repost Content */}
+            {(post.repost_of || post.reposted_post) && (
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: radius.card,
+                  padding: 12,
+                  marginBottom: 20,
+                  backgroundColor: colors.surface,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: colors.surfaceElevated,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 8,
+                      borderWidth: 1,
+                      borderColor: colors.border
+                    }}
+                  >
+                    <MaterialIcons
+                      name={(post.reposted_post?.users?.is_anonymous ?? post.reposted_post_is_anonymous) ? "person-off" : "person"}
+                      size={12}
+                      color={colors.textSecondary}
+                    />
+                  </View>
+                  <Body weight="bold" style={{ fontSize: 13 }}>
+                    {(post.reposted_post?.users?.is_anonymous ?? post.reposted_post_is_anonymous) ? "Anonymous" : (post.reposted_post?.users?.nickname ?? post.reposted_post_author) || "Unknown"}
+                  </Body>
+                  <Caption color="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                    {formatTime(post.reposted_post?.created_at ?? post.reposted_post_created_at)}
+                  </Caption>
+                </View>
+                <Body style={{ fontSize: 14, color: colors.textSecondary }}>
+                  {post.reposted_post?.content ?? post.reposted_post_content}
+                </Body>
+              </View>
+            )}
+
             {/* Post Content */}
             <Body style={{ lineHeight: 24, marginBottom: post.photos?.length > 0 ? 12 : 20, fontSize: 18 }}>
               {post.content}
@@ -244,29 +309,111 @@ export default function PostDetailScreen() {
               </View>
             )}
 
-            {/* Post Stats/Actions */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 16, marginBottom: 24 }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: colors.surface,
-                  borderRadius: radius.pill,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6
-                }}
-              >
-                <MaterialIcons name="arrow-upward" size={16} color={colors.primary} />
-                <Body weight="bold" variant="small" style={{ marginLeft: 6, color: colors.text }}>
-                  {post.score || 0}
-                </Body>
+            {/* Post Stats/Actions - New Design */}
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                {/* Vote Pill */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.surface,
+                    borderRadius: radius.pill,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    height: 32,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => handleVotePost('up')}
+                    style={{
+                      paddingHorizontal: 8,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      height: "100%",
+                    }}
+                  >
+                    <MaterialIcons
+                      name="arrow-upward"
+                      size={16}
+                      color={userPostVote === 'up' ? colors.primary : colors.text}
+                    />
+                    <Body weight="bold" style={{ marginLeft: 4, color: userPostVote === 'up' ? colors.primary : colors.text, fontSize: 12 }}>
+                      Vote
+                    </Body>
+                  </TouchableOpacity>
+
+                  <View style={{ width: 1, height: 16, backgroundColor: colors.border }} />
+
+                  <TouchableOpacity
+                    onPress={() => handleVotePost('down')}
+                    style={{
+                      paddingHorizontal: 8,
+                      height: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MaterialIcons
+                      name="arrow-downward"
+                      size={16}
+                      color={userPostVote === 'down' ? colors.error : colors.text}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Comment Pill */}
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.surface,
+                    borderRadius: radius.pill,
+                    paddingHorizontal: 10,
+                    height: 32,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+                  <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
+                    {post.comment_count || 0}
+                  </Body>
+                </View>
               </View>
 
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialIcons name="chat-bubble-outline" size={18} color={colors.textSecondary} />
-                <Caption color="secondary" style={{ marginLeft: 6 }}>
-                  {post.comment_count || 0} comments
-                </Caption>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                {/* Repost Button */}
+                <TouchableOpacity
+                  onPress={() => router.push(`/repost/${post.id}`)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: colors.surface,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <MaterialIcons name="repeat" size={16} color={colors.text} />
+                </TouchableOpacity>
+
+                {/* Share Button (Placeholder) */}
+                <TouchableOpacity
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: colors.surface,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <MaterialIcons name="share" size={16} color={colors.text} />
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -292,7 +439,6 @@ export default function PostDetailScreen() {
                     style={{
                       paddingHorizontal: 20,
                       paddingVertical: 16,
-                      // Removed background color
                     }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "flex-start" }}>

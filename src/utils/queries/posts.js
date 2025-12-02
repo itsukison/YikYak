@@ -79,7 +79,7 @@ export function useCreatePostMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, content, latitude, longitude, locationName, photos = [] }) => {
+    mutationFn: async ({ userId, content, latitude, longitude, locationName, photos = [], repostOf = null }) => {
       // Step 1: Insert post
       const { data: post, error } = await supabase
         .from('posts')
@@ -89,6 +89,7 @@ export function useCreatePostMutation() {
           latitude,
           longitude,
           location_name: locationName,
+          repost_of: repostOf,
         })
         .select(`
           *,
@@ -118,7 +119,7 @@ export function useCreatePostMutation() {
 
       return { ...post, photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })) };
     },
-    onMutate: async ({ userId, content, latitude, longitude, locationName, userNickname, userIsAnonymous, photos = [] }) => {
+    onMutate: async ({ userId, content, latitude, longitude, locationName, userNickname, userIsAnonymous, photos = [], repostOf = null }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['posts'] });
 
@@ -139,6 +140,7 @@ export function useCreatePostMutation() {
         photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })),
         nickname: userNickname || 'User', // Fallback
         is_anonymous: userIsAnonymous,
+        repost_of: repostOf,
         temp: true,
       };
 
@@ -298,6 +300,16 @@ export function usePostQuery(postId) {
           users!posts_user_id_fkey (
             nickname,
             is_anonymous
+          ),
+          reposted_post:posts!posts_repost_of_fkey (
+            id,
+            content,
+            created_at,
+            user_id,
+            users!posts_user_id_fkey (
+              nickname,
+              is_anonymous
+            )
           )
         `)
         .eq('id', postId)

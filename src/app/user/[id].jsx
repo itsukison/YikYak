@@ -20,6 +20,7 @@ import {
 } from "../../utils/queries/follows";
 import { useProfileStatsQuery } from "../../utils/queries/profile";
 import { useCreateChatMutation } from "../../utils/queries/chats";
+import { useVotePostMutation, useUserVotesQuery } from "../../utils/queries/posts";
 import { Heading, Body, Caption, Card, Avatar, Button } from "../../components/ui";
 
 export default function UserProfileScreen() {
@@ -36,9 +37,12 @@ export default function UserProfileScreen() {
   const { data: isFollowing, isLoading: followStatusLoading } =
     useFollowStatusQuery(user?.id, targetUserId);
 
+  const { data: userVotes } = useUserVotesQuery(user?.id);
+
   const followMutation = useFollowMutation();
   const unfollowMutation = useUnfollowMutation();
   const createChatMutation = useCreateChatMutation();
+  const votePostMutation = useVotePostMutation();
 
   if (!user) {
     return (
@@ -80,6 +84,21 @@ export default function UserProfileScreen() {
       router.push(`/chat/${chat.id}`);
     } catch (error) {
       console.error("Error creating chat:", error);
+    }
+  };
+
+  const handleVotePost = async (postId, voteType) => {
+    const currentVote = userVotes?.[postId];
+    const newVote = currentVote === voteType ? null : voteType;
+
+    try {
+      await votePostMutation.mutateAsync({
+        userId: user.id,
+        postId,
+        voteType: newVote,
+      });
+    } catch (error) {
+      console.error("Error voting on post:", error);
     }
   };
 
@@ -215,6 +234,7 @@ export default function UserProfileScreen() {
                   <View style={{ flexDirection: "row", gap: 12, width: "100%", marginTop: 4 }}>
                     <Button
                       variant={isFollowing ? "ghost" : "primary"}
+                      size="small"
                       onPress={handleFollowToggle}
                       disabled={followMutation.isPending || unfollowMutation.isPending}
                       style={{
@@ -268,73 +288,176 @@ export default function UserProfileScreen() {
               {postsLoading ? (
                 <ActivityIndicator size="large" color={colors.primary} />
               ) : targetPosts && targetPosts.length > 0 ? (
-                targetPosts.map((post) => (
-                  <TouchableOpacity
-                    key={post.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: `/post/${post.id}`,
-                        params: { post: JSON.stringify(post) },
-                      })
-                    }
-                    style={{
-                      marginBottom: 24,
-                      borderBottomWidth: 1,
-                      borderBottomColor: colors.borderLight,
-                      paddingBottom: 24
-                    }}
-                  >
-                    {/* Post Header */}
-                    <View
+                targetPosts.map((post) => {
+                  const userPostVote = userVotes?.[post.id];
+
+                  return (
+                    <TouchableOpacity
+                      key={post.id}
+                      onPress={() =>
+                        router.push({
+                          pathname: `/post/${post.id}`,
+                          params: { post: JSON.stringify(post) },
+                        })
+                      }
                       style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
+                        marginBottom: 24,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.borderLight,
+                        paddingBottom: 24
                       }}
                     >
-                      <Caption color="secondary">
-                        {formatTime(post.created_at)}
-                      </Caption>
-                    </View>
-
-                    {/* Post Content */}
-                    <Body style={{ lineHeight: 22, marginBottom: 12 }}>
-                      {post.content}
-                    </Body>
-
-                    {/* Location */}
-                    {post.location_name && (
+                      {/* Post Header */}
                       <View
                         style={{
                           flexDirection: "row",
-                          alignItems: "center",
-                          marginBottom: 12,
+                          justifyContent: "space-between",
+                          marginBottom: 8,
                         }}
                       >
-                        <MaterialIcons name="place" size={12} color={colors.textSecondary} />
-                        <Caption color="secondary" style={{ marginLeft: 4 }}>
-                          {post.location_name}
+                        <Caption color="secondary">
+                          {formatTime(post.created_at)}
                         </Caption>
                       </View>
-                    )}
 
-                    {/* Stats */}
-                    <View style={{ flexDirection: "row", gap: 16 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <MaterialIcons name="arrow-upward" size={16} color={colors.textSecondary} />
-                        <Caption color="secondary" style={{ marginLeft: 4 }}>
-                          {post.score || 0}
-                        </Caption>
+                      {/* Post Content */}
+                      <Body style={{ lineHeight: 22, marginBottom: 12 }}>
+                        {post.content}
+                      </Body>
+
+                      {/* Location */}
+                      {post.location_name && (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 12,
+                          }}
+                        >
+                          <MaterialIcons name="place" size={12} color={colors.textSecondary} />
+                          <Caption color="secondary" style={{ marginLeft: 4 }}>
+                            {post.location_name}
+                          </Caption>
+                        </View>
+                      )}
+
+                      {/* Stats/Actions - New Design */}
+                      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          {/* Vote Pill */}
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              backgroundColor: colors.surface,
+                              borderRadius: radius.pill,
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                              height: 32,
+                            }}
+                          >
+                            <TouchableOpacity
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                handleVotePost(post.id, 'up');
+                              }}
+                              style={{
+                                paddingHorizontal: 8,
+                                flexDirection: "row",
+                                alignItems: "center",
+                                height: "100%",
+                              }}
+                            >
+                              <MaterialIcons
+                                name="arrow-upward"
+                                size={16}
+                                color={userPostVote === 'up' ? colors.primary : colors.text}
+                              />
+                              <Body weight="bold" style={{ marginLeft: 4, color: userPostVote === 'up' ? colors.primary : colors.text, fontSize: 12 }}>
+                                Vote
+                              </Body>
+                            </TouchableOpacity>
+
+                            <View style={{ width: 1, height: 16, backgroundColor: colors.border }} />
+
+                            <TouchableOpacity
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                handleVotePost(post.id, 'down');
+                              }}
+                              style={{
+                                paddingHorizontal: 8,
+                                height: "100%",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <MaterialIcons
+                                name="arrow-downward"
+                                size={16}
+                                color={userPostVote === 'down' ? colors.error : colors.text}
+                              />
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Comment Pill */}
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              backgroundColor: colors.surface,
+                              borderRadius: radius.pill,
+                              paddingHorizontal: 10,
+                              height: 32,
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                            }}
+                          >
+                            <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+                            <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
+                              {post.comment_count || 0}
+                            </Body>
+                          </View>
+                        </View>
+
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                          {/* Repost Button (Placeholder) */}
+                          <TouchableOpacity
+                            onPress={(e) => e.stopPropagation()}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: colors.surface,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                            }}
+                          >
+                            <MaterialIcons name="repeat" size={16} color={colors.text} />
+                          </TouchableOpacity>
+
+                          {/* Share Button (Placeholder) */}
+                          <TouchableOpacity
+                            onPress={(e) => e.stopPropagation()}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              backgroundColor: colors.surface,
+                              justifyContent: "center",
+                              alignItems: "center",
+                              borderWidth: 1,
+                              borderColor: colors.border,
+                            }}
+                          >
+                            <MaterialIcons name="share" size={16} color={colors.text} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <MaterialIcons name="chat-bubble-outline" size={16} color={colors.textSecondary} />
-                        <Caption color="secondary" style={{ marginLeft: 4 }}>
-                          {post.comment_count || 0}
-                        </Caption>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))
+                    </TouchableOpacity>
+                  );
+                })
               ) : (
                 <Caption color="secondary" style={{ textAlign: "center", marginTop: 20 }}>
                   No posts yet

@@ -187,7 +187,7 @@ export default function NotificationScreen() {
                 position: 'absolute',
                 bottom: -4,
                 right: -4,
-                backgroundColor: colors.surfaceElevated,
+                backgroundColor: colors.primary,
                 borderRadius: 10,
                 width: 20,
                 height: 20,
@@ -200,7 +200,7 @@ export default function NotificationScreen() {
                 elevation: 2,
               }}
             >
-              <MaterialIcons name={iconName} size={12} color={colors.primary} />
+              <MaterialIcons name={iconName} size={12} color="#173300" />
             </View>
           </View>
 

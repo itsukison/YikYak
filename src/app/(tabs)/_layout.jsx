@@ -22,21 +22,15 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
           backgroundColor: colors.tabBarBackground,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 64,
+          height: 60,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
-        },
         tabBarIconStyle: {
           marginTop: 4,
         },
@@ -93,6 +87,6 @@ export default function TabLayout() {
           ),
         }}
       />
-    </Tabs>
+    </Tabs >
   );
 }

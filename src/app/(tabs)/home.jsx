@@ -242,6 +242,51 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* Repost Content */}
+        {post.repost_of && (
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.card,
+              padding: 12,
+              marginBottom: spacing.md,
+              backgroundColor: colors.surface,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: colors.surfaceElevated,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border
+                }}
+              >
+                <MaterialIcons
+                  name={post.reposted_post_is_anonymous ? "person-off" : "person"}
+                  size={12}
+                  color={colors.textSecondary}
+                />
+              </View>
+              <Body weight="bold" style={{ fontSize: 13 }}>
+                {post.reposted_post_is_anonymous ? "Anonymous" : post.reposted_post_author || "Unknown"}
+              </Body>
+              <Caption color="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                {formatTimeAgo(post.reposted_post_created_at)}
+              </Caption>
+            </View>
+            <Body style={{ fontSize: 14, color: colors.textSecondary }}>
+              {post.reposted_post_content}
+            </Body>
+          </View>
+        )}
+
         {/* Post Content */}
         <Body style={{ marginBottom: post.photos?.length > 0 ? spacing.sm : spacing.lg }}>
           {post.content}
@@ -257,87 +302,122 @@ export default function HomeScreen() {
         }
 
         {/* Post Actions */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <TouchableOpacity
-              onPress={(e) => {
-                e.stopPropagation();
-                handleVote(post.id, 1);
-              }}
+        {/* Post Actions */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {/* Vote Pill */}
+            <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                paddingVertical: 4, // Reduced from spacing.sm (8)
-                paddingHorizontal: 8, // Reduced from spacing.md (12)
+                backgroundColor: colors.surface,
                 borderRadius: radius.pill,
-                backgroundColor:
-                  userVote === 1
-                    ? colors.accentSubtle
-                    : colors.inputBackground,
+                borderWidth: 1,
+                borderColor: colors.border,
+                height: 32,
               }}
             >
-              <MaterialIcons
-                name="keyboard-arrow-up"
-                size={16} // Reduced from 18
-                color={
-                  userVote === 1 ? colors.accent : colors.textSecondary
-                }
-              />
-              <Body
-                variant="small"
-                weight="medium"
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleVote(post.id, 'up');
+                }}
                 style={{
-                  marginLeft: 4, // Reduced from spacing.xs
-                  color: userVote === 1 ? colors.accent : colors.textSecondary,
-                  fontSize: 13, // Slightly smaller text
+                  paddingHorizontal: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  height: "100%",
                 }}
               >
-                {post.score || 0}
-              </Body>
-            </TouchableOpacity>
+                <MaterialIcons
+                  name="arrow-upward"
+                  size={16}
+                  color={userVote === 'up' ? colors.primary : colors.text}
+                />
+                <Body weight="bold" style={{ marginLeft: 4, color: userVote === 'up' ? colors.primary : colors.text, fontSize: 12 }}>
+                  Vote
+                </Body>
+              </TouchableOpacity>
 
+              <View style={{ width: 1, height: 16, backgroundColor: colors.border }} />
+
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleVote(post.id, 'down');
+                }}
+                style={{
+                  paddingHorizontal: 8,
+                  height: "100%",
+                  justifyContent: "center",
+                }}
+              >
+                <MaterialIcons
+                  name="arrow-downward"
+                  size={16}
+                  color={userVote === 'down' ? colors.error : colors.text}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Comment Pill */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.surface,
+                borderRadius: radius.pill,
+                paddingHorizontal: 10,
+                height: 32,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+              <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
+                {post.comment_count || 0}
+              </Body>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {/* Repost Button */}
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                handleVote(post.id, -1);
+                router.push(`/repost/${post.id}`);
               }}
               style={{
-                paddingVertical: 4, // Reduced
-                paddingHorizontal: 6, // Reduced
-                marginLeft: 4, // Reduced
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: colors.surface,
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: colors.border,
               }}
             >
-              <MaterialIcons
-                name="keyboard-arrow-down"
-                size={16} // Reduced from 18
-                color={userVote === -1 ? colors.error : colors.textSecondary}
-              />
+              <MaterialIcons name="repeat" size={16} color={colors.text} />
+            </TouchableOpacity>
+
+            {/* Share Button (Placeholder) */}
+            <TouchableOpacity
+              onPress={(e) => e.stopPropagation()}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: colors.surface,
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <MaterialIcons name="share" size={16} color={colors.text} />
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              navigateToPost();
-            }}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingVertical: spacing.sm,
-              paddingHorizontal: spacing.md,
-            }}
-          >
-            <MaterialIcons name="chat-bubble" size={16} color={colors.textSecondary} />
-            <Caption color="secondary" style={{ marginLeft: spacing.sm }}>
-              {post.comment_count || 0}
-            </Caption>
-          </TouchableOpacity>
         </View>
       </TouchableOpacity >
     );

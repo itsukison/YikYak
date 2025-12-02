@@ -14,8 +14,8 @@ export const useTheme = () => {
   const colors = {
     // Background colors
     background: isDark ? "#000000" : "#FFFFFF",
-    surface: isDark ? "#1C1C1E" : "#F2F2F2",
-    surfaceElevated: isDark ? "#2C2C2E" : "#FFFFFF",
+    surface: isDark ? "#1C1C1E" : "#F9F9F9",
+    surfaceElevated: isDark ? "#2C2C2E" : "#F5F5F5",
     sectionBackground: isDark ? "#000000" : "#FFFFFF",
 
     // Text colors
@@ -45,7 +45,7 @@ export const useTheme = () => {
       : "rgba(159, 232, 112, 0.1)",
 
     // Borders
-    border: isDark ? "#27272A" : "#E4E4E7",
+    border: isDark ? "#27272A" : "#F4F4F5",
     borderLight: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
 
     // Status colors
@@ -266,12 +266,12 @@ export const gluestackConfig = {
       accent: "#9FE870",
       accentText: "#1C1C1E",
       background: "#FFFFFF",
-      surface: "#F2F2F2",
-      surfaceElevated: "#FFFFFF",
+      surface: "#F9F9F9",
+      surfaceElevated: "#F5F5F5",
       text: "#1C1C1E",
       textSecondary: "#767676",
       textTertiary: "#A1A1AA",
-      border: "#E4E4E7",
+      border: "#F4F4F5",
       borderLight: "#F4F4F5",
       error: "#EF4444",
       success: "#9FE870",

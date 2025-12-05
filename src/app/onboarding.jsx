@@ -182,8 +182,8 @@ export default function OnboardingScreen() {
         >
           {/* Header */}
           <Section spacing="large">
-            <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
-              Welcome to HearSay Japan
+            <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md, marginTop: spacing.xl }}>
+              Welcome to HearSay
             </Heading>
             <Body color="secondary" style={{ textAlign: 'center' }}>
               Let's set up your profile

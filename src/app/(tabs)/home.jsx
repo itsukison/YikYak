@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -18,6 +19,7 @@ import { Card, Avatar } from "../../components/ui";
 import { Heading, Body, Caption } from "../../components/ui/Text";
 import PhotoGrid from "../../components/PhotoGrid";
 import * as Location from "expo-location";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 
 export default function HomeScreen() {
@@ -103,6 +105,7 @@ export default function HomeScreen() {
   };
 
   const handleRefresh = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // Refresh both location and posts
     await getLocationPermission();
     await refetch();
@@ -163,17 +166,17 @@ export default function HomeScreen() {
     };
 
     return (
-      <TouchableOpacity
+      <Pressable
         key={post.id}
         onPress={navigateToPost}
-        style={{
+        style={({ pressed }) => ({
           backgroundColor: "transparent", // Removed gray background
           paddingHorizontal: 20,
           paddingVertical: 24,
           borderBottomWidth: 0.5, // Very thin separator
           borderBottomColor: colors.borderLight,
-        }}
-        activeOpacity={0.7}
+          opacity: pressed ? 0.7 : 1,
+        })}
       >
         {/* Post Header */}
         <View
@@ -296,7 +299,7 @@ export default function HomeScreen() {
         {
           post.photos && post.photos.length > 0 && (
             <View style={{ marginBottom: spacing.lg }}>
-              <PhotoGrid photos={post.photos} />
+              <PhotoGrid photos={post.photos} onPress={navigateToPost} />
             </View>
           )
         }
@@ -334,8 +337,8 @@ export default function HomeScreen() {
                   size={16}
                   color={userVote === 'up' ? colors.primary : colors.text}
                 />
-                <Body weight="bold" style={{ marginLeft: 4, color: userVote === 'up' ? colors.primary : colors.text, fontSize: 12 }}>
-                  Vote
+                <Body weight="bold" style={{ marginLeft: 4, color: userVote === 'up' ? colors.primary : userVote === 'down' ? colors.error : colors.text, fontSize: 12 }}>
+                  {post.score || 0}
                 </Body>
               </TouchableOpacity>
 
@@ -419,7 +422,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </TouchableOpacity >
+      </Pressable >
     );
   };
 

@@ -8,6 +8,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -17,6 +18,7 @@ import { useTheme } from '../utils/theme';
 import { useAuth } from '../utils/auth/useAuth';
 import { supabase } from '../utils/supabase';
 import * as Location from 'expo-location';
+import * as Haptics from 'expo-haptics';
 import { Button, Card, Heading, Body, Caption } from '../components/ui';
 import PhotoPicker from '../components/PhotoPicker';
 import { compressImages } from '../services/storage/imageCompression';
@@ -96,6 +98,8 @@ export default function CreatePost() {
   };
 
   const handleCreatePost = async () => {
+    Keyboard.dismiss();
+
     if (!content.trim()) {
       Alert.alert('Error', 'Please enter some content for your post.');
       return;
@@ -165,6 +169,7 @@ export default function CreatePost() {
         photos: photoUrls,
       });
 
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowCelebration(true);
     } catch (error) {
       throw error;

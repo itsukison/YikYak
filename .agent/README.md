@@ -5,7 +5,7 @@ Goal:
 Build a location-based, semi-anonymous social app for Japanese university students.
 Users can:
 
-Post short text updates visible to nearby users (like HearSay).
+Post short text updates visible to nearby users (like YikYak).
 
 Upvote/downvote posts (like Reddit).
 

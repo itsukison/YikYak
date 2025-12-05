@@ -66,7 +66,11 @@ export function useUserVotesQuery(userId) {
       // Convert to map for easy lookup
       const votesMap = {};
       data?.forEach((vote) => {
-        votesMap[vote.post_id] = vote.vote_type;
+        // Map integer to string for UI
+        let type = null;
+        if (vote.vote_type === 1) type = 'up';
+        if (vote.vote_type === -1) type = 'down';
+        if (type) votesMap[vote.post_id] = type;
       });
       return votesMap;
     },
@@ -135,8 +139,7 @@ export function useCreatePostMutation() {
         longitude,
         location_name: locationName,
         created_at: new Date().toISOString(),
-        upvotes: 0,
-        downvotes: 0,
+        score: 0,
         photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })),
         nickname: userNickname || 'User', // Fallback
         is_anonymous: userIsAnonymous,
@@ -185,11 +188,14 @@ export function useVotePostMutation() {
         return null;
       }
 
+      // Map string to integer for DB
+      const dbVoteType = voteType === 'up' ? 1 : -1;
+
       // Otherwise, upsert the vote
       const { error } = await supabase.rpc('handle_post_vote', {
         p_user_id: userId,
         p_post_id: postId,
-        p_vote_type: voteType,
+        p_vote_type: dbVoteType,
       });
 
       if (error) throw error;
@@ -218,23 +224,22 @@ export function useVotePostMutation() {
       });
 
       // Helper to calculate score change
-      const calculateChange = (currentVote, newVote) => {
-        let upvoteChange = 0;
-        let downvoteChange = 0;
+      const calculateScoreChange = (currentVote, newVote) => {
+        let change = 0;
 
         // Remove old vote effect
-        if (currentVote === 'up') upvoteChange -= 1;
-        if (currentVote === 'down') downvoteChange -= 1;
+        if (currentVote === 'up') change -= 1;
+        if (currentVote === 'down') change += 1; // Removing a downvote increases score
 
         // Add new vote effect
-        if (newVote === 'up') upvoteChange += 1;
-        if (newVote === 'down') downvoteChange += 1;
+        if (newVote === 'up') change += 1;
+        if (newVote === 'down') change -= 1;
 
-        return { upvoteChange, downvoteChange };
+        return change;
       };
 
       const currentVote = previousUserVotes ? previousUserVotes[postId] : null;
-      const { upvoteChange, downvoteChange } = calculateChange(currentVote, voteType);
+      const scoreChange = calculateScoreChange(currentVote, voteType);
 
       // Optimistically update posts lists
       queryClient.setQueriesData({ queryKey: ['posts'] }, (old) => {
@@ -243,8 +248,7 @@ export function useVotePostMutation() {
           if (post.id === postId) {
             return {
               ...post,
-              upvotes: (post.upvotes || 0) + upvoteChange,
-              downvotes: (post.downvotes || 0) + downvoteChange,
+              score: (post.score || 0) + scoreChange,
             };
           }
           return post;
@@ -256,8 +260,7 @@ export function useVotePostMutation() {
         if (!old) return old;
         return {
           ...old,
-          upvotes: (old.upvotes || 0) + upvoteChange,
-          downvotes: (old.downvotes || 0) + downvoteChange,
+          score: (old.score || 0) + scoreChange,
         };
       });
 

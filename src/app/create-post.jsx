@@ -22,6 +22,7 @@ import PhotoPicker from '../components/PhotoPicker';
 import { compressImages } from '../services/storage/imageCompression';
 import { uploadPhotos } from '../services/storage/photoUpload';
 import { useCreatePostMutation } from '../utils/queries/posts';
+import CelebrationOverlay from '../components/CelebrationOverlay';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
@@ -34,6 +35,7 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const [photos, setPhotos] = useState([]);
+  const [showCelebration, setShowCelebration] = useState(false);
   const focusedPadding = 12;
 
   const paddingAnimation = useRef(
@@ -163,9 +165,7 @@ export default function CreatePost() {
         photos: photoUrls,
       });
 
-      Alert.alert('Success', 'Your post has been created!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      setShowCelebration(true);
     } catch (error) {
       throw error;
     }
@@ -186,6 +186,14 @@ export default function CreatePost() {
     >
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
+
+        <CelebrationOverlay
+          visible={showCelebration}
+          onComplete={() => {
+            setShowCelebration(false);
+            router.back();
+          }}
+        />
 
         {showLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

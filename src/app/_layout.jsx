@@ -199,6 +199,7 @@ function RootLayoutNav() {
       <Stack.Screen name="verify-email" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="create-post" />
     </Stack>
   );
 }

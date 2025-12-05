@@ -338,3 +338,40 @@ export function usePostQuery(postId) {
     enabled: !!postId,
   });
 }
+
+// Report post
+export function useReportPostMutation() {
+  return useMutation({
+    mutationFn: async ({ reporterId, postId, reportedUserId, reason }) => {
+      const { error } = await supabase
+        .from('reports')
+        .insert({
+          reporter_id: reporterId,
+          reported_post_id: postId,
+          reported_user_id: reportedUserId,
+          reason: reason,
+        });
+
+      if (error) throw error;
+    },
+  });
+}
+
+// Block user
+export function useBlockUserMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ blockedUserId }) => {
+      const { error } = await supabase.rpc('block_user', {
+        blocked_user_id: blockedUserId,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      // Invalidate posts to remove blocked user's posts
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+}

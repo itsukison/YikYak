@@ -21,6 +21,7 @@ import PhotoGrid from "../../components/PhotoGrid";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import PostActionSheet from "../../components/PostActionSheet";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -30,6 +31,8 @@ export default function HomeScreen() {
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
   const [location, setLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
@@ -404,9 +407,13 @@ export default function HomeScreen() {
               <MaterialIcons name="repeat" size={16} color={colors.text} />
             </TouchableOpacity>
 
-            {/* Share Button (Placeholder) */}
+            {/* More Button */}
             <TouchableOpacity
-              onPress={(e) => e.stopPropagation()}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedPost(post);
+                setActionSheetVisible(true);
+              }}
               style={{
                 width: 32,
                 height: 32,
@@ -418,7 +425,7 @@ export default function HomeScreen() {
                 borderColor: colors.border,
               }}
             >
-              <MaterialIcons name="share" size={16} color={colors.text} />
+              <MaterialIcons name="more-horiz" size={16} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -668,6 +675,15 @@ export default function HomeScreen() {
       >
         <MaterialIcons name="add" size={32} color={colors.primaryText} />
       </TouchableOpacity>
+      {/* Post Action Sheet */}
+      <PostActionSheet
+        visible={actionSheetVisible}
+        onClose={() => {
+          setActionSheetVisible(false);
+          setSelectedPost(null);
+        }}
+        post={selectedPost}
+      />
     </AppBackground>
   );
 }

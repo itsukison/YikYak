@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { ArrowLeft, MessageCircle, MapPin, ArrowUp, ArrowDown, Repeat, Share } from "lucide-react-native";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -155,7 +155,7 @@ export default function UserProfileScreen() {
             alignItems: 'flex-start'
           }}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Heading variant="h2" style={{ flex: 1 }}>
           {isOwnProfile ? "My Posts" : "Profile"}
@@ -269,7 +269,7 @@ export default function UserProfileScreen() {
                       {createChatMutation.isPending ? (
                         <ActivityIndicator size="small" color={colors.text} />
                       ) : (
-                        <MaterialIcons name="chat-bubble-outline" size={18} color={colors.text} />
+                        <MessageCircle size={18} color={colors.text} />
                       )}
                     </TouchableOpacity>
                   </View>
@@ -334,7 +334,7 @@ export default function UserProfileScreen() {
                             marginBottom: 12,
                           }}
                         >
-                          <MaterialIcons name="place" size={12} color={colors.textSecondary} />
+                          <MapPin size={12} color={colors.textSecondary} />
                           <Caption color="secondary" style={{ marginLeft: 4 }}>
                             {post.location_name}
                           </Caption>
@@ -368,8 +368,7 @@ export default function UserProfileScreen() {
                                 height: "100%",
                               }}
                             >
-                              <MaterialIcons
-                                name="arrow-upward"
+                              <ArrowUp
                                 size={16}
                                 color={userPostVote === 'up' ? colors.primary : colors.text}
                               />
@@ -391,8 +390,7 @@ export default function UserProfileScreen() {
                                 justifyContent: "center",
                               }}
                             >
-                              <MaterialIcons
-                                name="arrow-downward"
+                              <ArrowDown
                                 size={16}
                                 color={userPostVote === 'down' ? colors.error : colors.text}
                               />
@@ -412,7 +410,7 @@ export default function UserProfileScreen() {
                               borderColor: colors.border,
                             }}
                           >
-                            <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+                            <MessageCircle size={16} color={colors.text} />
                             <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
                               {post.comment_count || 0}
                             </Body>
@@ -434,7 +432,7 @@ export default function UserProfileScreen() {
                               borderColor: colors.border,
                             }}
                           >
-                            <MaterialIcons name="repeat" size={16} color={colors.text} />
+                            <Repeat size={16} color={colors.text} />
                           </TouchableOpacity>
 
                           {/* Share Button (Placeholder) */}
@@ -451,7 +449,7 @@ export default function UserProfileScreen() {
                               borderColor: colors.border,
                             }}
                           >
-                            <MaterialIcons name="share" size={16} color={colors.text} />
+                            <Share size={16} color={colors.text} />
                           </TouchableOpacity>
                         </View>
                       </View>

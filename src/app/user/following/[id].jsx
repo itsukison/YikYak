@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { ArrowLeft, Users } from "lucide-react-native";
 import AppBackground from "../../../components/AppBackground";
 import EmptyState from "../../../components/EmptyState";
 import { useTheme } from "../../../utils/theme";
@@ -98,7 +98,7 @@ export default function FollowingScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        
+
         {/* Header */}
         <View
           style={{
@@ -111,9 +111,9 @@ export default function FollowingScreen() {
             borderBottomColor: colors.border,
           }}
         >
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={{ 
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
               marginRight: 12,
               width: 48,
               height: 48,
@@ -121,13 +121,13 @@ export default function FollowingScreen() {
               alignItems: 'flex-start'
             }}
           >
-            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>Following</Heading>
         </View>
 
         <EmptyState
-          Icon="group"
+          Icon={Users}
           title="Not Following Anyone"
           description="This user isn't following anyone yet."
         />
@@ -151,9 +151,9 @@ export default function FollowingScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={{ 
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
             marginRight: 12,
             width: 48,
             height: 48,
@@ -161,7 +161,7 @@ export default function FollowingScreen() {
             alignItems: 'flex-start'
           }}
         >
-          <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Heading variant="h2" style={{ flex: 1 }}>Following</Heading>
       </View>
@@ -200,14 +200,14 @@ function FollowingItem({
       }}
       activeOpacity={0.7}
     >
-      <View style={{ 
-        flexDirection: "row", 
+      <View style={{
+        flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 20,
         paddingVertical: 16,
       }}>
         {/* Avatar */}
-        <Avatar 
+        <Avatar
           name={displayName}
           size="medium"
           style={{ marginRight: 12 }}
@@ -235,8 +235,8 @@ function FollowingItem({
             style={{ minWidth: 90 }}
           >
             {followMutation.isPending ||
-            unfollowMutation.isPending ||
-            followStatusLoading ? (
+              unfollowMutation.isPending ||
+              followStatusLoading ? (
               <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
             ) : (
               isFollowing ? "Following" : "Follow"

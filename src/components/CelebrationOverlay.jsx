@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Dimensions, StyleSheet, Animated, Easing } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Dimensions, StyleSheet, Animated, Easing, TouchableWithoutFeedback } from 'react-native';
+import { Check } from "lucide-react-native";
 import { useTheme } from '../utils/theme';
 import { Heading, Body } from './ui';
 
@@ -146,9 +146,11 @@ export default function CelebrationOverlay({ visible, onComplete }) {
     const { colors, isDark } = useTheme();
     const opacity = useRef(new Animated.Value(0)).current;
     const scale = useRef(new Animated.Value(0.5)).current;
+    const hasCompleted = useRef(false);
 
     useEffect(() => {
         if (visible) {
+            hasCompleted.current = false;
             // Fade in background
             Animated.timing(opacity, {
                 toValue: 1,
@@ -181,12 +183,16 @@ export default function CelebrationOverlay({ visible, onComplete }) {
     }, [visible]);
 
     const handleComplete = () => {
+        if (hasCompleted.current) return;
+        hasCompleted.current = true;
+
         Animated.timing(opacity, {
             toValue: 0,
             duration: 300,
             useNativeDriver: true,
-        }).start(({ finished }) => {
-            if (finished && onComplete) {
+        }).start(() => {
+            // Always call onComplete, even if animation was interrupted
+            if (onComplete) {
                 onComplete();
             }
         });
@@ -195,52 +201,54 @@ export default function CelebrationOverlay({ visible, onComplete }) {
     if (!visible) return null;
 
     return (
-        <Animated.View
-            style={[
-                StyleSheet.absoluteFill,
-                {
-                    backgroundColor: isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.95)',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000,
-                    opacity: opacity,
-                },
-            ]}
-        >
-            {/* Particles */}
-            <View style={{ position: 'absolute', left: SCREEN_WIDTH / 2, top: SCREEN_HEIGHT / 2 }}>
-                {Array.from({ length: NUM_PARTICLES }).map((_, i) => (
-                    <Particle key={i} index={i} />
-                ))}
-            </View>
-
-            {/* Success Icon & Text */}
-            <Animated.View style={{ alignItems: 'center', transform: [{ scale: scale }] }}>
-                <View
-                    style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 50,
-                        backgroundColor: colors.primary,
+        <TouchableWithoutFeedback onPress={handleComplete}>
+            <Animated.View
+                style={[
+                    StyleSheet.absoluteFill,
+                    {
+                        backgroundColor: isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.95)',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        marginBottom: 24,
-                        shadowColor: colors.primary,
-                        shadowOffset: { width: 0, height: 10 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 20,
-                        elevation: 10,
-                    }}
-                >
-                    <MaterialIcons name="check" size={60} color={colors.primaryText} />
+                        zIndex: 1000,
+                        opacity: opacity,
+                    },
+                ]}
+            >
+                {/* Particles */}
+                <View style={{ position: 'absolute', left: SCREEN_WIDTH / 2, top: SCREEN_HEIGHT / 2 }} pointerEvents="none">
+                    {Array.from({ length: NUM_PARTICLES }).map((_, i) => (
+                        <Particle key={i} index={i} />
+                    ))}
                 </View>
-                <Heading variant="h2" style={{ marginBottom: 8, textAlign: 'center' }}>
-                    Posted!
-                </Heading>
-                <Body style={{ color: colors.textSecondary, textAlign: 'center' }}>
-                    Your post is now live.
-                </Body>
+
+                {/* Success Icon & Text */}
+                <Animated.View style={{ alignItems: 'center', transform: [{ scale: scale }] }} pointerEvents="none">
+                    <View
+                        style={{
+                            width: 100,
+                            height: 100,
+                            borderRadius: 50,
+                            backgroundColor: colors.primary,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginBottom: 24,
+                            shadowColor: colors.primary,
+                            shadowOffset: { width: 0, height: 10 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 20,
+                            elevation: 10,
+                        }}
+                    >
+                        <Check size={60} color={colors.primaryText} />
+                    </View>
+                    <Heading variant="h2" style={{ marginBottom: 8, textAlign: 'center' }}>
+                        Posted!
+                    </Heading>
+                    <Body style={{ color: colors.textSecondary, textAlign: 'center' }}>
+                        Your post is now live.
+                    </Body>
+                </Animated.View>
             </Animated.View>
-        </Animated.View>
+        </TouchableWithoutFeedback>
     );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { X } from "lucide-react-native";
 import { useTheme } from '../utils/theme';
 
 export default function PhotoThumbnail({ uri, onRemove, size = 80 }) {
@@ -13,14 +13,14 @@ export default function PhotoThumbnail({ uri, onRemove, size = 80 }) {
         style={[styles.image, { borderRadius: 12 }]}
         resizeMode="cover"
       />
-      
+
       {onRemove && (
         <TouchableOpacity
           style={[styles.removeButton, { backgroundColor: colors.error }]}
           onPress={onRemove}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <MaterialIcons name="close" size={16} color="#FFFFFF" />
+          <X size={16} color="#FFFFFF" />
         </TouchableOpacity>
       )}
     </View>

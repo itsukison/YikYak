@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { X, User, UserX, ChevronDown, MapPin } from "lucide-react-native";
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../utils/theme';
 import { useAuth } from '../../utils/auth/useAuth';
@@ -32,6 +32,7 @@ export default function RepostScreen() {
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState(null);
+    const [locationName, setLocationName] = useState('Locating...');
     const focusedPadding = 12;
 
     const paddingAnimation = useRef(
@@ -80,14 +81,37 @@ export default function RepostScreen() {
                     'Location access is required to create location-based posts.',
                     [{ text: 'OK' }]
                 );
+                setLocationName('Unknown Location');
                 return;
             }
 
             let currentLocation = await Location.getCurrentPositionAsync({});
             setLocation(currentLocation);
+
+            // Reverse geocode to get location name
+            try {
+                const reverseGeocode = await Location.reverseGeocodeAsync({
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude
+                });
+
+                if (reverseGeocode && reverseGeocode.length > 0) {
+                    const address = reverseGeocode[0];
+                    // Prioritize name (e.g. "University of Tokyo"), then city, then region
+                    const name = address.name || address.city || address.region || 'Unknown Location';
+                    setLocationName(name);
+                } else {
+                    setLocationName('Unknown Location');
+                }
+            } catch (geoError) {
+                console.error('Error reverse geocoding:', geoError);
+                setLocationName('Unknown Location');
+            }
+
         } catch (error) {
             console.error('Error getting location:', error);
             Alert.alert('Error', 'Failed to get your location. Please try again.');
+            setLocationName('Unknown Location');
         }
     };
 
@@ -120,7 +144,7 @@ export default function RepostScreen() {
                 content: content.trim(),
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
-                locationName: 'University of Tokyo', // Ideally fetch this
+                locationName: locationName,
                 userNickname: profile?.nickname,
                 userIsAnonymous: isAnonymous,
                 repostOf: id,
@@ -192,7 +216,7 @@ export default function RepostScreen() {
                             alignItems: 'flex-start'
                         }}
                     >
-                        <MaterialIcons name="close" size={24} color={colors.text} />
+                        <X size={24} color={colors.text} />
                     </TouchableOpacity>
 
                     <Heading variant="h2">New Post</Heading>
@@ -225,11 +249,11 @@ export default function RepostScreen() {
                                     marginRight: 12
                                 }}
                             >
-                                <MaterialIcons
-                                    name={isAnonymous ? "person-off" : "person"}
-                                    size={20}
-                                    color={colors.textSecondary}
-                                />
+                                {isAnonymous ? (
+                                    <UserX size={20} color={colors.textSecondary} />
+                                ) : (
+                                    <User size={20} color={colors.textSecondary} />
+                                )}
                             </View>
                             <View>
                                 <Body weight="bold">
@@ -237,7 +261,7 @@ export default function RepostScreen() {
                                 </Body>
                                 <TouchableOpacity onPress={() => setIsAnonymous(!isAnonymous)}>
                                     <Caption color="secondary" style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        {isAnonymous ? 'Hidden Identity' : 'Public Identity'} <MaterialIcons name="keyboard-arrow-down" size={14} />
+                                        {isAnonymous ? 'Hidden Identity' : 'Public Identity'} <ChevronDown size={14} color={colors.textSecondary} />
                                     </Caption>
                                 </TouchableOpacity>
                             </View>
@@ -290,11 +314,11 @@ export default function RepostScreen() {
                                         borderColor: colors.border
                                     }}
                                 >
-                                    <MaterialIcons
-                                        name={originalPost.is_anonymous ? "person-off" : "person"}
-                                        size={14}
-                                        color={colors.textSecondary}
-                                    />
+                                    {(originalPost.is_anonymous) ? (
+                                        <UserX size={14} color={colors.textSecondary} />
+                                    ) : (
+                                        <User size={14} color={colors.textSecondary} />
+                                    )}
                                 </View>
                                 <Body weight="bold" style={{ fontSize: 14 }}>
                                     {originalPost.users?.is_anonymous ? 'Anonymous' : originalPost.users?.nickname || 'Unknown'}
@@ -335,12 +359,12 @@ export default function RepostScreen() {
                                             marginRight: 12
                                         }}
                                     >
-                                        <MaterialIcons name="place" size={20} color={colors.textSecondary} />
+                                        <MapPin size={20} color={colors.textSecondary} />
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Body weight="medium">Location</Body>
                                         <Caption color="secondary">
-                                            University of Tokyo • Visible to nearby students
+                                            {locationName} • Visible to nearby students
                                         </Caption>
                                     </View>
                                 </View>

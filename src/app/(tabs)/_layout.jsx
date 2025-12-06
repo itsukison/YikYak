@@ -1,6 +1,6 @@
 import { Tabs, useRouter } from "expo-router";
 import { View } from "react-native";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { Home, MessageCircle, Bell, User } from "lucide-react-native";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { useUnreadCountQuery } from "../../utils/queries/notifications";
@@ -41,7 +41,7 @@ export default function TabLayout() {
         options={{
           title: "Feed",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" size={24} color={color} />
+            <Home size={24} color={color} />
           ),
         }}
       />
@@ -50,7 +50,7 @@ export default function TabLayout() {
         options={{
           title: "Messages",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="chat-bubble" size={24} color={color} />
+            <MessageCircle size={24} color={color} />
           ),
         }}
       />
@@ -60,7 +60,7 @@ export default function TabLayout() {
           title: "Notifications",
           tabBarIcon: ({ color, size }) => (
             <View style={{ position: 'relative' }}>
-              <MaterialIcons name="notifications" size={24} color={color} />
+              <Bell size={24} color={color} />
               {unreadCount > 0 && (
                 <View
                   style={{
@@ -83,7 +83,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="person" size={24} color={color} />
+            <User size={24} color={color} />
           ),
         }}
       />

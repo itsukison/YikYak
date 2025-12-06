@@ -9,14 +9,22 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import {
+  Settings,
+  HelpCircle,
+  LogOut,
+  User,
+  UserX,
+  MapPin,
+  ChevronRight
+} from "lucide-react-native";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { useProfileStatsQuery } from "../../utils/queries/profile";
 import { useQueryClient } from "@tanstack/react-query";
 import AppBackground from "../../components/AppBackground";
 import MenuItem from "../../components/MenuItem";
-import { Container, Section, Heading, Body, Caption, Card, Avatar } from "../../components/ui";
+import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal } from "../../components/ui";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -29,6 +37,20 @@ export default function ProfileScreen() {
   const [locationRadius, setLocationRadius] = useState(
     profile?.location_radius ? profile.location_radius / 1000 : 5
   );
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    actions: [],
+  });
+
+  const showModal = (title, message, actions = []) => {
+    setModalConfig({ visible: true, title, message, actions });
+  };
+
+  const hideModal = () => {
+    setModalConfig((prev) => ({ ...prev, visible: false }));
+  };
 
   // Fetch real stats from database
   const { data: stats } = useProfileStatsQuery(user?.id);
@@ -87,28 +109,39 @@ export default function ProfileScreen() {
     if (error) {
       console.error("Error updating profile:", error);
       setIsAnonymous(!newValue);
-      Alert.alert("Error", "Failed to update anonymous setting.");
+      showModal("Error", "Failed to update anonymous setting.", [
+        { text: "OK", onPress: hideModal }
+      ]);
     }
   };
 
   const handleSettings = () => {
-    Alert.alert("Settings", "Settings screen would open here");
+    showModal("Settings", "Settings screen would open here", [
+      { text: "OK", onPress: hideModal }
+    ]);
   };
 
   const handleHelp = () => {
-    Alert.alert("Help & Support", "Help & Support options would be shown here");
+    showModal("Help & Support", "Help & Support options would be shown here", [
+      { text: "OK", onPress: hideModal }
+    ]);
   };
 
   const handleSignOut = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
+    showModal("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel", onPress: hideModal },
       {
         text: "Sign Out",
         style: "destructive",
         onPress: async () => {
+          hideModal();
           const { error } = await signOut();
           if (error) {
-            Alert.alert("Error", "Failed to sign out");
+            setTimeout(() => {
+              showModal("Error", "Failed to sign out", [
+                { text: "OK", onPress: hideModal }
+              ]);
+            }, 300);
           } else {
             router.replace("/login");
           }
@@ -118,17 +151,23 @@ export default function ProfileScreen() {
   };
 
   const handleLocationRadius = () => {
-    Alert.alert(
+    showModal(
       "Location Radius",
       "Choose how far you want to see posts from your location",
       [
         {
           text: "2km",
+          style: "secondary",
           onPress: async () => {
+            hideModal();
             setLocationRadius(2);
             const { error } = await updateLocationRadius(2000);
             if (error) {
-              Alert.alert("Error", "Failed to update radius preference");
+              setTimeout(() => {
+                showModal("Error", "Failed to update radius preference", [
+                  { text: "OK", onPress: hideModal }
+                ]);
+              }, 300);
               setLocationRadius(profile.location_radius / 1000);
             } else {
               queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -137,11 +176,17 @@ export default function ProfileScreen() {
         },
         {
           text: "5km",
+          style: "secondary",
           onPress: async () => {
+            hideModal();
             setLocationRadius(5);
             const { error } = await updateLocationRadius(5000);
             if (error) {
-              Alert.alert("Error", "Failed to update radius preference");
+              setTimeout(() => {
+                showModal("Error", "Failed to update radius preference", [
+                  { text: "OK", onPress: hideModal }
+                ]);
+              }, 300);
               setLocationRadius(profile.location_radius / 1000);
             } else {
               queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -150,25 +195,31 @@ export default function ProfileScreen() {
         },
         {
           text: "10km",
+          style: "secondary",
           onPress: async () => {
+            hideModal();
             setLocationRadius(10);
             const { error } = await updateLocationRadius(10000);
             if (error) {
-              Alert.alert("Error", "Failed to update radius preference");
+              setTimeout(() => {
+                showModal("Error", "Failed to update radius preference", [
+                  { text: "OK", onPress: hideModal }
+                ]);
+              }, 300);
               setLocationRadius(profile.location_radius / 1000);
             } else {
               queryClient.invalidateQueries({ queryKey: ['posts'] });
             }
           }
         },
-        { text: "Cancel", style: "cancel" },
+        { text: "Cancel", onPress: hideModal },
       ],
     );
   };
 
   const accountMenuItems = [
     {
-      icon: isAnonymous ? "person-off" : "person",
+      icon: isAnonymous ? UserX : User,
       title: "Anonymous Mode",
       subtitle: isAnonymous
         ? "You're posting anonymously"
@@ -188,7 +239,7 @@ export default function ProfileScreen() {
       ),
     },
     {
-      icon: "place",
+      icon: MapPin,
       title: "Location Radius",
       subtitle: `See posts within ${locationRadius}km of your location`,
       onPress: handleLocationRadius,
@@ -197,19 +248,19 @@ export default function ProfileScreen() {
 
   const appMenuItems = [
     {
-      icon: "settings",
+      icon: Settings,
       title: "Settings",
       subtitle: "Notifications, privacy, and more",
       onPress: handleSettings,
     },
     {
-      icon: "help",
+      icon: HelpCircle,
       title: "Help & Support",
       subtitle: "Get help or contact us",
       onPress: handleHelp,
     },
     {
-      icon: "logout",
+      icon: LogOut,
       title: "Sign Out",
       subtitle: "Sign out of your account",
       onPress: handleSignOut,
@@ -344,16 +395,15 @@ export default function ProfileScreen() {
                       width: 44,
                       height: 44,
                       borderRadius: radius.pill,
-                      backgroundColor: colors.surface,
+                      backgroundColor: colors.surfaceElevated,
                       justifyContent: "center",
                       alignItems: "center",
                       marginRight: 16,
                     }}
                   >
-                    <MaterialIcons
-                      name={item.icon}
+                    <item.icon
                       size={22}
-                      color={colors.text}
+                      color={colors.textSecondary}
                     />
                   </View>
 
@@ -371,7 +421,7 @@ export default function ProfileScreen() {
                   {item.rightComponent ? (
                     item.rightComponent
                   ) : item.showChevron !== false ? (
-                    <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+                    <ChevronRight size={24} color={colors.textTertiary} />
                   ) : null}
                 </TouchableOpacity>
               </View>
@@ -406,16 +456,15 @@ export default function ProfileScreen() {
                     width: 44,
                     height: 44,
                     borderRadius: radius.pill,
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.surfaceElevated,
                     justifyContent: "center",
                     alignItems: "center",
                     marginRight: 16,
                   }}
                 >
-                  <MaterialIcons
-                    name={item.icon}
+                  <item.icon
                     size={22}
-                    color={colors.text}
+                    color={colors.textSecondary}
                   />
                 </View>
 
@@ -429,7 +478,7 @@ export default function ProfileScreen() {
                   </Caption>
                 </View>
 
-                <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+                <ChevronRight size={24} color={colors.textTertiary} />
               </TouchableOpacity>
             ))}
           </View>
@@ -448,6 +497,13 @@ export default function ProfileScreen() {
           </Caption>
         </View>
       </ScrollView>
+      <Modal
+        visible={modalConfig.visible}
+        onClose={hideModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        actions={modalConfig.actions}
+      />
     </AppBackground>
   );
 }

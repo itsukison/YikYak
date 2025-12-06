@@ -13,7 +13,7 @@ import {
     Animated,
     Dimensions,
 } from "react-native";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { ArrowLeft, ChevronRight, Flag, Mail, Ban } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../utils/theme";
 import { Body, Heading } from "./ui/Text";
@@ -215,7 +215,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                         <View style={{ padding: spacing.lg, height: 400 }}>
                                             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: spacing.md }}>
                                                 <TouchableOpacity onPress={() => setReportMode(false)} style={{ padding: 4 }}>
-                                                    <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+                                                    <ArrowLeft size={24} color={colors.text} />
                                                 </TouchableOpacity>
                                                 <Heading variant="h3" style={{ marginLeft: spacing.sm }}>Report Post</Heading>
                                             </View>
@@ -245,7 +245,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                         }}
                                                     >
                                                         <Body>{reason}</Body>
-                                                        <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+                                                        <ChevronRight size={20} color={colors.textSecondary} />
                                                     </TouchableOpacity>
                                                 ))}
 
@@ -283,7 +283,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                         <View style={{ padding: spacing.md }}>
                                             <TouchableOpacity style={styles.option} onPress={() => setReportMode(true)}>
                                                 <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-                                                    <MaterialIcons name="flag" size={24} color={colors.text} />
+                                                    <Flag size={24} color={colors.text} />
                                                 </View>
                                                 <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Report Post</Body>
                                             </TouchableOpacity>
@@ -291,7 +291,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                             {!post.is_anonymous && (
                                                 <TouchableOpacity style={styles.option} onPress={handleDM}>
                                                     <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-                                                        <MaterialIcons name="mail" size={24} color={colors.text} />
+                                                        <Mail size={24} color={colors.text} />
                                                     </View>
                                                     <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Send Message</Body>
                                                 </TouchableOpacity>
@@ -300,7 +300,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                             {!post.is_anonymous && (
                                                 <TouchableOpacity style={styles.option} onPress={handleBlock}>
                                                     <View style={[styles.iconContainer, { backgroundColor: colors.errorSubtle }]}>
-                                                        <MaterialIcons name="block" size={24} color={colors.error} />
+                                                        <Ban size={24} color={colors.error} />
                                                     </View>
                                                     <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>Block User</Body>
                                                 </TouchableOpacity>

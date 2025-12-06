@@ -9,7 +9,17 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import {
+  MapPin,
+  User,
+  UserX,
+  ArrowUp,
+  ArrowDown,
+  MessageCircle,
+  Repeat,
+  MoreHorizontal,
+  Plus
+} from "lucide-react-native";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery, useVotePostMutation } from "../../utils/queries/posts";
@@ -240,7 +250,7 @@ export default function HomeScreen() {
           {/* Location (Optional, kept minimal) */}
           {post.location_name && (
             <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
-              <MaterialIcons name="place" size={12} color={colors.textTertiary} />
+              <MapPin size={12} color={colors.textTertiary} />
               <Caption color="tertiary" style={{ marginLeft: 2 }}>
                 {post.location_name}
               </Caption>
@@ -274,11 +284,11 @@ export default function HomeScreen() {
                   borderColor: colors.border
                 }}
               >
-                <MaterialIcons
-                  name={post.reposted_post_is_anonymous ? "person-off" : "person"}
-                  size={12}
-                  color={colors.textSecondary}
-                />
+                {post.reposted_post_is_anonymous ? (
+                  <UserX size={12} color={colors.textSecondary} />
+                ) : (
+                  <User size={12} color={colors.textSecondary} />
+                )}
               </View>
               <Body weight="bold" style={{ fontSize: 13 }}>
                 {post.reposted_post_is_anonymous ? "Anonymous" : post.reposted_post_author || "Unknown"}
@@ -335,8 +345,7 @@ export default function HomeScreen() {
                   height: "100%",
                 }}
               >
-                <MaterialIcons
-                  name="arrow-upward"
+                <ArrowUp
                   size={16}
                   color={userVote === 'up' ? colors.primary : colors.text}
                 />
@@ -358,8 +367,7 @@ export default function HomeScreen() {
                   justifyContent: "center",
                 }}
               >
-                <MaterialIcons
-                  name="arrow-downward"
+                <ArrowDown
                   size={16}
                   color={userVote === 'down' ? colors.error : colors.text}
                 />
@@ -379,7 +387,7 @@ export default function HomeScreen() {
                 borderColor: colors.border,
               }}
             >
-              <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+              <MessageCircle size={16} color={colors.text} />
               <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
                 {post.comment_count || 0}
               </Body>
@@ -404,7 +412,7 @@ export default function HomeScreen() {
                 borderColor: colors.border,
               }}
             >
-              <MaterialIcons name="repeat" size={16} color={colors.text} />
+              <Repeat size={16} color={colors.text} />
             </TouchableOpacity>
 
             {/* More Button */}
@@ -425,7 +433,7 @@ export default function HomeScreen() {
                 borderColor: colors.border,
               }}
             >
-              <MaterialIcons name="more-horiz" size={16} color={colors.text} />
+              <MoreHorizontal size={16} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -626,7 +634,7 @@ export default function HomeScreen() {
               paddingHorizontal: 32,
             }}
           >
-            <MaterialIcons name="chat-bubble" size={48} color={colors.primary} />
+            <MessageCircle size={48} color={colors.primary} />
             <Heading
               variant="h2"
               style={{
@@ -673,7 +681,7 @@ export default function HomeScreen() {
           elevation: 8,
         }}
       >
-        <MaterialIcons name="add" size={32} color={colors.primaryText} />
+        <Plus size={32} color={colors.primaryText} />
       </TouchableOpacity>
       {/* Post Action Sheet */}
       <PostActionSheet

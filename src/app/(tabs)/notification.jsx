@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { ArrowUp, MessageCircle, UserPlus, Mail, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
@@ -87,15 +87,15 @@ export default function NotificationScreen() {
   const getNotificationIcon = (type) => {
     switch (type) {
       case "vote":
-        return "arrow-upward";
+        return ArrowUp;
       case "comment":
-        return "chat-bubble";
+        return MessageCircle;
       case "follow":
-        return "person-add";
+        return UserPlus;
       case "message":
-        return "mail";
+        return Mail;
       default:
-        return "notifications";
+        return Bell;
     }
   };
 
@@ -145,7 +145,7 @@ export default function NotificationScreen() {
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
         <EmptyState
-          Icon="notifications"
+          Icon={Bell}
           title="No Notifications"
           description="You'll see notifications here when someone votes on your posts, comments, or follows you!"
         />
@@ -156,7 +156,7 @@ export default function NotificationScreen() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const renderNotification = ({ item }) => {
-    const iconName = getNotificationIcon(item.type);
+    const IconComponent = getNotificationIcon(item.type);
     const notificationText = getNotificationText(item);
 
     // Determine avatar name (use actor name or "System")
@@ -200,7 +200,7 @@ export default function NotificationScreen() {
                 elevation: 2,
               }}
             >
-              <MaterialIcons name={iconName} size={12} color="#173300" />
+              <IconComponent size={12} color="#173300" />
             </View>
           </View>
 

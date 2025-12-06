@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { ArrowLeft, Search, Users } from "lucide-react-native";
 import AppBackground from "../components/AppBackground";
 import EmptyState from "../components/EmptyState";
 import UserCard from "../components/UserCard";
@@ -82,7 +82,7 @@ export default function SearchUsersScreen() {
               alignItems: "flex-start",
             }}
           >
-            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>
             Find Users
@@ -101,7 +101,7 @@ export default function SearchUsersScreen() {
               paddingVertical: 12,
             }}
           >
-            <MaterialIcons name="search" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
+            <Search size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
               value={searchTerm}
               onChangeText={setSearchTerm}
@@ -128,7 +128,7 @@ export default function SearchUsersScreen() {
         {/* Results */}
         {showInitialState ? (
           <EmptyState
-            Icon="group"
+            Icon={Users}
             title="Search for Users"
             description="Enter a username or user ID to find other students and start connecting!"
           />
@@ -138,7 +138,7 @@ export default function SearchUsersScreen() {
           </View>
         ) : showEmptyState ? (
           <EmptyState
-            Icon="group"
+            Icon={Users}
             title="No Users Found"
             description="Try searching with a different username or check the spelling."
           />

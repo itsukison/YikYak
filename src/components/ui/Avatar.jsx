@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { User } from "lucide-react-native";
 import { useTheme } from "../../utils/theme";
 
 /**
@@ -61,8 +61,7 @@ export default function Avatar({
           resizeMode="cover"
         />
       ) : (
-        <MaterialIcons
-          name="person"
+        <User
           size={iconSizes[normalizedSize]}
           color={colors.textSecondary}
         />

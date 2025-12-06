@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { ChevronRight } from 'lucide-react-native';
+
 import { useTheme } from '../utils/theme';
 import { Body, Caption } from './ui/Text';
 
@@ -8,13 +9,13 @@ import { Body, Caption } from './ui/Text';
  * MenuItem component - Clean menu item with icon and text
  * Artifact-inspired with proper spacing and typography
  */
-export default function MenuItem({ 
-  Icon, 
-  title, 
-  subtitle, 
-  onPress, 
+export default function MenuItem({
+  Icon,
+  title,
+  subtitle,
+  onPress,
   showDivider = false,
-  showChevron = true 
+  showChevron = true
 }) {
   const { colors, radius, spacing } = useTheme();
 
@@ -42,7 +43,7 @@ export default function MenuItem({
             marginRight: spacing.md,
           }}
         >
-          <MaterialIcons name={Icon} size={20} color={colors.text} />
+          <Icon size={20} color={colors.text} />
         </View>
 
         {/* Text Content */}
@@ -59,7 +60,7 @@ export default function MenuItem({
 
         {/* Chevron */}
         {showChevron && (
-          <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
+          <ChevronRight size={20} color={colors.textSecondary} />
         )}
       </TouchableOpacity>
 

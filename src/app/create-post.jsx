@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { ArrowLeft, User, UserX, MapPin } from "lucide-react-native";
 import { router } from 'expo-router';
 import { useTheme } from '../utils/theme';
 import { useAuth } from '../utils/auth/useAuth';
@@ -36,6 +36,7 @@ export default function CreatePost() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
+  const [locationName, setLocationName] = useState('Locating...');
   const [photos, setPhotos] = useState([]);
   const [showCelebration, setShowCelebration] = useState(false);
   const focusedPadding = 12;
@@ -86,14 +87,37 @@ export default function CreatePost() {
           'Location access is required to create location-based posts.',
           [{ text: 'OK' }]
         );
+        setLocationName('Unknown Location');
         return;
       }
 
       let currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
+
+      // Reverse geocode to get location name
+      try {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude
+        });
+
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const address = reverseGeocode[0];
+          // Prioritize name (e.g. "University of Tokyo"), then city, then region
+          const name = address.name || address.city || address.region || 'Unknown Location';
+          setLocationName(name);
+        } else {
+          setLocationName('Unknown Location');
+        }
+      } catch (geoError) {
+        console.error('Error reverse geocoding:', geoError);
+        setLocationName('Unknown Location');
+      }
+
     } catch (error) {
       console.error('Error getting location:', error);
       Alert.alert('Error', 'Failed to get your location. Please try again.');
+      setLocationName('Unknown Location');
     }
   };
 
@@ -163,7 +187,7 @@ export default function CreatePost() {
         content: content.trim(),
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        locationName: 'University of Tokyo',
+        locationName: locationName,
         userNickname: profile?.nickname,
         userIsAnonymous: isAnonymous,
         photos: photoUrls,
@@ -228,7 +252,7 @@ export default function CreatePost() {
                   alignItems: 'flex-start'
                 }}
               >
-                <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+                <ArrowLeft size={24} color={colors.text} />
               </TouchableOpacity>
 
               <Heading variant="h2">Create Post</Heading>
@@ -308,11 +332,11 @@ export default function CreatePost() {
                           marginRight: 12
                         }}
                       >
-                        <MaterialIcons
-                          name={isAnonymous ? "person-off" : "person"}
-                          size={20}
-                          color={colors.textSecondary}
-                        />
+                        {isAnonymous ? (
+                          <UserX size={20} color={colors.textSecondary} />
+                        ) : (
+                          <User size={20} color={colors.textSecondary} />
+                        )}
                       </View>
                       <View>
                         <Body weight="medium">
@@ -365,12 +389,12 @@ export default function CreatePost() {
                           marginRight: 12
                         }}
                       >
-                        <MaterialIcons name="place" size={20} color={colors.textSecondary} />
+                        <MapPin size={20} color={colors.textSecondary} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Body weight="medium">Location</Body>
                         <Caption color="secondary">
-                          University of Tokyo • Visible to nearby students
+                          {locationName} • Visible to nearby students
                         </Caption>
                       </View>
                     </View>

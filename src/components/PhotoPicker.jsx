@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+import { Image as ImageIcon } from "lucide-react-native";
 import { useTheme } from '../utils/theme';
 import { Body } from './ui';
 import PhotoThumbnail from './PhotoThumbnail';
@@ -87,8 +87,7 @@ export default function PhotoPicker({ photos, onPhotosChange }) {
         onPress={pickImages}
         disabled={isDisabled}
       >
-        <MaterialIcons
-          name="image"
+        <ImageIcon
           size={20}
           color={isDisabled ? colors.textSecondary : colors.ghostText}
         />

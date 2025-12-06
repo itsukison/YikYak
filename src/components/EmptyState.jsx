@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { MaterialIcons } from '@react-native-vector-icons/material-icons';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../utils/theme';
 import { Heading, Body } from './ui/Text';
@@ -9,12 +9,12 @@ import { Heading, Body } from './ui/Text';
  * EmptyState component - Clean, minimal empty state design
  * Artifact-inspired with generous spacing and bold typography
  */
-export default function EmptyState({ 
-  Icon, 
-  title, 
-  description, 
+export default function EmptyState({
+  Icon,
+  title,
+  description,
   iconColor,
-  style 
+  style
 }) {
   const insets = useSafeAreaInsets();
   const { colors, radius, spacing } = useTheme();
@@ -45,7 +45,7 @@ export default function EmptyState({
           marginBottom: spacing["3xl"],
         }}
       >
-        <MaterialIcons name={Icon} size={36} color={iconColor || colors.accent} />
+        <Icon size={36} color={iconColor || colors.accent} />
       </View>
 
       {/* Empty state title */}

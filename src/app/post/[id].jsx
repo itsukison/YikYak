@@ -10,7 +10,18 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import {
+  ArrowLeft,
+  MapPin,
+  User,
+  UserX,
+  ArrowUp,
+  ArrowDown,
+  MessageCircle,
+  Repeat,
+  Share,
+  Send
+} from "lucide-react-native";
 import AppBackground from "../../components/AppBackground";
 import { useTheme } from "../../utils/theme";
 import { useAuth } from "../../utils/auth/useAuth";
@@ -186,7 +197,7 @@ export default function PostDetailScreen() {
               alignItems: 'flex-start'
             }}
           >
-            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Heading variant="h2" style={{ flex: 1 }}>Post</Heading>
         </View>
@@ -244,7 +255,7 @@ export default function PostDetailScreen() {
               {/* Location */}
               {post.location_name && (
                 <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
-                  <MaterialIcons name="place" size={12} color={colors.textTertiary} />
+                  <MapPin size={12} color={colors.textTertiary} />
                   <Caption color="tertiary" style={{ marginLeft: 2 }}>
                     {post.location_name}
                   </Caption>
@@ -278,11 +289,11 @@ export default function PostDetailScreen() {
                       borderColor: colors.border
                     }}
                   >
-                    <MaterialIcons
-                      name={(post.reposted_post?.users?.is_anonymous ?? post.reposted_post_is_anonymous) ? "person-off" : "person"}
-                      size={12}
-                      color={colors.textSecondary}
-                    />
+                    {(post.reposted_post?.users?.is_anonymous ?? post.reposted_post_is_anonymous) ? (
+                      <UserX size={12} color={colors.textSecondary} />
+                    ) : (
+                      <User size={12} color={colors.textSecondary} />
+                    )}
                   </View>
                   <Body weight="bold" style={{ fontSize: 13 }}>
                     {(post.reposted_post?.users?.is_anonymous ?? post.reposted_post_is_anonymous) ? "Anonymous" : (post.reposted_post?.users?.nickname ?? post.reposted_post_author) || "Unknown"}
@@ -333,8 +344,7 @@ export default function PostDetailScreen() {
                       height: "100%",
                     }}
                   >
-                    <MaterialIcons
-                      name="arrow-upward"
+                    <ArrowUp
                       size={16}
                       color={userPostVote === 'up' ? colors.primary : colors.text}
                     />
@@ -353,8 +363,7 @@ export default function PostDetailScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    <MaterialIcons
-                      name="arrow-downward"
+                    <ArrowDown
                       size={16}
                       color={userPostVote === 'down' ? colors.error : colors.text}
                     />
@@ -374,7 +383,7 @@ export default function PostDetailScreen() {
                     borderColor: colors.border,
                   }}
                 >
-                  <MaterialIcons name="chat-bubble-outline" size={16} color={colors.text} />
+                  <MessageCircle size={16} color={colors.text} />
                   <Body weight="bold" style={{ marginLeft: 4, color: colors.text, fontSize: 12 }}>
                     {post.comment_count || 0}
                   </Body>
@@ -396,7 +405,7 @@ export default function PostDetailScreen() {
                     borderColor: colors.border,
                   }}
                 >
-                  <MaterialIcons name="repeat" size={16} color={colors.text} />
+                  <Repeat size={16} color={colors.text} />
                 </TouchableOpacity>
 
                 {/* Share Button (Placeholder) */}
@@ -412,7 +421,7 @@ export default function PostDetailScreen() {
                     borderColor: colors.border,
                   }}
                 >
-                  <MaterialIcons name="share" size={16} color={colors.text} />
+                  <Share size={16} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -491,8 +500,7 @@ export default function PostDetailScreen() {
                             onPress={() => handleVoteComment(commentItem.id, 1)}
                             style={{ flexDirection: "row", alignItems: "center" }}
                           >
-                            <MaterialIcons
-                              name="arrow-upward"
+                            <ArrowUp
                               size={16}
                               color={userVote === 1 ? colors.accent : colors.textSecondary}
                             />
@@ -504,8 +512,7 @@ export default function PostDetailScreen() {
                           <TouchableOpacity
                             onPress={() => handleVoteComment(commentItem.id, -1)}
                           >
-                            <MaterialIcons
-                              name="arrow-downward"
+                            <ArrowDown
                               size={16}
                               color={userVote === -1 ? colors.error : colors.textSecondary}
                             />
@@ -570,7 +577,7 @@ export default function PostDetailScreen() {
             {createCommentMutation.isPending ? (
               <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
-              <MaterialIcons name="send" size={20} color={colors.primaryText} />
+              <Send size={20} color={colors.primaryText} />
             )}
           </TouchableOpacity>
         </View>

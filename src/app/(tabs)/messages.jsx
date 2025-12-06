@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { MaterialIcons } from "@react-native-vector-icons/material-icons";
+import { UserPlus, MessageCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import AppBackground from "../../components/AppBackground";
 import EmptyState from "../../components/EmptyState";
@@ -88,12 +88,12 @@ export default function MessagesScreen() {
               borderRadius: 24,
             }}
           >
-            <MaterialIcons name="person-add" size={20} color={colors.accent} />
+            <UserPlus size={20} color={colors.accent} />
           </TouchableOpacity>
         </View>
 
         <EmptyState
-          Icon="chat-bubble"
+          Icon={MessageCircle}
           title="No Direct Messages"
           description="You can message students you follow. Tap the + button above to find users!"
         />
@@ -225,7 +225,7 @@ export default function MessagesScreen() {
               justifyContent: "center",
             }}
           >
-            <MaterialIcons name="person-add" size={20} color={colors.text} />
+            <UserPlus size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 

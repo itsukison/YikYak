@@ -32,6 +32,8 @@ import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import PostActionSheet from "../../components/PostActionSheet";
+import { debounce } from "lodash";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -39,10 +41,12 @@ export default function HomeScreen() {
   const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null); // Fresh GPS location
+  const [feedLocation, setFeedLocation] = useState(null); // Location used for feed (cached or fresh)
   const [locationError, setLocationError] = useState(null);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [isUsingCachedLocation, setIsUsingCachedLocation] = useState(false);
 
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
@@ -50,13 +54,15 @@ export default function HomeScreen() {
 
 
   // Fetch posts from Supabase
+  // Fetch posts from Supabase using feedLocation
+  // Note: feedLocation structure should match expo-location object { coords: { latitude, longitude } }
   const { data: posts = [], isLoading, refetch } = usePostsQuery(
-    location?.coords.latitude,
-    location?.coords.longitude,
+    feedLocation?.coords?.latitude,
+    feedLocation?.coords?.longitude,
     locationRadius,
     activeTab,
     timeFilter,
-    !!location
+    !!feedLocation // Enable query as soon as we have ANY location (cached or fresh)
   );
 
   // Fetch user's votes
@@ -65,29 +71,67 @@ export default function HomeScreen() {
   // Vote mutation
   const votePostMutation = useVotePostMutation();
 
-  // Get location on mount
+  // Get location on mount (Cached + Fresh)
   useEffect(() => {
-    getLocationPermission();
+    loadLocationStrategy();
   }, []);
+
+  const loadLocationStrategy = async () => {
+    // 1. Try to load cached location immediately
+    try {
+      const cached = await AsyncStorage.getItem('lastKnownLocation');
+      if (cached) {
+        const parsedLocation = JSON.parse(cached);
+        console.log("Using cached location:", parsedLocation);
+        setFeedLocation(parsedLocation);
+        setIsUsingCachedLocation(true);
+      }
+    } catch (e) {
+      console.error("Failed to load cached location", e);
+    }
+
+    // 2. Fetch fresh location (with timeout)
+    getLocationPermission();
+  };
+
 
   // Refresh posts when radius changes
   useEffect(() => {
-    if (location) {
+    if (feedLocation) {
       refetch();
     }
   }, [locationRadius]);
 
-  // Subscribe to new posts
-  useEffect(() => {
-    if (!location || !user) return;
 
-    const unsubscribe = subscribeToNewPosts((newPost) => {
-      // Check if post is within radius (simple check)
+
+  // Debounced refetch to prevent flickering/excessive calls
+  const debouncedRefetch = React.useCallback(
+    debounce(() => {
       refetch();
+    }, 1000),
+    [refetch]
+  );
+
+  // Subscribe to new posts (Scoped by Geohash)
+  useEffect(() => {
+    // Pass the location to subscription to calculate geohash
+    // We use feedLocation to ensure we subscribe even if using cached data
+    if (!feedLocation?.coords || !user) return;
+
+    const { latitude, longitude } = feedLocation.coords;
+
+    const unsubscribe = subscribeToNewPosts(latitude, longitude, (newPost) => {
+      // Check if post is within radius is handled in subscription/RPC mostly, 
+      // but a simple client check or just refetching is fine.
+      // The RPC is optimized now, so refetch is cheap.
+      debouncedRefetch();
     });
 
-    return unsubscribe;
-  }, [location, user, refetch]);
+    return () => {
+      unsubscribe();
+      debouncedRefetch.cancel();
+    };
+  }, [feedLocation, user, debouncedRefetch]);
 
   const getLocationPermission = async () => {
     try {
@@ -104,23 +148,53 @@ export default function HomeScreen() {
         return;
       }
 
-      let currentLocation = await Location.getCurrentPositionAsync({
+      // Race condition: Location vs Timeout
+      // We want to wait for location, but if it takes too long, we just stick with cache if we have it.
+      // However, startAsync doesn't support timeout natively easily without wrapper.
+      // We can wrap it.
+
+      const locationPromise = Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
-      setLocation(currentLocation);
-      setLocationError(null);
+      const timeoutPromise = new Promise((resolve, reject) =>
+        setTimeout(() => reject(new Error("Location timeout")), 5000)
+      );
+
+      try {
+        let currentLocation = await Promise.race([locationPromise, timeoutPromise]);
+
+        // If successful, update state and cache
+        setLocation(currentLocation);
+        setFeedLocation(currentLocation); // Switch to fresh location
+        setIsUsingCachedLocation(false);
+        setLocationError(null);
+        await AsyncStorage.setItem('lastKnownLocation', JSON.stringify(currentLocation));
+
+      } catch (err) {
+        console.warn("Location fetch failed or timed out:", err);
+        // If we have cached location, we suppress the error from UI or show a toast
+        if (!feedLocation) {
+          setLocationError("Could not retrieve current location. " + err.message);
+        } else {
+          // We are still using cached location, maybe show a small indicator?
+          // For now, silent fail is better than blocking if we have cache.
+        }
+      }
+
     } catch (error) {
       console.error("Error getting location:", error);
       setLocationError(error.message);
-      Alert.alert("Error", "Failed to get your location. Please try again.");
+      if (!feedLocation) {
+        Alert.alert("Error", "Failed to get your location. Please try again.");
+      }
     }
   };
 
   const handleRefresh = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // Refresh both location and posts
-    await getLocationPermission();
+    await loadLocationStrategy(); // Re-trigger the strategy
     await refetch();
   };
 
@@ -136,6 +210,12 @@ export default function HomeScreen() {
     // If clicking the same vote, remove it
     if (currentVote === voteType) {
       newVote = null;
+    }
+
+    // Prevent voting on temporary posts
+    if (String(postId).startsWith("temp_")) {
+      Alert.alert("Please wait", "Your post is still uploading.");
+      return;
     }
 
     // Optimistic update handled by React Query
@@ -551,10 +631,17 @@ export default function HomeScreen() {
           </View>
 
           {/* Subtitle */}
-          {location && (
-            <Caption color="secondary" style={{ marginBottom: 12 }}>
-              Posts within {locationRadius / 1000}km
-            </Caption>
+          {(feedLocation || location) && (
+            <View>
+              <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 12 }}>
+                Posts within {locationRadius / 1000}km
+              </Caption>
+              {isUsingCachedLocation && (
+                <Caption color="tertiary" style={{ marginBottom: 12, fontSize: 11 }}>
+                  Using last known location
+                </Caption>
+              )}
+            </View>
           )}
 
           {/* Show location error */}

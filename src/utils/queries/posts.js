@@ -2,11 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 
 // Fetch posts within radius
+// Fetch posts within radius
 export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new', timeFilter = 'week', enabled = true) {
   return useQuery({
     queryKey: ['posts', latitude, longitude, radius, sortBy, timeFilter],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_posts_within_radius', {
+      // Use the new optimized RPC that returns posts WITH photos
+      const { data, error } = await supabase.rpc('get_feed_optimized', {
         user_lat: latitude,
         user_lon: longitude,
         radius_meters: radius,
@@ -17,32 +19,7 @@ export function usePostsQuery(latitude, longitude, radius = 5000, sortBy = 'new'
 
       if (error) throw error;
 
-      // Fetch photos for all posts
-      if (data && data.length > 0) {
-        const postIds = data.map(post => post.id);
-        const { data: photos, error: photosError } = await supabase
-          .from('post_photos')
-          .select('*')
-          .in('post_id', postIds)
-          .order('photo_order', { ascending: true });
-
-        if (!photosError && photos) {
-          // Group photos by post_id
-          const photosByPost = {};
-          photos.forEach(photo => {
-            if (!photosByPost[photo.post_id]) {
-              photosByPost[photo.post_id] = [];
-            }
-            photosByPost[photo.post_id].push(photo);
-          });
-
-          // Attach photos to posts
-          data.forEach(post => {
-            post.photos = photosByPost[post.id] || [];
-          });
-        }
-      }
-
+      // The RPC returns 'photos' as a JSON array, so we don't need manual fetching
       return data || [];
     },
     enabled: enabled && latitude != null && longitude != null,
@@ -84,22 +61,14 @@ export function useCreatePostMutation() {
 
   return useMutation({
     mutationFn: async ({ userId, content, latitude, longitude, locationName, photos = [], repostOf = null }) => {
-      // Step 1: Insert post
-      const { data: post, error } = await supabase
-        .from('posts')
-        .insert({
-          user_id: userId,
-          content: content.trim(),
-          latitude,
-          longitude,
-          location_name: locationName,
-          repost_of: repostOf,
-        })
-        .select(`
-          *,
-          sender:users!posts_user_id_fkey(id, nickname, is_anonymous)
-        `)
-        .single();
+      // Step 1: Insert post via RPC (includes rate limiting)
+      const { data: post, error } = await supabase.rpc('create_post', {
+        p_content: content.trim(),
+        p_latitude: latitude,
+        p_longitude: longitude,
+        p_location_name: locationName,
+        p_repost_of: repostOf,
+      });
 
       if (error) throw error;
 
@@ -116,8 +85,9 @@ export function useCreatePostMutation() {
           .insert(photoRecords);
 
         if (photoError) {
-          console.error('Photo record error:', photoError);
-          // We don't throw here to avoid rolling back the post creation
+          console.error('Failed to link photos to post:', photoError);
+          // We don't throw here to avoid rolling back the post creation, 
+          // but in a production app we might want to alert the user or retry.
         }
       }
 
@@ -176,13 +146,13 @@ export function useVotePostMutation() {
 
   return useMutation({
     mutationFn: async ({ userId, postId, voteType }) => {
-      // If voteType is null, delete the vote
+      // If voteType is null, delete the vote using RPC (value 0)
       if (voteType === null) {
-        const { error } = await supabase
-          .from('votes_posts')
-          .delete()
-          .eq('user_id', userId)
-          .eq('post_id', postId);
+        const { error } = await supabase.rpc('handle_post_vote', {
+          p_post_id: postId,
+          p_user_id: userId,
+          p_vote_value: 0,
+        });
 
         if (error) throw error;
         return null;
@@ -193,9 +163,9 @@ export function useVotePostMutation() {
 
       // Otherwise, upsert the vote
       const { error } = await supabase.rpc('handle_post_vote', {
-        p_user_id: userId,
         p_post_id: postId,
-        p_vote_type: dbVoteType,
+        p_user_id: userId,
+        p_vote_value: dbVoteType,
       });
 
       if (error) throw error;
@@ -372,6 +342,25 @@ export function useBlockUserMutation() {
     onSuccess: () => {
       // Invalidate posts to remove blocked user's posts
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+}
+
+// Delete post (Soft Delete)
+export function useDeletePostMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ postId }) => {
+      const { error } = await supabase.rpc('delete_post', {
+        p_post_id: postId,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['user-votes'] }); // Optional, but good practice
     },
   });
 }

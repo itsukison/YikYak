@@ -3,6 +3,10 @@
 	"main": "index",
 	"version": "1.0.0",
 	"scripts": {
+		"start": "expo start",
+		"android": "expo start --android",
+		"ios": "expo start --ios",
+		"web": "expo start --web",
 		"postinstall": "patch-package"
 	},
 	"dependencies": {
@@ -66,6 +70,7 @@
 		"lodash": "^4.17.21",
 		"lucide-react-native": "^0.525.0",
 		"moti": "0.30.0",
+		"ngeohash": "^0.6.3",
 		"papaparse": "^5.5.3",
 		"react": "19.0.0",
 		"react-dom": "19.0.0",
@@ -90,6 +95,7 @@
 		"zustand": "5.0.3"
 	},
 	"devDependencies": {
+		"@types/ngeohash": "^0.6.8",
 		"@types/react": "~19.0.10",
 		"autoprefixer": "10.4.20",
 		"patch-package": "^8.0.0",

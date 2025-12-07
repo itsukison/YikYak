@@ -54,9 +54,14 @@ export function useAuth() {
         .single();
 
       if (error) {
-        console.error("Error fetching profile:", error);
-        // If profile doesn't exist, user might need to complete onboarding
-        setProfile(null);
+        // PGRST116 is the error code for "The result contains 0 rows" when using .single()
+        if (error.code === 'PGRST116') {
+          console.log("Profile not found (user likely in onboarding)");
+          setProfile(null);
+        } else {
+          console.error("Error fetching profile:", error);
+          setProfile(null);
+        }
       } else {
         setProfile(data);
       }

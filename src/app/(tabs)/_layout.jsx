@@ -9,7 +9,7 @@ import { Badge } from "../../components/ui";
 
 export default function TabLayout() {
   const { colors, radius } = useTheme();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
   const { data: unreadCount } = useUnreadCountQuery(user?.id);
 
@@ -17,6 +17,13 @@ export default function TabLayout() {
   if (loading || !user) {
     return null;
   }
+
+  // Enforce onboarding
+  useEffect(() => {
+    if (user && !loading && profile && !profile.onboarding_completed) {
+      router.replace("/onboarding");
+    }
+  }, [user, loading, profile]);
 
   return (
     <Tabs

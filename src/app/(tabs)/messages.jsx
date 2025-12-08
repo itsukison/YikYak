@@ -128,7 +128,14 @@ export default function MessagesScreen() {
 
     return (
       <TouchableOpacity
-        onPress={() => router.push(`/chat/${item.id}`)}
+        onPress={() => router.push({
+          pathname: `/chat/${item.id}`,
+          params: {
+            otherUserId: item.otherUser.id,
+            otherUserNickname: item.otherUser.nickname,
+            otherUserIsAnonymous: item.otherUser.is_anonymous ? 'true' : 'false'
+          }
+        })}
         style={{
           backgroundColor: "transparent",
           borderBottomWidth: 0.5,

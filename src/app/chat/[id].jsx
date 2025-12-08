@@ -27,7 +27,12 @@ import { Heading, Body, Caption } from "../../components/ui";
 
 
 export default function ChatDetailScreen() {
-  const { id: chatId } = useLocalSearchParams();
+  const {
+    id: chatId,
+    otherUserId: paramOtherUserId,
+    otherUserNickname: paramOtherUserNickname,
+    otherUserIsAnonymous: paramOtherUserIsAnonymous
+  } = useLocalSearchParams();
   const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
@@ -36,15 +41,16 @@ export default function ChatDetailScreen() {
 
   const [message, setMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const { data: messages, isLoading, refetch } = useChatMessagesQuery(chatId, user?.id);
   const sendMessageMutation = useSendMessageMutation();
   const markReadMutation = useMarkMessagesReadMutation();
 
-  // Get other user ID
-  const otherUserId = messages && messages.length > 0
+  // Get other user ID (prefer param, fallback to messages)
+  const otherUserId = paramOtherUserId || (messages && messages.length > 0
     ? messages.find((msg) => msg.sender_id !== user?.id)?.sender_id
-    : null;
+    : null);
 
   // Subscribe to new messages
   useEffect(() => {
@@ -80,6 +86,7 @@ export default function ChatDetailScreen() {
 
     const messageText = message.trim();
     setMessage("");
+    setIsSending(true);
 
     try {
       await sendMessageMutation.mutateAsync({
@@ -98,6 +105,8 @@ export default function ChatDetailScreen() {
       console.error("Error sending message:", error);
       // Restore message to input on error
       setMessage(messageText);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -193,11 +202,13 @@ export default function ChatDetailScreen() {
   };
 
   // Get other user's name for header
-  const otherUserName = messages && messages.length > 0
-    ? messages.find((msg) => msg.sender_id !== user.id)?.sender.is_anonymous
-      ? "Anonymous"
-      : messages.find((msg) => msg.sender_id !== user.id)?.sender.nickname || "User"
-    : "Chat";
+  const otherUserName = paramOtherUserNickname
+    ? (paramOtherUserIsAnonymous === 'true' ? "Anonymous" : paramOtherUserNickname)
+    : (messages && messages.length > 0
+      ? messages.find((msg) => msg.sender_id !== user.id)?.sender.is_anonymous
+        ? "Anonymous"
+        : messages.find((msg) => msg.sender_id !== user.id)?.sender.nickname || "User"
+      : "Chat");
 
   return (
     <AppBackground>
@@ -294,7 +305,7 @@ export default function ChatDetailScreen() {
           />
           <TouchableOpacity
             onPress={handleSend}
-            disabled={!message.trim() || sendMessageMutation.isPending}
+            disabled={!message.trim() || isSending}
             style={{
               backgroundColor: message.trim() ? colors.primary : colors.border,
               width: 40,
@@ -304,7 +315,7 @@ export default function ChatDetailScreen() {
               alignItems: "center",
             }}
           >
-            {sendMessageMutation.isPending ? (
+            {isSending ? (
               <ActivityIndicator size="small" color={colors.primaryText} />
             ) : (
               <Send size={20} color={colors.primaryText} />

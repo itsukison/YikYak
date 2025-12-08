@@ -54,7 +54,7 @@ export function useChatsQuery(userId) {
 export function useChatMessagesQuery(chatId, userId) {
   return useQuery({
     queryKey: ["messages", chatId],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       if (!chatId) throw new Error("Chat ID required");
 
       // Always fetch from database to ensure we have the latest messages
@@ -67,8 +67,8 @@ export function useChatMessagesQuery(chatId, userId) {
         `
         )
         .eq("chat_id", chatId)
-        .eq("chat_id", chatId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .abortSignal(signal);
 
       if (error) throw error;
 
@@ -109,8 +109,11 @@ export function useSendMessageMutation() {
       return data;
     },
     onMutate: async ({ chatId, senderId, content, senderData }) => {
+      console.log('Mutation: onMutate started');
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries({ queryKey: ["messages", chatId] });
+      // Do NOT await this, as it can hang if the query is stuck.
+      // We accept the risk of a race condition (old data overwriting new) which is eventualy fixed by invalidation.
+      queryClient.cancelQueries({ queryKey: ["messages", chatId] }).catch(err => console.warn('Cancel failed:', err));
 
       // Snapshot the previous value
       const previousMessages = queryClient.getQueryData(["messages", chatId]);
@@ -127,6 +130,7 @@ export function useSendMessageMutation() {
         sender: senderData,
       };
 
+      console.log('Mutation: Setting optimistic data');
       // Optimistically update to the new value
       // Note: We prepend because the list is now sorted descending (Newest first)
       queryClient.setQueryData(["messages", chatId], (old) => {
@@ -138,6 +142,7 @@ export function useSendMessageMutation() {
       return { previousMessages };
     },
     onSuccess: (data, variables) => {
+      console.log('Mutation: onSuccess');
       // Replace the temp message with the real one
       queryClient.setQueryData(["messages", variables.chatId], (oldData) => {
         if (!oldData) return [data];

@@ -8,18 +8,18 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { ArrowUp, MessageCircle, UserPlus, Mail, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import AppBackground from "../../components/AppBackground";
-import EmptyState from "../../components/EmptyState";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
+import AppBackground from "../../ui/components/AppBackground";
+import EmptyState from "../../ui/components/EmptyState";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
+import { useNotificationsQuery } from "../../services/notifications/useNotifications";
 import {
-  useNotificationsQuery,
   useMarkNotificationReadMutation,
   useMarkAllReadMutation,
-} from "../../utils/queries/notifications";
-import { subscribeToNotifications } from "../../utils/realtime";
+} from "../../services/notifications/useNotificationActions";
+import { subscribeToNotifications } from "../../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
-import { Container, Heading, Body, Caption, Card, Button, Avatar } from "../../components/ui";
+import { Container, Heading, Body, Caption, Card, Button, Avatar } from "../../ui/components/ui";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();

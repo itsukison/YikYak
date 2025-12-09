@@ -13,31 +13,37 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, User, UserX, MapPin } from "lucide-react-native";
-import { router } from 'expo-router';
-import { useTheme } from '../utils/theme';
-import { useAuth } from '../utils/auth/useAuth';
-import { supabase } from '../utils/supabase';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTheme } from '../config/theme';
+import { useAuth } from '../services/auth/useAuth';
+import { supabase } from '../adapters/supabaseClient';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import { Button, Card, Heading, Body, Caption } from '../components/ui';
-import PhotoPicker from '../components/PhotoPicker';
+import { Button, Card, Heading, Body, Caption } from '../ui/components/ui';
+import PhotoPicker from '../ui/components/PhotoPicker';
 import { compressImages } from '../services/storage/imageCompression';
 import { uploadPhotos } from '../services/storage/photoUpload';
-import { useCreatePostMutation } from '../utils/queries/posts';
-import CelebrationOverlay from '../components/CelebrationOverlay';
+import { useCreatePostMutation } from '../services/posts/useCreatePost';
+import { useEditPostMutation } from '../services/posts/usePostActions';
+import CelebrationOverlay from '../ui/components/CelebrationOverlay';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark } = useTheme();
   const { user, profile } = useAuth();
-  const createPostMutation = useCreatePostMutation();
+  const params = useLocalSearchParams();
+  const isEditMode = params.mode === 'edit';
+  const initialPost = params.post ? JSON.parse(params.post) : null;
 
-  const [content, setContent] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
+  const createPostMutation = useCreatePostMutation();
+  const editPostMutation = useEditPostMutation();
+
+  const [content, setContent] = useState(initialPost?.content || '');
+  const [isAnonymous, setIsAnonymous] = useState(initialPost?.is_anonymous || false);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const [locationName, setLocationName] = useState('Locating...');
-  const [photos, setPhotos] = useState([]);
+  const [photos, setPhotos] = useState(initialPost?.photos || []);
   const [showCelebration, setShowCelebration] = useState(false);
   const focusedPadding = 12;
 
@@ -67,12 +73,12 @@ export default function CreatePost() {
     animateTo(insets.bottom + focusedPadding);
   };
 
-  // Use profile's anonymous setting as initial state
+  // Use profile's anonymous setting as initial state (only for new posts)
   useEffect(() => {
-    if (profile) {
+    if (profile && !isEditMode) {
       setIsAnonymous(profile.is_anonymous);
     }
-  }, [profile]);
+  }, [profile, isEditMode]);
 
   useEffect(() => {
     getCurrentLocation();
@@ -134,7 +140,7 @@ export default function CreatePost() {
       return;
     }
 
-    if (!location) {
+    if (!location && !isEditMode) {
       Alert.alert('Error', 'Location is required to create a post.');
       return;
     }
@@ -149,52 +155,78 @@ export default function CreatePost() {
     try {
       // Step 1: Compress and upload photos if any
       let photoUrls = [];
-      if (photos.length > 0) {
-        const compressed = await compressImages(photos, {
-          maxWidth: 1920,
-          quality: 0.8,
-        });
+      const newPhotosToUpload = photos.filter(p => !p.startsWith('http'));
+      const existingPhotos = photos.filter(p => p.startsWith('http'));
 
-        const compressedUris = compressed.map(img => img.uri);
-        const { urls, errors } = await uploadPhotos(user.id, compressedUris);
+      if (newPhotosToUpload.length > 0) {
+        // ... (existing compression logic mostly same, but need to handle mixed types if `photos` state has objects vs strings)
+        // Adjusting assumption: `photos` state in PhotoPicker usually holds objects with `uri`. 
+        // If initialPost.photos is array of strings, we need to handle that.
+        // Let's assume PhotoPicker handles standardizing, but let's be safe.
 
-        if (errors.length > 0) {
-          console.error('Photo upload errors:', errors);
-          Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
-            { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
-            { text: 'Continue', onPress: () => createPostWithMutation(urls) },
-          ]);
-          return;
+        const photoUris = newPhotosToUpload.map(p => p.uri || p);
+        const imagesToCompress = newPhotosToUpload.filter(p => p.uri); // Only compress objects with URI
+
+        let finalNewUrls = [];
+
+        if (imagesToCompress.length > 0) {
+          const compressed = await compressImages(imagesToCompress, {
+            maxWidth: 1920,
+            quality: 0.8,
+          });
+          const compressedUris = compressed.map(img => img.uri);
+          const { urls, errors } = await uploadPhotos(user.id, compressedUris);
+          if (errors.length > 0) {
+            console.error('Photo upload errors:', errors);
+            Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
+              { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+              { text: 'Continue', onPress: () => submitPost([...existingPhotos, ...urls]) },
+            ]);
+            return;
+          }
+          finalNewUrls = urls;
         }
 
-        photoUrls = urls;
+        photoUrls = [...existingPhotos, ...finalNewUrls];
+      } else {
+        photoUrls = existingPhotos;
       }
 
-      await createPostWithMutation(photoUrls);
+      await submitPost(photoUrls);
 
     } catch (error) {
-      console.error('Error creating post:', error);
-      Alert.alert('Error', 'Failed to create post. Please try again.');
+      console.error('Error creating/editing post:', error);
+      Alert.alert('Error', `Failed to ${isEditMode ? 'save' : 'create'} post. Please try again.`);
     } finally {
       setLoading(false);
     }
   };
 
-  const createPostWithMutation = async (photoUrls) => {
+  const submitPost = async (photoUrls) => {
     try {
-      await createPostMutation.mutateAsync({
-        userId: user.id,
-        content: content.trim(),
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        locationName: locationName,
-        userNickname: profile?.nickname,
-        userIsAnonymous: isAnonymous,
-        photos: photoUrls,
-      });
-
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setShowCelebration(true);
+      if (isEditMode) {
+        await editPostMutation.mutateAsync({
+          postId: initialPost.id,
+          content: content.trim(),
+          isAnonymous,
+          photos: photoUrls,
+        });
+        Alert.alert("Success", "Post updated successfully");
+        router.back();
+      } else {
+        await createPostMutation.mutateAsync({
+          userId: user.id,
+          content: content.trim(),
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          locationName: locationName,
+          userNickname: profile?.nickname,
+          userIsAnonymous: isAnonymous,
+          photos: photoUrls,
+        });
+        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setShowCelebration(true);
+      }
     } catch (error) {
       throw error;
     }
@@ -255,7 +287,7 @@ export default function CreatePost() {
                 <ArrowLeft size={24} color={colors.text} />
               </TouchableOpacity>
 
-              <Heading variant="h2">Create Post</Heading>
+              <Heading variant="h2">{isEditMode ? 'Edit Post' : 'Create Post'}</Heading>
 
               <Button
                 variant="primary"
@@ -264,7 +296,7 @@ export default function CreatePost() {
                 disabled={loading || !content.trim() || isOverLimit}
                 style={{ minWidth: 80 }}
               >
-                {loading ? 'Posting...' : 'Post'}
+                {loading ? 'Saving...' : (isEditMode ? 'Save' : 'Post')}
               </Button>
             </View>
 

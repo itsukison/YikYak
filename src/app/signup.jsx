@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useAuth } from '../utils/auth/useAuth';
-import { useTheme } from '../utils/theme';
-import { validateEmail } from '../utils/schools';
-import { Button, Input, Section } from '../components/ui';
-import { Heading, Body, Caption } from '../components/ui/Text';
-import AppBackground from '../components/AppBackground';
+import { useAuth } from '../services/auth/useAuth';
+import { useTheme } from '../config/theme';
+import { validateEmail } from '../core/schools';
+import { Button, Input, Section } from '../ui/components/ui';
+import { Heading, Body, Caption } from '../ui/components/ui/Text';
+import AppBackground from '../ui/components/AppBackground';
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('');
@@ -21,7 +21,7 @@ export default function SignupScreen() {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const { signUp } = useAuth();
@@ -43,7 +43,7 @@ export default function SignupScreen() {
 
   const validateSchoolEmail = () => {
     if (!school) return false;
-    
+
     if (school.isGuest) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -53,7 +53,7 @@ export default function SignupScreen() {
       setEmailError('');
       return true;
     }
-    
+
     const result = validateEmail(email, school.domain);
     if (!result.valid) {
       setEmailError(result.error);
@@ -94,9 +94,9 @@ export default function SignupScreen() {
     setError('');
 
     const { data, error: signUpError } = await signUp(email, password, {
-      data: { 
+      data: {
         school_name: school.name,
-        school_id: school.id 
+        school_id: school.id
       },
       emailConfirmation: !school.isGuest
     });
@@ -139,10 +139,10 @@ export default function SignupScreen() {
           <Section spacing="default">
             <Input
               placeholder={
-                school?.isGuest 
-                  ? "Email (any email address)" 
-                  : school 
-                    ? `Email (e.g., you@${school.domain})` 
+                school?.isGuest
+                  ? "Email (any email address)"
+                  : school
+                    ? `Email (e.g., you@${school.domain})`
                     : "School email"
               }
               value={email}

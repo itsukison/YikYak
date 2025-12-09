@@ -18,20 +18,23 @@ import {
   MessageCircle,
   Repeat,
   MoreHorizontal,
-  Plus
+  Plus,
+  Trash2,
+  AlertCircle
 } from "lucide-react-native";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
-import { usePostsQuery, useUserVotesQuery, useVotePostMutation } from "../../utils/queries/posts";
-import { subscribeToNewPosts } from "../../utils/realtime";
-import AppBackground from "../../components/AppBackground";
-import { Card, Avatar } from "../../components/ui";
-import { Heading, Body, Caption } from "../../components/ui/Text";
-import PhotoGrid from "../../components/PhotoGrid";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
+import { usePostsQuery, useUserVotesQuery } from "../../services/posts/usePosts";
+import { useVotePostMutation } from "../../services/posts/usePostActions";
+import { subscribeToNewPosts } from "../../services/realtime";
+import AppBackground from "../../ui/components/AppBackground";
+import { Card, Avatar } from "../../ui/components/ui";
+import { Heading, Body, Caption } from "../../ui/components/ui/Text";
+import PhotoGrid from "../../ui/components/PhotoGrid";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import PostActionSheet from "../../components/PostActionSheet";
+import PostActionSheet from "../../ui/components/PostActionSheet";
 import { debounce } from "lodash";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -350,36 +353,47 @@ export default function HomeScreen() {
               backgroundColor: colors.surface,
             }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-              <View
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  backgroundColor: colors.surfaceElevated,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 8,
-                  borderWidth: 1,
-                  borderColor: colors.border
-                }}
-              >
-                {post.reposted_post_is_anonymous ? (
-                  <UserX size={12} color={colors.textSecondary} />
-                ) : (
-                  <User size={12} color={colors.textSecondary} />
-                )}
+            {post.reposted_post_content ? (
+              <>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: colors.surfaceElevated,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 8,
+                      borderWidth: 1,
+                      borderColor: colors.border
+                    }}
+                  >
+                    {post.reposted_post_is_anonymous ? (
+                      <UserX size={12} color={colors.textSecondary} />
+                    ) : (
+                      <User size={12} color={colors.textSecondary} />
+                    )}
+                  </View>
+                  <Body weight="bold" style={{ fontSize: 13 }}>
+                    {post.reposted_post_is_anonymous ? "Anonymous" : post.reposted_post_author || "Unknown"}
+                  </Body>
+                  <Caption color="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+                    {formatTimeAgo(post.reposted_post_created_at)}
+                  </Caption>
+                </View>
+                <Body style={{ fontSize: 14, color: colors.textSecondary }}>
+                  {post.reposted_post_content}
+                </Body>
+              </>
+            ) : (
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "left", padding: spacing.sm, opacity: 0.6 }}>
+                <Trash2 size={16} color={colors.textSecondary} />
+                <Body style={{ marginLeft: 8, color: colors.textSecondary }}>
+                  This post has been deleted
+                </Body>
               </View>
-              <Body weight="bold" style={{ fontSize: 13 }}>
-                {post.reposted_post_is_anonymous ? "Anonymous" : post.reposted_post_author || "Unknown"}
-              </Body>
-              <Caption color="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
-                {formatTimeAgo(post.reposted_post_created_at)}
-              </Caption>
-            </View>
-            <Body style={{ fontSize: 14, color: colors.textSecondary }}>
-              {post.reposted_post_content}
-            </Body>
+            )}
           </View>
         )}
 

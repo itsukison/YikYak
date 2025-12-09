@@ -8,12 +8,12 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../utils/theme';
-import { SCHOOLS, GUEST_OPTION } from '../utils/schools';
+import { useTheme } from '../config/theme';
+import { SCHOOLS, GUEST_OPTION } from '../core/schools';
 
 export default function SchoolSelectionScreen() {
   const router = useRouter();
-  const { colors, radius, isDark } = useTheme();
+  const { colors, radius, isDark, typography, shadows, spacing } = useTheme();
 
   const handleSchoolSelect = (school) => {
     // Navigate to signup with school data
@@ -29,8 +29,8 @@ export default function SchoolSelectionScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#000000' : '#FFF9F3' }]}>
-      <ScrollView 
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -44,11 +44,11 @@ export default function SchoolSelectionScreen() {
               ← Back
             </Text>
           </TouchableOpacity>
-          
-          <Text style={[styles.title, { color: colors.text }]}>
+
+          <Text style={[styles.title, typography.h1Small, { color: colors.text }]}>
             Select Your School
           </Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          <Text style={[styles.subtitle, typography.body, { color: colors.textSecondary }]}>
             Choose your university to continue
           </Text>
         </View>
@@ -60,8 +60,9 @@ export default function SchoolSelectionScreen() {
               key={school.id}
               style={[
                 styles.schoolCard,
-                { 
-                  backgroundColor: colors.surface,
+                shadows.minimal,
+                {
+                  backgroundColor: colors.cardBackground,
                   borderColor: colors.border,
                   borderRadius: radius.card,
                 }
@@ -70,13 +71,13 @@ export default function SchoolSelectionScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.schoolInfo}>
-                <Text style={[styles.schoolName, { color: colors.text }]}>
+                <Text style={[styles.schoolName, typography.h3, { color: colors.text }]}>
                   {school.displayName}
                 </Text>
-                <Text style={[styles.schoolDescription, { color: colors.textSecondary }]}>
+                <Text style={[styles.schoolDescription, typography.bodySmall, { color: colors.textSecondary }]}>
                   {school.description}
                 </Text>
-                <Text style={[styles.schoolDomain, { color: colors.textTertiary }]}>
+                <Text style={[styles.schoolDomain, typography.caption, { color: colors.textTertiary }]}>
                   @{school.domain}
                 </Text>
               </View>
@@ -91,8 +92,8 @@ export default function SchoolSelectionScreen() {
             style={[
               styles.schoolCard,
               styles.guestCard,
-              { 
-                backgroundColor: colors.sectionBackground,
+              {
+                backgroundColor: colors.surface,
                 borderColor: colors.border,
                 borderStyle: 'dashed',
                 borderRadius: radius.card,
@@ -102,13 +103,13 @@ export default function SchoolSelectionScreen() {
             activeOpacity={0.7}
           >
             <View style={styles.schoolInfo}>
-              <Text style={[styles.schoolName, { color: colors.textSecondary }]}>
+              <Text style={[styles.schoolName, typography.h3, { color: colors.textSecondary }]}>
                 {GUEST_OPTION.displayName}
               </Text>
-              <Text style={[styles.schoolDescription, { color: colors.textTertiary }]}>
+              <Text style={[styles.schoolDescription, typography.bodySmall, { color: colors.textTertiary }]}>
                 {GUEST_OPTION.description}
               </Text>
-              <Text style={[styles.guestNote, { color: colors.textTertiary }]}>
+              <Text style={[styles.guestNote, typography.caption, { color: colors.textTertiary }]}>
                 For testing • No school email required
               </Text>
             </View>
@@ -120,10 +121,10 @@ export default function SchoolSelectionScreen() {
 
         {/* Help Text */}
         <View style={styles.helpContainer}>
-          <Text style={[styles.helpText, { color: colors.textSecondary }]}>
+          <Text style={[styles.helpText, typography.bodySmall, { color: colors.textSecondary }]}>
             Don't see your school?
           </Text>
-          <Text style={[styles.helpSubtext, { color: colors.textTertiary }]}>
+          <Text style={[styles.helpSubtext, typography.caption, { color: colors.textTertiary }]}>
             More universities coming soon. Check back later!
           </Text>
         </View>
@@ -152,14 +153,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
     marginBottom: 12,
-    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    lineHeight: 24,
+    marginBottom: 0,
   },
   schoolList: {
     gap: 16,
@@ -171,27 +168,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 1,
   },
   schoolInfo: {
     flex: 1,
     gap: 4,
   },
   schoolName: {
-    fontSize: 18,
-    fontWeight: '600',
     marginBottom: 4,
   },
   schoolDescription: {
-    fontSize: 14,
     marginBottom: 4,
   },
   schoolDomain: {
-    fontSize: 12,
     fontFamily: 'monospace',
   },
   arrow: {
@@ -211,11 +199,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   helpText: {
-    fontSize: 14,
     textAlign: 'center',
   },
   helpSubtext: {
-    fontSize: 12,
     textAlign: 'center',
   },
 });

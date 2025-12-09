@@ -14,11 +14,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { X, User, UserX, ChevronDown, MapPin } from "lucide-react-native";
 import { router, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../../utils/theme';
-import { useAuth } from '../../utils/auth/useAuth';
+import { useTheme } from '../../config/theme';
+import { useAuth } from '../../services/auth/useAuth';
 import * as Location from 'expo-location';
-import { Button, Heading, Body, Caption, Avatar } from '../../components/ui';
-import { useCreatePostMutation, usePostQuery } from '../../utils/queries/posts';
+import { Button, Heading, Body, Caption, Avatar } from '../../ui/components/ui';
+import { useCreatePostMutation } from '../../services/posts/useCreatePost';
+import { usePostQuery } from '../../services/posts/usePosts';
 
 export default function RepostScreen() {
     const { id } = useLocalSearchParams();

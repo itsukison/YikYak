@@ -3,15 +3,15 @@ import { View, FlatList, TouchableOpacity, ActivityIndicator } from "react-nativ
 import { StatusBar } from "expo-status-bar";
 import { UserPlus, MessageCircle } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import AppBackground from "../../components/AppBackground";
-import EmptyState from "../../components/EmptyState";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
-import { useChatsQuery } from "../../utils/queries/chats";
-import { subscribeToMessages } from "../../utils/realtime";
+import AppBackground from "../../ui/components/AppBackground";
+import EmptyState from "../../ui/components/EmptyState";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
+import { useChatsQuery } from "../../services/chat/useChat";
+import { subscribeToMessages } from "../../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
-import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../components/ui";
-import { useMultiplePresence } from "../../utils/hooks/usePresence";
+import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../ui/components/ui";
+import { useMultiplePresence } from "../../services/presence/usePresence";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();

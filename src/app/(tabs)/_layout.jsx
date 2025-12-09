@@ -1,11 +1,11 @@
 import { Tabs, useRouter } from "expo-router";
 import { View } from "react-native";
 import { Home, MessageCircle, Bell, User } from "lucide-react-native";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
-import { useUnreadCountQuery } from "../../utils/queries/notifications";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
+import { useUnreadCountQuery } from "../../services/notifications/useNotifications";
 import { useEffect } from "react";
-import { Badge } from "../../components/ui";
+import { Badge } from "../../ui/components/ui";
 
 export default function TabLayout() {
   const { colors, radius } = useTheme();

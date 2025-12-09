@@ -1,4 +1,4 @@
-import { supabase } from '../../utils/supabase';
+import { supabase } from '../../adapters/supabaseClient';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
 
@@ -63,7 +63,7 @@ export async function uploadPhotos(userId, uris, maxRetries = 3) {
 
     while (attempt < maxRetries && !success) {
       const { url, error } = await uploadPhoto(userId, uri, i);
-      
+
       if (url) {
         results.push(url);
         success = true;
@@ -94,7 +94,7 @@ export async function deletePhoto(photoUrl) {
     if (urlParts.length < 2) {
       return { success: false, error: 'Invalid photo URL' };
     }
-    
+
     const filename = urlParts[1];
 
     const { error } = await supabase.storage

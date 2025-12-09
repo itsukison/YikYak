@@ -16,20 +16,25 @@ import {
   User,
   UserX,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Camera,
+  Upload,
+  Trash,
 } from "lucide-react-native";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
-import { useProfileStatsQuery } from "../../utils/queries/profile";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
+import { useAvatar } from "../../services/user/useAvatar";
+import { useProfileStatsQuery } from "../../services/user/useUser";
 import { useQueryClient } from "@tanstack/react-query";
-import AppBackground from "../../components/AppBackground";
-import MenuItem from "../../components/MenuItem";
-import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal } from "../../components/ui";
+import AppBackground from "../../ui/components/AppBackground";
+import MenuItem from "../../ui/components/MenuItem";
+import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal } from "../../ui/components/ui";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark } = useTheme();
   const { user, profile, signOut, updateProfile, updateLocationRadius } = useAuth();
+  const { pickImage, uploadAvatar, removeAvatar, uploading: avatarUploading } = useAvatar();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
@@ -65,6 +70,7 @@ export default function ProfileScreen() {
     following_count: stats?.followingCount || 0,
     post_count: stats?.postCount || 0,
     is_anonymous: profile?.is_anonymous || false,
+    avatar_url: profile?.avatar_url || null,
   };
 
   // Sync anonymous state with profile when it loads
@@ -148,6 +154,52 @@ export default function ProfileScreen() {
         },
       },
     ]);
+  };
+
+  const handleAvatarPress = () => {
+    const actions = [
+      {
+        text: "Upload Photo",
+        style: "default",
+        onPress: async () => {
+          hideModal();
+          setTimeout(async () => {
+            try {
+              const image = await pickImage();
+              if (image) {
+                // Optimistic update could go here
+                const url = await uploadAvatar(user.id, image);
+                await updateProfile({ avatar_url: url });
+              }
+            } catch (error) {
+              console.error("Avatar upload error:", error);
+              showModal("Error", "Failed to upload profile picture");
+            }
+          }, 500);
+        }
+      }
+    ];
+
+    if (currentUser.avatar_url) {
+      actions.push({
+        text: "Remove Photo",
+        style: "destructive",
+        onPress: async () => {
+          hideModal();
+          try {
+            await removeAvatar(user.id, currentUser.avatar_url);
+            await updateProfile({ avatar_url: null });
+          } catch (error) {
+            console.error("Avatar remove error:", error);
+            showModal("Error", "Failed to remove profile picture");
+          }
+        }
+      });
+    }
+
+    actions.push({ text: "Cancel", style: "cancel", onPress: hideModal });
+
+    showModal("Change Profile Photo", "Choose an option to update your profile picture.", actions);
   };
 
   const handleLocationRadius = () => {
@@ -310,10 +362,30 @@ export default function ProfileScreen() {
           {/* Top Section: Avatar + Name + Stats */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {/* Profile Avatar */}
-            <Avatar
-              size="xlarge" // Increased from large
-              name={currentUser.nickname}
-            />
+            <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
+              <View>
+                <Avatar
+                  size="xlarge"
+                  name={currentUser.nickname}
+                  source={currentUser.avatar_url ? { uri: currentUser.avatar_url } : null}
+                  style={{ opacity: avatarUploading ? 0.7 : 1 }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: colors.primary,
+                    borderRadius: radius.pill,
+                    padding: 8,
+                    borderWidth: 3,
+                    borderColor: colors.background,
+                  }}
+                >
+                  <Camera size={20} color={colors.primaryText} />
+                </View>
+              </View>
+            </TouchableOpacity>
 
             {/* Right Column: Name + Stats */}
             <View style={{ flex: 1, marginLeft: 20, justifyContent: "center" }}>

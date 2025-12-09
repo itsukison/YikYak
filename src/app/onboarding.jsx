@@ -8,12 +8,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../utils/auth/useAuth';
-import { useTheme } from '../utils/theme';
-import { supabase } from '../utils/supabase';
-import { Button, Input, Card, Section } from '../components/ui';
-import { Heading, Body, Caption } from '../components/ui/Text';
-import AppBackground from '../components/AppBackground';
+import { useAuth } from '../services/auth/useAuth';
+import { useTheme } from '../config/theme';
+import { supabase } from '../adapters/supabaseClient';
+import { Button, Input, Card, Section } from '../ui/components/ui';
+import { Heading, Body, Caption } from '../ui/components/ui/Text';
+import AppBackground from '../ui/components/AppBackground';
 
 export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
@@ -24,7 +24,7 @@ export default function OnboardingScreen() {
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const { updateProfile, user, profile, setProfile, fetchProfile } = useAuth();
   const { colors, spacing, radius } = useTheme();
@@ -39,7 +39,7 @@ export default function OnboardingScreen() {
 
   const checkUsernameAvailability = async (value) => {
     if (!value || validateUsername(value)) return false;
-    
+
     setCheckingUsername(true);
     try {
       const { data, error } = await supabase
@@ -47,19 +47,19 @@ export default function OnboardingScreen() {
         .select('username')
         .ilike('username', value)
         .maybeSingle();
-      
+
       setCheckingUsername(false);
-      
+
       if (error) {
         setUsernameError('Error checking username availability');
         return false;
       }
-      
+
       if (data) {
         setUsernameError('Username is already taken');
         return false;
       }
-      
+
       setUsernameError('');
       return true;
     } catch (error) {
@@ -108,7 +108,7 @@ export default function OnboardingScreen() {
       is_anonymous: isAnonymous,
       onboarding_completed: true,
     };
-    
+
     setProfile(optimisticProfile);
 
     const { data, error: updateError } = await updateProfile({
@@ -132,9 +132,9 @@ export default function OnboardingScreen() {
 
   const handleSkip = async () => {
     setLoading(true);
-    
+
     const randomUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
-    
+
     const optimisticProfile = {
       ...profile,
       username: randomUsername,
@@ -143,9 +143,9 @@ export default function OnboardingScreen() {
       is_anonymous: true,
       onboarding_completed: true,
     };
-    
+
     setProfile(optimisticProfile);
-    
+
     const { error: updateError } = await updateProfile({
       username: randomUsername,
       nickname: 'Anonymous User',

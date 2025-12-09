@@ -3,7 +3,7 @@
  * Handles synchronization between local storage and database
  */
 
-import { supabase } from '../../utils/supabase';
+import { supabase } from '../../adapters/supabaseClient';
 import * as chatStorage from './chatStorage';
 
 const SYNC_BATCH_SIZE = 50;

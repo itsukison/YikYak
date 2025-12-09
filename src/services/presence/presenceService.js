@@ -3,7 +3,7 @@
  * Tracks user online/offline status using Supabase Realtime Presence
  */
 
-import { supabase } from '../../utils/supabase';
+import { supabase } from '../../adapters/supabaseClient';
 
 // Active presence channels by user
 const activeChannels = new Map();
@@ -31,7 +31,7 @@ export const trackPresence = async (userId, metadata = {}) => {
 
     // Create a unique channel for this user's presence
     const channelName = `presence:${userId}`;
-    
+
     // Check if already tracking
     if (activeChannels.has(userId)) {
       console.log('Already tracking presence for user:', userId);
@@ -103,7 +103,7 @@ export const trackPresence = async (userId, metadata = {}) => {
     return cleanup;
   } catch (error) {
     console.error('Error tracking presence:', error);
-    return () => {}; // Return no-op cleanup
+    return () => { }; // Return no-op cleanup
   }
 };
 
@@ -137,10 +137,10 @@ export const isUserOnline = async (userId) => {
         .on('presence', { event: 'sync' }, () => {
           const state = channel.presenceState();
           const isOnline = Object.keys(state).length > 0;
-          
+
           clearTimeout(timeout);
           supabase.removeChannel(channel);
-          
+
           // Cache result
           presenceCache.set(userId, { online: isOnline, timestamp: Date.now() });
           resolve(isOnline);
@@ -187,7 +187,7 @@ export const subscribeToUserPresence = (userId, callback) => {
     };
   } catch (error) {
     console.error('Error subscribing to presence:', error);
-    return () => {}; // Return no-op cleanup
+    return () => { }; // Return no-op cleanup
   }
 };
 

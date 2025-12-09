@@ -7,18 +7,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../utils/auth/useAuth';
-import { useTheme } from '../utils/theme';
-import { Button, Input, Container, Section } from '../components/ui';
-import { Heading, Body } from '../components/ui/Text';
-import AppBackground from '../components/AppBackground';
+import { useAuth } from '../services/auth/useAuth';
+import { useTheme } from '../config/theme';
+import { Button, Input, Container, Section } from '../ui/components/ui';
+import { Heading, Body } from '../ui/components/ui/Text';
+import AppBackground from '../ui/components/AppBackground';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
   const { signIn } = useAuth();
   const { colors, spacing } = useTheme();

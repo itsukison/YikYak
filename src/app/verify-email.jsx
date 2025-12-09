@@ -9,14 +9,14 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../utils/theme';
-import { supabase } from '../utils/supabase';
+import { useTheme } from '../config/theme';
+import { supabase } from '../adapters/supabaseClient';
 
 export default function VerifyEmailScreen() {
   const [resending, setResending] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(0);
   const [resendCount, setResendCount] = useState(0);
-  
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const { colors, isDark } = useTheme();
@@ -78,7 +78,7 @@ export default function VerifyEmailScreen() {
         <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#1C1C1E' }]}>
           Check Your Email
         </Text>
-        
+
         <Text style={[styles.subtitle, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
           We've sent a verification link to:
         </Text>
@@ -107,9 +107,9 @@ export default function VerifyEmailScreen() {
         <TouchableOpacity
           style={[
             styles.resendButton,
-            { 
-              backgroundColor: (cooldownTime > 0 || resending) ? 
-                (isDark ? '#2D2D2D' : '#E5E5EA') : 
+            {
+              backgroundColor: (cooldownTime > 0 || resending) ?
+                (isDark ? '#2D2D2D' : '#E5E5EA') :
                 (isDark ? '#FF6B47' : '#FFCC00')
             }
           ]}
@@ -121,14 +121,14 @@ export default function VerifyEmailScreen() {
           ) : (
             <Text style={[
               styles.resendButtonText,
-              { 
-                color: (cooldownTime > 0) ? 
-                  (isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2') : 
+              {
+                color: (cooldownTime > 0) ?
+                  (isDark ? 'rgba(255,255,255,0.5)' : '#AEAEB2') :
                   '#FFFFFF'
               }
             ]}>
-              {cooldownTime > 0 ? 
-                `Resend Email (${cooldownTime}s)` : 
+              {cooldownTime > 0 ?
+                `Resend Email (${cooldownTime}s)` :
                 resendCount > 0 ? 'Resend Email Again' : 'Resend Email'
               }
             </Text>
@@ -146,7 +146,7 @@ export default function VerifyEmailScreen() {
         </View>
 
         {/* Wrong Email Link */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.changeEmailButton}
           onPress={handleChangeEmail}
         >

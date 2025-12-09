@@ -8,23 +8,25 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Users } from "lucide-react-native";
-import AppBackground from "../../../components/AppBackground";
-import EmptyState from "../../../components/EmptyState";
-import { useTheme } from "../../../utils/theme";
-import { useAuth } from "../../../utils/auth/useAuth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AppBackground from "../../../ui/components/AppBackground";
+import EmptyState from "../../../ui/components/EmptyState";
+import { useTheme } from "../../../config/theme";
+import { useAuth } from "../../../services/auth/useAuth";
 import {
   useFollowingQuery,
   useFollowStatusQuery,
   useFollowMutation,
   useUnfollowMutation,
-} from "../../../utils/queries/follows";
-import { Heading, Body, Card, Avatar, Button } from "../../../components/ui";
+} from "../../../services/user/useFollows";
+import { Heading, Body, Card, Avatar, Button } from "../../../ui/components/ui";
 
 export default function FollowingScreen() {
   const { id: userId } = useLocalSearchParams();
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, spacing, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const { data: following, isLoading } = useFollowingQuery(userId);
   const followMutation = useFollowMutation();
@@ -75,6 +77,7 @@ export default function FollowingScreen() {
         currentUserId={user.id}
         onFollowToggle={handleFollowToggle}
         colors={colors}
+        radius={radius}
         router={router}
         followMutation={followMutation}
         unfollowMutation={unfollowMutation}
@@ -143,7 +146,7 @@ export default function FollowingScreen() {
       <View
         style={{
           paddingHorizontal: 20,
-          paddingTop: 60,
+          paddingTop: insets.top + 16,
           paddingBottom: 16,
           flexDirection: "row",
           alignItems: "center",
@@ -184,6 +187,7 @@ function FollowingItem({
   currentUserId,
   onFollowToggle,
   colors,
+  radius,
   router,
   followMutation,
   unfollowMutation,
@@ -196,7 +200,9 @@ function FollowingItem({
     <TouchableOpacity
       onPress={() => router.push(`/user/${followingUser.id}`)}
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: colors.background,
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.borderLight,
       }}
       activeOpacity={0.7}
     >
@@ -232,14 +238,22 @@ function FollowingItem({
               unfollowMutation.isPending ||
               followStatusLoading
             }
-            style={{ minWidth: 90 }}
+            style={{
+              minWidth: 90,
+              backgroundColor: isFollowing ? 'transparent' : colors.primary,
+              borderWidth: isFollowing ? 1 : 0,
+              borderColor: isFollowing ? colors.border : 'transparent',
+              borderRadius: radius.pill,
+            }}
           >
             {followMutation.isPending ||
               unfollowMutation.isPending ||
               followStatusLoading ? (
-              <ActivityIndicator size="small" color={isFollowing ? colors.text : "#FFFFFF"} />
+              <ActivityIndicator size="small" color={isFollowing ? colors.text : colors.primaryText} />
             ) : (
-              isFollowing ? "Following" : "Follow"
+              <Body weight="medium" style={{ color: isFollowing ? colors.text : colors.primaryText }}>
+                {isFollowing ? "Following" : "Follow"}
+              </Body>
             )}
           </Button>
         )}

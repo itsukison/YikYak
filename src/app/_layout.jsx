@@ -8,11 +8,11 @@ import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../utils/auth/useAuth';
-import { supabase } from '../utils/supabase';
-import { usePeriodicSync } from '../utils/hooks/useMessageSync';
-import { useTrackPresence } from '../utils/hooks/usePresence';
-import { usePendingMessages, useUpdateLastSeen } from '../utils/hooks/usePendingMessages';
+import { useAuth } from '../services/auth/useAuth';
+import { supabase } from '../adapters/supabaseClient';
+import { usePeriodicSync } from '../services/chat/useMessageSync';
+import { useTrackPresence } from '../services/presence/usePresence';
+import { usePendingMessages, useUpdateLastSeen } from '../services/chat/usePendingMessages';
 
 SplashScreen.preventAutoHideAsync();
 

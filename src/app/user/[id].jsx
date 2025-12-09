@@ -8,20 +8,23 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, MessageCircle, MapPin, ArrowUp, ArrowDown, Repeat, Share } from "lucide-react-native";
-import AppBackground from "../../components/AppBackground";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
+import AppBackground from "../../ui/components/AppBackground";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
 import {
   useUserProfileQuery,
   useUserPostsQuery,
+  useProfileStatsQuery,
+} from "../../services/user/useUser";
+import {
   useFollowStatusQuery,
   useFollowMutation,
   useUnfollowMutation,
-} from "../../utils/queries/follows";
-import { useProfileStatsQuery } from "../../utils/queries/profile";
-import { useCreateChatMutation } from "../../utils/queries/chats";
-import { useVotePostMutation, useUserVotesQuery } from "../../utils/queries/posts";
-import { Heading, Body, Caption, Card, Avatar, Button } from "../../components/ui";
+} from "../../services/user/useFollows";
+import { useCreateChatMutation } from "../../services/chat/useChatActions";
+import { useVotePostMutation } from "../../services/posts/usePostActions";
+import { useUserVotesQuery } from "../../services/posts/usePosts";
+import { Heading, Body, Caption, Card, Avatar, Button } from "../../ui/components/ui";
 
 export default function UserProfileScreen() {
   const { id: targetUserId } = useLocalSearchParams();

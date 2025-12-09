@@ -22,22 +22,24 @@ import {
   Share,
   Send
 } from "lucide-react-native";
-import AppBackground from "../../components/AppBackground";
-import { useTheme } from "../../utils/theme";
-import { useAuth } from "../../utils/auth/useAuth";
+import AppBackground from "../../ui/components/AppBackground";
+import { useTheme } from "../../config/theme";
+import { useAuth } from "../../services/auth/useAuth";
 import {
   useCommentsQuery,
   useCommentVotesQuery,
+} from "../../services/comments/useComments";
+import {
   useCreateCommentMutation,
   useVoteCommentMutation,
-} from "../../utils/queries/comments";
+} from "../../services/comments/useCommentActions";
 import {
   usePostQuery,
-  useVotePostMutation,
   useUserVotesQuery,
-} from "../../utils/queries/posts";
-import { Heading, Body, Caption, Avatar } from "../../components/ui";
-import PhotoGrid from "../../components/PhotoGrid";
+} from "../../services/posts/usePosts";
+import { useVotePostMutation } from "../../services/posts/usePostActions";
+import { Heading, Body, Caption, Avatar } from "../../ui/components/ui";
+import PhotoGrid from "../../ui/components/PhotoGrid";
 
 export default function PostDetailScreen() {
   const { id: postId, post: postJson } = useLocalSearchParams();

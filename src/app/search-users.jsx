@@ -11,14 +11,14 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Search, Users } from "lucide-react-native";
-import AppBackground from "../components/AppBackground";
-import EmptyState from "../components/EmptyState";
-import UserCard from "../components/UserCard";
-import { useTheme } from "../utils/theme";
-import { useAuth } from "../utils/auth/useAuth";
-import { useUserSearchQuery } from "../utils/queries/users";
-import { useFollowStatusQuery } from "../utils/queries/follows";
-import { Container, Heading, Caption } from "../components/ui";
+import AppBackground from "../ui/components/AppBackground";
+import EmptyState from "../ui/components/EmptyState";
+import UserCard from "../ui/components/UserCard";
+import { useTheme } from "../config/theme";
+import { useAuth } from "../services/auth/useAuth";
+import { useUserSearchQuery } from "../services/user/useUser";
+import { useFollowStatusQuery } from "../services/user/useFollows";
+import { Container, Heading, Caption } from "../ui/components/ui";
 
 export default function SearchUsersScreen() {
   const { isDark, colors, radius } = useTheme();

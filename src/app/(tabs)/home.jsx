@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
   Alert,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -59,10 +60,16 @@ export default function HomeScreen() {
 
 
 
-  // Fetch posts from Supabase
-  // Fetch posts from Supabase using feedLocation
+  // Fetch posts from Supabase with infinite scroll
   // Note: feedLocation structure should match expo-location object { coords: { latitude, longitude } }
-  const { data: posts = [], isLoading, refetch } = usePostsQuery(
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch
+  } = usePostsQuery(
     feedLocation?.coords?.latitude,
     feedLocation?.coords?.longitude,
     locationRadius,
@@ -70,6 +77,12 @@ export default function HomeScreen() {
     timeFilter,
     !!feedLocation // Enable query as soon as we have ANY location (cached or fresh)
   );
+
+  // Flatten infinite query pages into single posts array
+  const posts = React.useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.posts);
+  }, [data]);
 
   // Fetch user's votes
   const { data: userVotes = {} } = useUserVotesQuery(user?.id);
@@ -110,34 +123,71 @@ export default function HomeScreen() {
 
 
 
-  // Debounced refetch to prevent flickering/excessive calls
-  const debouncedRefetch = React.useCallback(
-    debounce(() => {
-      refetch();
-    }, 1000),
-    [refetch]
+  // Optimized: Add new posts directly to cache instead of refetching
+  // Debounced to prevent excessive updates
+  const addPostToCache = React.useCallback(
+    debounce((newPost) => {
+      queryClient.setQueriesData(
+        {
+          queryKey: ['posts'],
+          // Only update feeds that are sorted by 'new'
+          // Query Key: ["posts", latitude, longitude, radius, sortBy, timeFilter]
+          predicate: (query) => {
+            return query.queryKey[4] === 'new';
+          }
+        },
+        (old) => {
+          if (!old?.pages) return old;
+
+          // Check if post already exists in cache
+          const postExists = old.pages.some(page =>
+            page.posts.some(p => p.id === newPost.id)
+          );
+
+          if (postExists) return old;
+
+          // Add to first page only
+          return {
+            ...old,
+            pages: old.pages.map((page, index) => {
+              if (index === 0) {
+                return {
+                  ...page,
+                  posts: [newPost, ...page.posts],
+                };
+              }
+              return page;
+            }),
+          };
+        });
+    }, 3000), // Increased debounce from 1s to 3s for better performance
+    [queryClient]
   );
 
-  // Subscribe to new posts (Scoped by Geohash)
+  // Subscribe to new posts (Optimized with fewer channels)
   useEffect(() => {
-    // Pass the location to subscription to calculate geohash
+    // Pass the location and radius to subscription
     // We use feedLocation to ensure we subscribe even if using cached data
     if (!feedLocation?.coords || !user) return;
 
     const { latitude, longitude } = feedLocation.coords;
 
-    const unsubscribe = subscribeToNewPosts(latitude, longitude, (newPost) => {
-      // Check if post is within radius is handled in subscription/RPC mostly, 
-      // but a simple client check or just refetching is fine.
-      // The RPC is optimized now, so refetch is cheap.
-      debouncedRefetch();
-    });
+    const unsubscribe = subscribeToNewPosts(
+      latitude,
+      longitude,
+      locationRadius,
+      (newPost, distance) => {
+        // Distance is already checked in subscription, but we have the data
+        // Add directly to cache instead of refetching (huge performance win)
+        addPostToCache(newPost);
+      }
+    );
 
     return () => {
       unsubscribe();
-      debouncedRefetch.cancel();
+      addPostToCache.cancel();
     };
-  }, [feedLocation, user, debouncedRefetch]);
+  }, [feedLocation, user, locationRadius, addPostToCache]);
 
   const getLocationPermission = async () => {
     try {
@@ -574,223 +624,235 @@ export default function HomeScreen() {
     );
   }
 
+  const renderHeader = () => (
+    <View
+      style={{
+        backgroundColor: colors.background,
+        paddingTop: insets.top + 20,
+        paddingBottom: 16,
+        paddingHorizontal: 16,
+      }}
+    >
+      {/* Title + Toggle Row */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        {/* Left: Title */}
+        <TouchableOpacity onPress={handleResetCache} onLongPress={handleResetCache}>
+          <Heading variant="h2" weight="semibold">HearSay</Heading>
+        </TouchableOpacity>
+
+        {/* Right: New/Popular Toggle */}
+        <View
+          style={{
+            flexDirection: "row",
+            padding: 0,
+            gap: 8,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setActiveTab("new")}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: radius.pill,
+              backgroundColor:
+                activeTab === "new" ? colors.surface : "transparent",
+            }}
+          >
+            <Body
+              variant="small"
+              weight={activeTab === "new" ? "bold" : "medium"}
+              style={{
+                color: activeTab === "new" ? colors.text : colors.textSecondary,
+              }}
+            >
+              New
+            </Body>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setActiveTab("popular")}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: radius.pill,
+              backgroundColor:
+                activeTab === "popular" ? colors.surface : "transparent",
+            }}
+          >
+            <Body
+              variant="small"
+              weight={activeTab === "popular" ? "bold" : "medium"}
+              style={{
+                color: activeTab === "popular" ? colors.text : colors.textSecondary,
+              }}
+            >
+              Popular
+            </Body>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Subtitle */}
+      {(feedLocation || location) && (
+        <View>
+          <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 12 }}>
+            Posts within {locationRadius / 1000}km
+          </Caption>
+          {isUsingCachedLocation && (
+            <Caption color="tertiary" style={{ marginBottom: 12, fontSize: 11 }}>
+              Using last known location
+            </Caption>
+          )}
+        </View>
+      )}
+
+      {/* Show location error */}
+      {locationError && (
+        <View
+          style={{
+            backgroundColor: colors.errorSubtle || "#FFE5E5",
+            borderRadius: 12,
+            padding: 8,
+            marginBottom: 12,
+          }}
+        >
+          <Caption style={{ color: colors.error || "#D32F2F" }}>
+            📍 {locationError}
+          </Caption>
+        </View>
+      )}
+
+      {/* Time Filter - Center, only when Popular */}
+      {activeTab === "popular" && (
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
+          {["day", "week", "month"].map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              onPress={() => setTimeFilter(filter)}
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: radius.pill,
+                backgroundColor:
+                  timeFilter === filter
+                    ? colors.surface
+                    : "transparent",
+              }}
+            >
+              <Caption
+                weight={timeFilter === filter ? "bold" : "medium"}
+                style={{
+                  color: timeFilter === filter ? colors.text : colors.textSecondary,
+                }}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+              </Caption>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Caption color="secondary" style={{ marginTop: 8 }}>Loading more posts...</Caption>
+      </View>
+    );
+  };
+
+  const renderEmpty = () => (
+    <View
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 40,
+        paddingHorizontal: 32,
+      }}
+    >
+      <MessageCircle size={48} color={colors.primary} />
+      <Heading
+        variant="h2"
+        style={{
+          textAlign: "center",
+          marginTop: 16,
+          marginBottom: 8,
+        }}
+      >
+        No Posts Yet
+      </Heading>
+      <Body
+        color="secondary"
+        style={{
+          textAlign: "center",
+          lineHeight: 22,
+        }}
+      >
+        Be the first to share what's happening on campus! Tap the + button
+        to create a post.
+      </Body>
+    </View>
+  );
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
   return (
     <AppBackground>
       <StatusBar style={isDark ? "light" : "dark"} />
 
-      <ScrollView
-        style={{ flex: 1 }}
+      <FlatList
+        data={posts}
+        renderItem={({ item, index }) => renderPost(item, index)}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={!isLoading ? renderEmpty : null}
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 80, // Extra padding for FAB
+          paddingBottom: insets.bottom + 80,
+          flexGrow: 1,
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading}
+            refreshing={isLoading && posts.length === 0}
             onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
         }
-      >
-        {/* Scrollable Header */}
-        <View
-          style={{
-            backgroundColor: colors.background,
-            paddingTop: insets.top + 20,
-            paddingBottom: 16,
-            paddingHorizontal: 16,
-            // Removed borderBottomWidth to keep it clean
-          }}
-        >
-          {/* Title + Toggle Row */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            {/* Left: Title */}
-            <TouchableOpacity onPress={handleResetCache} onLongPress={handleResetCache}>
-               <Heading variant="h2" weight="semibold">HearSay</Heading>
-            </TouchableOpacity>
-
-            {/* Right: New/Popular Toggle - Simplified */}
-            <View
-              style={{
-                flexDirection: "row",
-                // Removed container background and border
-                padding: 0,
-                gap: 8,
-              }}
-            >
-              <TouchableOpacity
-                onPress={() => setActiveTab("new")}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: radius.pill,
-                  backgroundColor:
-                    activeTab === "new" ? colors.surface : "transparent", // Subtle background for active
-                }}
-              >
-                <Body
-                  variant="small"
-                  weight={activeTab === "new" ? "bold" : "medium"}
-                  style={{
-                    color: activeTab === "new" ? colors.text : colors.textSecondary,
-                  }}
-                >
-                  New
-                </Body>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setActiveTab("popular")}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: radius.pill,
-                  backgroundColor:
-                    activeTab === "popular" ? colors.surface : "transparent",
-                }}
-              >
-                <Body
-                  variant="small"
-                  weight={activeTab === "popular" ? "bold" : "medium"}
-                  style={{
-                    color: activeTab === "popular" ? colors.text : colors.textSecondary,
-                  }}
-                >
-                  Popular
-                </Body>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Subtitle */}
-          {(feedLocation || location) && (
-            <View>
-              <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 12 }}>
-                Posts within {locationRadius / 1000}km
-              </Caption>
-              {isUsingCachedLocation && (
-                <Caption color="tertiary" style={{ marginBottom: 12, fontSize: 11 }}>
-                  Using last known location
-                </Caption>
-              )}
-            </View>
-          )}
-
-          {/* Show location error */}
-          {locationError && (
-            <View
-              style={{
-                backgroundColor: colors.errorSubtle || "#FFE5E5",
-                borderRadius: 12,
-                padding: 8,
-                marginBottom: 12,
-              }}
-            >
-              <Caption style={{ color: colors.error || "#D32F2F" }}>
-                📍 {locationError}
-              </Caption>
-            </View>
-          )}
-
-          {/* Time Filter - Center, only when Popular */}
-          {activeTab === "popular" && (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                marginTop: 8,
-              }}
-            >
-              {["day", "week", "month"].map((filter) => (
-                <TouchableOpacity
-                  key={filter}
-                  onPress={() => setTimeFilter(filter)}
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: radius.pill,
-                    backgroundColor:
-                      timeFilter === filter
-                        ? colors.surface
-                        : "transparent",
-                  }}
-                >
-                  <Caption
-                    weight={timeFilter === filter ? "bold" : "medium"}
-                    style={{
-                      color: timeFilter === filter ? colors.text : colors.textSecondary,
-                    }}
-                  >
-                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                  </Caption>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Posts Feed */}
-        {isLoading && posts.length === 0 ? (
-          <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 40,
-            }}
-          >
-            <Body color="secondary">
-              Loading posts...
-            </Body>
-          </View>
-        ) : posts.length === 0 ? (
-          <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingVertical: 40,
-              paddingHorizontal: 32,
-            }}
-          >
-            <MessageCircle size={48} color={colors.primary} />
-            <Heading
-              variant="h2"
-              style={{
-                textAlign: "center",
-                marginTop: 16,
-                marginBottom: 8,
-              }}
-            >
-              No Posts Yet
-            </Heading>
-            <Body
-              color="secondary"
-              style={{
-                textAlign: "center",
-                lineHeight: 22,
-              }}
-            >
-              Be the first to share what's happening on campus! Tap the + button
-              to create a post.
-            </Body>
-          </View>
-        ) : (
-          posts.map((post, index) => renderPost(post, index))
-        )}
-      </ScrollView>
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+      />
 
       {/* Floating Action Button */}
       <TouchableOpacity

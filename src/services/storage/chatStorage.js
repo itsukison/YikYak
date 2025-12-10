@@ -3,11 +3,11 @@
  * Handles local storage of chat messages using AsyncStorage
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const STORAGE_PREFIX = 'chat_messages_';
-const CHAT_METADATA_KEY = 'chat_metadata';
-const MAX_MESSAGES_PER_CHAT = 1000; // Prevent storage overflow
+const STORAGE_PREFIX = "chat_messages_";
+const CHAT_METADATA_KEY = "chat_metadata";
+const MAX_MESSAGES_PER_CHAT = 50; // Optimized for pending queue only
 
 /**
  * Get storage key for a chat
@@ -22,7 +22,7 @@ const getChatKey = (chatId) => `${STORAGE_PREFIX}${chatId}`;
 export const storeMessages = async (chatId, messages) => {
   try {
     if (!chatId || !Array.isArray(messages)) {
-      throw new Error('Invalid chatId or messages');
+      throw new Error("Invalid chatId or messages");
     }
 
     // Limit messages to prevent storage overflow
@@ -39,7 +39,7 @@ export const storeMessages = async (chatId, messages) => {
 
     return true;
   } catch (error) {
-    console.error('Error storing messages:', error);
+    console.error("Error storing messages:", error);
     return false;
   }
 };
@@ -52,7 +52,7 @@ export const storeMessages = async (chatId, messages) => {
 export const getMessages = async (chatId) => {
   try {
     if (!chatId) {
-      throw new Error('Invalid chatId');
+      throw new Error("Invalid chatId");
     }
 
     const key = getChatKey(chatId);
@@ -62,9 +62,10 @@ export const getMessages = async (chatId) => {
       return [];
     }
 
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.error('Error getting messages:', error);
+    console.error("Error getting messages:", error);
     return [];
   }
 };
@@ -77,14 +78,16 @@ export const getMessages = async (chatId) => {
 export const addMessage = async (chatId, message) => {
   try {
     if (!chatId || !message) {
-      throw new Error('Invalid chatId or message');
+      throw new Error("Invalid chatId or message");
     }
 
     const existingMessages = await getMessages(chatId);
-    
+
     // Check for duplicates (by id or temporary id)
     const isDuplicate = existingMessages.some(
-      (msg) => msg.id === message.id || (message.tempId && msg.tempId === message.tempId)
+      (msg) =>
+        msg.id === message.id ||
+        (message.tempId && msg.tempId === message.tempId)
     );
 
     if (isDuplicate) {
@@ -94,7 +97,7 @@ export const addMessage = async (chatId, message) => {
     const updatedMessages = [...existingMessages, message];
     return await storeMessages(chatId, updatedMessages);
   } catch (error) {
-    console.error('Error adding message:', error);
+    console.error("Error adding message:", error);
     return false;
   }
 };
@@ -108,7 +111,7 @@ export const addMessage = async (chatId, message) => {
 export const updateMessage = async (chatId, messageId, updates) => {
   try {
     if (!chatId || !messageId) {
-      throw new Error('Invalid chatId or messageId');
+      throw new Error("Invalid chatId or messageId");
     }
 
     const messages = await getMessages(chatId);
@@ -121,7 +124,7 @@ export const updateMessage = async (chatId, messageId, updates) => {
 
     return await storeMessages(chatId, updatedMessages);
   } catch (error) {
-    console.error('Error updating message:', error);
+    console.error("Error updating message:", error);
     return false;
   }
 };
@@ -134,7 +137,7 @@ export const updateMessage = async (chatId, messageId, updates) => {
 export const deleteMessage = async (chatId, messageId) => {
   try {
     if (!chatId || !messageId) {
-      throw new Error('Invalid chatId or messageId');
+      throw new Error("Invalid chatId or messageId");
     }
 
     const messages = await getMessages(chatId);
@@ -144,7 +147,7 @@ export const deleteMessage = async (chatId, messageId) => {
 
     return await storeMessages(chatId, filteredMessages);
   } catch (error) {
-    console.error('Error deleting message:', error);
+    console.error("Error deleting message:", error);
     return false;
   }
 };
@@ -156,7 +159,7 @@ export const deleteMessage = async (chatId, messageId) => {
 export const clearChat = async (chatId) => {
   try {
     if (!chatId) {
-      throw new Error('Invalid chatId');
+      throw new Error("Invalid chatId");
     }
 
     const key = getChatKey(chatId);
@@ -167,7 +170,7 @@ export const clearChat = async (chatId) => {
 
     return true;
   } catch (error) {
-    console.error('Error clearing chat:', error);
+    console.error("Error clearing chat:", error);
     return false;
   }
 };
@@ -181,7 +184,7 @@ export const getChatMetadata = async () => {
     const data = await AsyncStorage.getItem(CHAT_METADATA_KEY);
     return data ? JSON.parse(data) : {};
   } catch (error) {
-    console.error('Error getting chat metadata:', error);
+    console.error("Error getting chat metadata:", error);
     return {};
   }
 };
@@ -201,7 +204,7 @@ export const updateChatMetadata = async (chatId, metadata) => {
     await AsyncStorage.setItem(CHAT_METADATA_KEY, JSON.stringify(allMetadata));
     return true;
   } catch (error) {
-    console.error('Error updating chat metadata:', error);
+    console.error("Error updating chat metadata:", error);
     return false;
   }
 };
@@ -217,7 +220,7 @@ export const removeChatMetadata = async (chatId) => {
     await AsyncStorage.setItem(CHAT_METADATA_KEY, JSON.stringify(allMetadata));
     return true;
   } catch (error) {
-    console.error('Error removing chat metadata:', error);
+    console.error("Error removing chat metadata:", error);
     return false;
   }
 };
@@ -230,7 +233,7 @@ export const getStorageStats = async () => {
   try {
     const metadata = await getChatMetadata();
     const chatIds = Object.keys(metadata);
-    
+
     let totalMessages = 0;
     let totalChats = chatIds.length;
 
@@ -242,10 +245,11 @@ export const getStorageStats = async () => {
     return {
       totalChats,
       totalMessages,
-      averageMessagesPerChat: totalChats > 0 ? Math.round(totalMessages / totalChats) : 0,
+      averageMessagesPerChat:
+        totalChats > 0 ? Math.round(totalMessages / totalChats) : 0,
     };
   } catch (error) {
-    console.error('Error getting storage stats:', error);
+    console.error("Error getting storage stats:", error);
     return { totalChats: 0, totalMessages: 0, averageMessagesPerChat: 0 };
   }
 };
@@ -271,7 +275,7 @@ export const clearAllChats = async () => {
 
     return true;
   } catch (error) {
-    console.error('Error clearing all chats:', error);
+    console.error("Error clearing all chats:", error);
     return false;
   }
 };

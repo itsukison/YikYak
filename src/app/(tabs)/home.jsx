@@ -37,11 +37,14 @@ import { router } from "expo-router";
 import PostActionSheet from "../../ui/components/PostActionSheet";
 import { debounce } from "lodash";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQueryClient } from "@tanstack/react-query";
+import { clearAllChats } from "../../services/storage/chatStorage";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark, spacing } = useTheme();
   const { user, profile } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
   const [location, setLocation] = useState(null); // Fresh GPS location
@@ -227,6 +230,31 @@ export default function HomeScreen() {
       postId,
       voteType: newVote,
     });
+  };
+
+  const handleResetCache = async () => {
+    Alert.alert(
+      "Reset Chat Cache",
+      "This will clear all local chat history. Database messages will remain.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllChats();
+              queryClient.invalidateQueries(["messages"]);
+              queryClient.invalidateQueries(["chats"]);
+              Alert.alert("Success", "Chat cache cleared. Please reload the app if issues persist.");
+            } catch (error) {
+              console.error("Error clearing cache:", error);
+              Alert.alert("Error", "Failed to clear cache");
+            }
+          }
+        }
+      ]
+    );
   };
 
 
@@ -585,7 +613,9 @@ export default function HomeScreen() {
             }}
           >
             {/* Left: Title */}
-            <Heading variant="h2" weight="semibold">HearSay</Heading>
+            <TouchableOpacity onPress={handleResetCache} onLongPress={handleResetCache}>
+               <Heading variant="h2" weight="semibold">HearSay</Heading>
+            </TouchableOpacity>
 
             {/* Right: New/Popular Toggle - Simplified */}
             <View

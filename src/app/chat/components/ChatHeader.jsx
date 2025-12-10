@@ -2,12 +2,14 @@ import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { Heading } from "../../../ui/components/ui";
+import { Heading, Caption } from "../../../ui/components/ui";
 import { useTheme } from "../../../config/theme";
+import { useUserPresence } from "../../../services/presence/usePresence";
 
-export default function ChatHeader({ title }) {
+export default function ChatHeader({ title, otherUserId }) {
     const { colors } = useTheme();
     const router = useRouter();
+    const { online, loading } = useUserPresence(otherUserId);
 
     return (
         <View
@@ -35,6 +37,22 @@ export default function ChatHeader({ title }) {
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
                 <Heading variant="h2">{title}</Heading>
+                {!loading && otherUserId && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                        <View
+                            style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: 3,
+                                backgroundColor: online ? '#4CAF50' : colors.textSecondary,
+                                marginRight: 6,
+                            }}
+                        />
+                        <Caption color="secondary" style={{ fontSize: 12 }}>
+                            {online ? 'Online' : 'Offline'}
+                        </Caption>
+                    </View>
+                )}
             </View>
         </View>
     );

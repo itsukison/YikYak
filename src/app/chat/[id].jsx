@@ -64,9 +64,20 @@ export default function ChatDetailScreen() {
   const [contentHeight, setContentHeight] = useState(0);
   const [listHeight, setListHeight] = useState(0);
 
-  const { data: messages, isLoading, refetch } = useChatMessagesQuery(chatId, user?.id);
+  const {
+    data,
+    isLoading,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useChatMessagesQuery(chatId, user?.id);
   const sendMessageMutation = useSendMessageMutation();
   const markReadMutation = useMarkMessagesReadMutation();
+
+  // Safely extract messages with defensive checks
+  // Note: useChatMessagesQuery returns pages as a single array [allMessages], not multiple pages
+  const messages = (data?.pages?.[0] || []).filter(Boolean);
 
   // Get other user ID (prefer param, fallback to messages)
   const otherUserId = paramOtherUserId || (messages && messages.length > 0
@@ -160,7 +171,7 @@ export default function ChatDetailScreen() {
         style={{ flex: 1 }}
         keyboardVerticalOffset={0}
       >
-        <ChatHeader title={otherUserName} />
+        <ChatHeader title={otherUserName} otherUserId={otherUserId} />
 
         {/* Messages List */}
         {isLoading ? (
@@ -195,11 +206,24 @@ export default function ChatDetailScreen() {
               paddingTop: 16,
               paddingBottom: 8,
               flexGrow: 1,
-              justifyContent: contentHeight < listHeight ? 'flex-end' : undefined
+              justifyContent: 'flex-end' // Always align to bottom since it's inverted
             }}
             onContentSizeChange={(w, h) => setContentHeight(h)}
             onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
             inverted
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={{ paddingVertical: 20 }}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                </View>
+              ) : null
+            }
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}

@@ -3,8 +3,8 @@
  * Handles synchronization between local storage and database
  */
 
-import { supabase } from '../../adapters/supabaseClient';
-import * as chatStorage from './chatStorage';
+import { supabase } from "../../adapters/supabaseClient";
+import * as chatStorage from "./chatStorage";
 
 const SYNC_BATCH_SIZE = 50;
 const RETENTION_DAYS = 30;
@@ -17,63 +17,49 @@ const RETENTION_DAYS = 30;
  */
 export const syncMessagesFromDatabase = async (chatId, userId) => {
   try {
-    if (!chatId || !userId) {
-      throw new Error('Invalid chatId or userId');
-    }
+    if (!chatId) throw new Error("Invalid chatId");
 
-    // Get local messages
+    // Get last synced message timestamp from local storage
     const localMessages = await chatStorage.getMessages(chatId);
-    const lastLocalMessage = localMessages[localMessages.length - 1];
-    const lastLocalTimestamp = lastLocalMessage?.created_at;
+    const lastMessage =
+      localMessages.length > 0 ? localMessages[localMessages.length - 1] : null;
+    const lastTimestamp = lastMessage?.created_at || new Date(0).toISOString();
 
-    // Fetch messages from database (only newer than local)
-    let query = supabase
-      .from('messages')
-      .select(`
+    // Fetch new messages from database
+    const { data, error } = await supabase
+      .from("messages")
+      .select(
+        `
         *,
         sender:users!messages_sender_id_fkey(id, nickname, is_anonymous)
-      `)
-      .eq('chat_id', chatId)
-      .order('created_at', { ascending: true });
-
-    if (lastLocalTimestamp) {
-      query = query.gt('created_at', lastLocalTimestamp);
-    }
-
-    const { data: newMessages, error } = await query;
+      `
+      )
+      .eq("chat_id", chatId)
+      .gt("created_at", lastTimestamp)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
-    if (!newMessages || newMessages.length === 0) {
-      return { success: true, newCount: 0, totalCount: localMessages.length };
-    }
+    if (data && data.length > 0) {
+      // Merge with local messages (deduplicate by ID)
+      const existingIds = new Set(localMessages.map((m) => m.id));
+      const newMessages = data.filter((m) => !existingIds.has(m.id));
 
-    // Merge with local messages
-    const mergedMessages = [...localMessages];
-    let newCount = 0;
-
-    for (const msg of newMessages) {
-      // Check if message already exists locally
-      const exists = mergedMessages.some((m) => m.id === msg.id);
-      if (!exists) {
-        mergedMessages.push({ ...msg, synced: true });
-        newCount++;
+      // Add new messages to local storage
+      for (const msg of newMessages) {
+        await chatStorage.addMessage(chatId, { ...msg, synced: true });
       }
+
+      return {
+        success: true,
+        newCount: newMessages.length,
+        totalCount: localMessages.length + newMessages.length,
+      };
     }
 
-    // Sort by created_at
-    mergedMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-    // Store merged messages
-    await chatStorage.storeMessages(chatId, mergedMessages);
-
-    return {
-      success: true,
-      newCount,
-      totalCount: mergedMessages.length,
-    };
+    return { success: true, newCount: 0, totalCount: localMessages.length };
   } catch (error) {
-    console.error('Error syncing messages from database:', error);
+    console.error("Error syncing from database:", error);
     return { success: false, error: error.message };
   }
 };
@@ -86,12 +72,14 @@ export const syncMessagesFromDatabase = async (chatId, userId) => {
 export const syncMessagesToDatabase = async (chatId) => {
   try {
     if (!chatId) {
-      throw new Error('Invalid chatId');
+      throw new Error("Invalid chatId");
     }
 
     // Get local messages that haven't been synced
     const localMessages = await chatStorage.getMessages(chatId);
-    const unsyncedMessages = localMessages.filter((msg) => !msg.synced && msg.tempId);
+    const unsyncedMessages = localMessages.filter(
+      (msg) => !msg.synced && msg.tempId
+    );
 
     if (unsyncedMessages.length === 0) {
       return { success: true, syncedCount: 0 };
@@ -106,9 +94,13 @@ export const syncMessagesToDatabase = async (chatId) => {
 
       for (const msg of batch) {
         try {
+          // Check if message already exists in DB (to avoid duplicates if previous sync failed/partial)
+          // Uses tempId matching in content or metadata if possible?
+          // For now, simpler to just try insert. If duplicate, we might need a unique constraint on client_id.
+
           // Insert to database
           const { data, error } = await supabase
-            .from('messages')
+            .from("messages")
             .insert({
               chat_id: msg.chat_id,
               sender_id: msg.sender_id,
@@ -120,16 +112,12 @@ export const syncMessagesToDatabase = async (chatId) => {
 
           if (error) throw error;
 
-          // Update local message with real ID and mark as synced
-          await chatStorage.updateMessage(chatId, msg.tempId, {
-            id: data.id,
-            synced: true,
-            tempId: undefined, // Remove tempId
-          });
+          // Remove from local storage (outbox) as it is now in DB (and React Query will fetch it)
+          await chatStorage.deleteMessage(chatId, msg.tempId);
 
           syncedCount++;
         } catch (error) {
-          console.error('Error syncing message:', error);
+          console.error("Error syncing message:", error);
           errors.push({ messageId: msg.tempId, error: error.message });
         }
       }
@@ -141,7 +129,7 @@ export const syncMessagesToDatabase = async (chatId) => {
       errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
-    console.error('Error syncing messages to database:', error);
+    console.error("Error syncing messages to database:", error);
     return { success: false, error: error.message };
   }
 };
@@ -167,7 +155,7 @@ export const fullSync = async (chatId, userId) => {
       total: downloadResult.totalCount,
     };
   } catch (error) {
-    console.error('Error in full sync:', error);
+    console.error("Error in full sync:", error);
     return { success: false, error: error.message };
   }
 };
@@ -181,17 +169,17 @@ export const fullSync = async (chatId, userId) => {
 export const cleanupOldMessages = async (chatId) => {
   try {
     if (!chatId) {
-      throw new Error('Invalid chatId');
+      throw new Error("Invalid chatId");
     }
 
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
     const { data, error } = await supabase
-      .from('messages')
+      .from("messages")
       .delete()
-      .eq('chat_id', chatId)
-      .lt('created_at', cutoffDate.toISOString())
+      .eq("chat_id", chatId)
+      .lt("created_at", cutoffDate.toISOString())
       .select();
 
     if (error) throw error;
@@ -201,7 +189,7 @@ export const cleanupOldMessages = async (chatId) => {
       deletedCount: data?.length || 0,
     };
   } catch (error) {
-    console.error('Error cleaning up old messages:', error);
+    console.error("Error cleaning up old messages:", error);
     return { success: false, error: error.message };
   }
 };
@@ -219,7 +207,7 @@ export const initializeChat = async (chatId, userId) => {
 
     // Start background sync (don't wait for it)
     syncMessagesFromDatabase(chatId, userId).catch((error) => {
-      console.error('Background sync failed:', error);
+      console.error("Background sync failed:", error);
     });
 
     return {
@@ -228,7 +216,7 @@ export const initializeChat = async (chatId, userId) => {
       syncInProgress: true,
     };
   } catch (error) {
-    console.error('Error initializing chat:', error);
+    console.error("Error initializing chat:", error);
     return {
       messages: [],
       fromCache: false,
@@ -247,7 +235,7 @@ export const sendMessageLocalFirst = async (messageData) => {
     const { chatId, senderId, content } = messageData;
 
     if (!chatId || !senderId || !content) {
-      throw new Error('Invalid message data');
+      throw new Error("Invalid message data");
     }
 
     // Create temporary message for optimistic UI
@@ -271,7 +259,7 @@ export const sendMessageLocalFirst = async (messageData) => {
       local: true,
     };
   } catch (error) {
-    console.error('Error sending message locally:', error);
+    console.error("Error sending message locally:", error);
     return { success: false, error: error.message };
   }
 };
@@ -293,7 +281,7 @@ export const markMessageSynced = async (chatId, tempId, serverMessage) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error marking message as synced:', error);
+    console.error("Error marking message as synced:", error);
     return { success: false, error: error.message };
   }
 };

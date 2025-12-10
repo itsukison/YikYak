@@ -13,6 +13,8 @@ import { supabase } from '../adapters/supabaseClient';
 import { usePeriodicSync } from '../services/chat/useMessageSync';
 import { useTrackPresence } from '../services/presence/usePresence';
 import { usePendingMessages, useUpdateLastSeen } from '../services/chat/usePendingMessages';
+import { usePushNotifications } from '../services/notifications/usePushNotifications';
+import { useOfflineQueue } from '../services/chat/useOfflineQueue';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -50,6 +52,12 @@ function RootLayoutNav() {
 
   // Update last seen timestamp when app goes to background
   useUpdateLastSeen(user?.id);
+
+  // Initialize Push Notifications
+  usePushNotifications();
+
+  // Process offline message queue
+  useOfflineQueue();
 
   // Deep link handler for email verification
   useEffect(() => {

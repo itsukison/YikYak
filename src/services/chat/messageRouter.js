@@ -67,6 +67,9 @@ export const sendMessage = async (messageData, recipientId) => {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', chatId);
 
+    // Remove from local storage (outbox) since it's sent
+    await chatStorage.deleteMessage(chatId, tempMessage.tempId);
+
     // Step 6: Route based on online status
     if (isOnline) {
       // Recipient is online - message will be delivered via Realtime subscription

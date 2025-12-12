@@ -48,6 +48,7 @@ export default function ProfileScreen() {
     message: "",
     actions: [],
   });
+  const [pendingAction, setPendingAction] = useState(null);
 
   const showModal = (title, message, actions = []) => {
     setModalConfig({ visible: true, title, message, actions });
@@ -86,6 +87,23 @@ export default function ProfileScreen() {
       setLocationRadius(profile.location_radius / 1000);
     }
   }, [profile?.location_radius]);
+
+  // Execute pending action after modal closes
+  React.useEffect(() => {
+    if (!modalConfig.visible && pendingAction) {
+      const action = pendingAction;
+      setPendingAction(null);
+      
+      // Small delay to ensure modal animation completes
+      setTimeout(async () => {
+        try {
+          await action();
+        } catch (error) {
+          console.error("Pending action error:", error);
+        }
+      }, 100);
+    }
+  }, [modalConfig.visible, pendingAction]);
 
   // If no user or profile, show loading (root layout will handle redirect)
   if (!user || !profile) {
@@ -161,21 +179,29 @@ export default function ProfileScreen() {
       {
         text: "Upload Photo",
         style: "default",
-        onPress: async () => {
-          hideModal();
-          setTimeout(async () => {
+        onPress: () => {
+          // Set pending action and close modal
+          setPendingAction(() => async () => {
             try {
               const image = await pickImage();
               if (image) {
-                // Optimistic update could go here
                 const url = await uploadAvatar(user.id, image);
-                await updateProfile({ avatar_url: url });
+                if (url) {
+                  await updateProfile({ avatar_url: url });
+                  // Invalidate queries to refresh avatar everywhere
+                  queryClient.invalidateQueries({ queryKey: ['profile'] });
+                }
               }
             } catch (error) {
               console.error("Avatar upload error:", error);
-              showModal("Error", "Failed to upload profile picture");
+              showModal(
+                "Error", 
+                "Failed to upload profile picture. Please try again.",
+                [{ text: "OK", onPress: hideModal }]
+              );
             }
-          }, 500);
+          });
+          hideModal();
         }
       }
     ];
@@ -184,15 +210,22 @@ export default function ProfileScreen() {
       actions.push({
         text: "Remove Photo",
         style: "destructive",
-        onPress: async () => {
+        onPress: () => {
+          setPendingAction(() => async () => {
+            try {
+              await removeAvatar(user.id, currentUser.avatar_url);
+              await updateProfile({ avatar_url: null });
+              queryClient.invalidateQueries({ queryKey: ['profile'] });
+            } catch (error) {
+              console.error("Avatar remove error:", error);
+              showModal(
+                "Error",
+                "Failed to remove profile picture. Please try again.",
+                [{ text: "OK", onPress: hideModal }]
+              );
+            }
+          });
           hideModal();
-          try {
-            await removeAvatar(user.id, currentUser.avatar_url);
-            await updateProfile({ avatar_url: null });
-          } catch (error) {
-            console.error("Avatar remove error:", error);
-            showModal("Error", "Failed to remove profile picture");
-          }
         }
       });
     }

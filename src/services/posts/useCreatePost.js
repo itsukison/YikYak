@@ -15,6 +15,7 @@ export function useCreatePostMutation() {
       locationName,
       photos = [],
       repostOf = null,
+      userIsAnonymous = false,
     }) => {
       const validation = validateContent(content);
       if (!validation.allowed) {

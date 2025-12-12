@@ -13,6 +13,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "HearSay uses your location to show you posts from people nearby. Your exact location is never shared with other users.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "HearSay uses your location to show you posts from people nearby even when the app is in the background. Your exact location is never shared with other users.",
+        "NSPhotoLibraryUsageDescription": "HearSay needs access to your photo library to set your profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "HearSay needs permission to save photos to your library.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.itsukison.HearSayjapan"
@@ -24,7 +26,9 @@
       },
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_EXTERNAL_STORAGE"
       ],
       "package": "xyz.create.CreateExpoEnvironment"
     },
@@ -44,6 +48,12 @@
         }
       ],
       "expo-audio",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "HearSay needs access to your photos to set your profile picture."
+        }
+      ],
       [
         "expo-build-properties",
         {

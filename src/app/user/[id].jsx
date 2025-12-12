@@ -84,7 +84,14 @@ export default function UserProfileScreen() {
         user1Id: user.id,
         user2Id: targetUserId,
       });
-      router.push(`/chat/${chat.id}`);
+      router.push({
+        pathname: `/chat/${chat.id}`,
+        params: {
+          otherUserId: targetUserId,
+          otherUserNickname: targetProfile?.nickname,
+          otherUserIsAnonymous: targetProfile?.is_anonymous ? 'true' : 'false'
+        }
+      });
     } catch (error) {
       console.error("Error creating chat:", error);
     }

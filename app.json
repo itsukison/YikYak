@@ -11,6 +11,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "HearSay uses your location to show you posts from people nearby. Your exact location is never shared with other users.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "HearSay uses your location to show you posts from people nearby even when the app is in the background. Your exact location is never shared with other users.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.itsukison.HearSayjapan"

@@ -284,9 +284,9 @@ export default function ProfileScreen() {
           onValueChange={handleAnonymousToggle}
           trackColor={{
             false: colors.inputBackground,
-            true: colors.primarySubtle,
+            true: colors.accent,
           }}
-          thumbColor={isAnonymous ? colors.primary : "#FFFFFF"}
+          thumbColor={"#FFFFFF"}
         />
       ),
     },
@@ -332,7 +332,7 @@ export default function ProfileScreen() {
           right: 0,
           zIndex: 10,
           backgroundColor: colors.background,
-          paddingTop: insets.top,
+          paddingTop: insets.top + 20,
           paddingBottom: 16,
           borderBottomWidth: showHeaderBorder ? 1 : 0,
           borderBottomColor: colors.border,
@@ -346,7 +346,7 @@ export default function ProfileScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
-          paddingTop: insets.top + 60, // Account for fixed header
+          paddingTop: insets.top + 80, // Account for fixed header
           paddingBottom: insets.bottom + 20,
           paddingHorizontal: 20,
         }}

@@ -170,7 +170,14 @@ export default function PostActionSheet({ visible, onClose, post }) {
             }
 
             resetAndClose();
-            router.push(`/chat/${chatId}`);
+            router.push({
+                pathname: `/chat/${chatId}`,
+                params: {
+                    otherUserId: post.user_id,
+                    otherUserNickname: post.is_anonymous ? "Anonymous" : post.author_nickname || "User",
+                    otherUserIsAnonymous: post.is_anonymous,
+                }
+            });
         } catch (error) {
             console.error("Error initiating DM:", error);
             Alert.alert("Error", "Failed to start chat.");
@@ -180,7 +187,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
     const handleEdit = () => {
         resetAndClose();
         router.push({
-            pathname: "/create-post",
+            pathname: "/compose",
             params: {
                 mode: "edit",
                 post: JSON.stringify(post),

@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../adapters/supabaseClient";
+import { validateContent } from "../moderation/contentFilter";
 
 // Create new post
 export function useCreatePostMutation() {
@@ -15,6 +16,11 @@ export function useCreatePostMutation() {
       photos = [],
       repostOf = null,
     }) => {
+      const validation = validateContent(content);
+      if (!validation.allowed) {
+        throw new Error(validation.error);
+      }
+
       // Step 1: Insert post via RPC (includes rate limiting)
       const { data: post, error } = await supabase.rpc("create_post", {
         p_content: content.trim(),

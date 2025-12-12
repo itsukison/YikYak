@@ -5,6 +5,7 @@ import { Image as ImageIcon } from "lucide-react-native";
 import { useTheme } from '../../config/theme';
 import { Body } from './ui';
 import PhotoThumbnail from './PhotoThumbnail';
+import { validateImageBeforeUpload } from '../../services/moderation/imageModeration';
 
 const MAX_PHOTOS = 3;
 
@@ -43,8 +44,30 @@ export default function PhotoPicker({ photos, onPhotosChange }) {
       });
 
       if (!result.canceled && result.assets) {
-        const newPhotos = result.assets.map(asset => asset.uri);
-        onPhotosChange([...photos, ...newPhotos].slice(0, MAX_PHOTOS));
+        // Validate each image before adding
+        const validPhotos = [];
+        const errors = [];
+
+        for (const asset of result.assets) {
+          const validation = validateImageBeforeUpload(asset);
+          if (validation.valid) {
+            validPhotos.push(asset.uri);
+          } else {
+            errors.push(validation.error);
+          }
+        }
+
+        if (errors.length > 0) {
+          Alert.alert(
+            'Invalid Images',
+            errors.join('\n'),
+            [{ text: 'OK' }]
+          );
+        }
+
+        if (validPhotos.length > 0) {
+          onPhotosChange([...photos, ...validPhotos].slice(0, MAX_PHOTOS));
+        }
       }
     } catch (error) {
       console.error('Image picker error:', error);

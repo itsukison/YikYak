@@ -1,24 +1,21 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { supabase } from '../../adapters/supabaseClient';
 import { decode } from 'base64-arraybuffer';
 
 export function useAvatar() {
     const [uploading, setUploading] = useState(false);
 
-    const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
-
     const pickImage = async () => {
         try {
-            if (!status?.granted) {
-                const permission = await requestPermission();
-                if (!permission.granted) {
-                    return null;
-                }
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                return null;
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
                 aspect: [1, 1],
                 quality: 0.8,
@@ -46,13 +43,14 @@ export function useAvatar() {
             const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // Create blob from URI
-            const response = await fetch(imageFile.uri);
-            const blob = await response.blob();
+            // Read file as base64
+            const base64 = await FileSystem.readAsStringAsync(imageFile.uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
 
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(filePath, blob, {
+                .upload(filePath, decode(base64), {
                     contentType: imageFile.mimeType || 'image/jpeg',
                     upsert: true,
                 });

@@ -14,6 +14,7 @@ import { supabase } from '../adapters/supabaseClient';
 import { Button, Input, Card, Section } from '../ui/components/ui';
 import { Heading, Body, Caption } from '../ui/components/ui/Text';
 import AppBackground from '../ui/components/AppBackground';
+import CommunityGuidelinesModal from '../ui/components/CommunityGuidelinesModal';
 
 export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
@@ -294,6 +295,7 @@ export default function OnboardingScreen() {
           </Section>
         </ScrollView>
       </KeyboardAvoidingView>
+      <CommunityGuidelinesModal />
     </AppBackground>
   );
 }

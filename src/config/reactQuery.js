@@ -99,3 +99,4 @@ export const clearOldCache = async (queryClient) => {
 
 // Export default instance
 export const queryClient = createQueryClient();
+

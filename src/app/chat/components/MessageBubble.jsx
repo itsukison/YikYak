@@ -8,7 +8,7 @@ const DeliveryStatus = ({ message, colors }) => {
     if (!message.synced && message.tempId) {
         return (
             <Caption style={{ fontSize: 10, color: colors.textSecondary, marginLeft: 4 }}>
-                Sending...
+                
             </Caption>
         );
     }

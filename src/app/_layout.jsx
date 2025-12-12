@@ -17,6 +17,7 @@ import { usePushNotifications } from '../services/notifications/usePushNotificat
 import { useOfflineQueue } from '../services/chat/useOfflineQueue';
 
 SplashScreen.preventAutoHideAsync();
+console.log("LAYOUT UPDATED: Routing check");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -155,7 +156,7 @@ function RootLayoutNav() {
     const currentPath = segments.join('/');
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'signup' || segments[0] === 'school-selection' || segments[0] === 'verify-email';
     const onOnboardingScreen = segments[0] === 'onboarding';
-    const inProtectedRoute = segments[0] === '(tabs)' || segments[0] === 'create-post' || segments[0] === 'home';
+    const inProtectedRoute = segments[0] === '(tabs)' || segments[0] === 'compose' || segments[0] === 'share' || segments[0] === 'home';
 
     console.log('Auth routing:', {
       user: !!user,
@@ -166,14 +167,18 @@ function RootLayoutNav() {
     });
 
     // Not authenticated - redirect to login (except for index and auth screens)
-    if (!user && !inAuthGroup && !onOnboardingScreen && segments[0] !== 'index' && segments[0] !== '') {
-      console.log('Redirecting to login: no user');
+    // Explicit public routes that don't require authentication
+    const publicFirstSegments = ['login', 'signup', 'school-selection', 'verify-email', 'index', 'onboarding'];
+    const isPublic = segments.length === 0 || publicFirstSegments.includes(segments[0]);
+
+    if (!user && !isPublic) {
+      console.log('Redirecting to login: no user', { segments });
       router.replace('/login');
       return;
     }
 
     // Authenticated but profile not loaded yet - wait (don't redirect)
-    if (user && !profile && !inAuthGroup) {
+    if (user && !profile && !isPublic) {
       console.log('Waiting for profile to load');
       return;
     }
@@ -207,7 +212,8 @@ function RootLayoutNav() {
       <Stack.Screen name="verify-email" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="create-post" />
+      <Stack.Screen name="compose" />
+      <Stack.Screen name="share/[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

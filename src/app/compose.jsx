@@ -10,6 +10,7 @@ import {
   ScrollView,
   Keyboard,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, User, UserX, MapPin } from "lucide-react-native";
@@ -45,6 +46,7 @@ export default function CreatePost() {
   const [locationName, setLocationName] = useState('Locating...');
   const [photos, setPhotos] = useState(initialPost?.photos || []);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showLocation, setShowLocation] = useState(true);
   const focusedPadding = 12;
 
   const paddingAnimation = useRef(
@@ -81,8 +83,30 @@ export default function CreatePost() {
   }, [profile, isEditMode]);
 
   useEffect(() => {
+    loadLocationPreference();
     getCurrentLocation();
   }, []);
+
+  const loadLocationPreference = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('post_show_location_preference');
+      if (saved !== null) {
+        setShowLocation(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn("Failed to load location preference", e);
+    }
+  };
+
+  const toggleLocationPreference = async () => {
+    const newValue = !showLocation;
+    setShowLocation(newValue);
+    try {
+      await AsyncStorage.setItem('post_show_location_preference', JSON.stringify(newValue));
+    } catch (e) {
+      console.warn("Failed to save location preference", e);
+    }
+  };
 
   const getCurrentLocation = async () => {
     try {
@@ -219,7 +243,7 @@ export default function CreatePost() {
           content: content.trim(),
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-          locationName: locationName,
+          locationName: showLocation ? locationName : null,
           userNickname: profile?.nickname,
           userIsAnonymous: isAnonymous,
           photos: photoUrls,
@@ -409,27 +433,66 @@ export default function CreatePost() {
 
                   {/* Location Display */}
                   {location && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
+                    <TouchableOpacity
+                      onPress={toggleLocationPreference}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 12,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: colors.surface,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: 12
+                          }}
+                        >
+                          <MapPin size={20} color={colors.textSecondary} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Body weight="medium">Location</Body>
+                          <Caption color="secondary">
+                            {showLocation
+                              ? `${locationName} • Visible to nearby`
+                              : 'Hidden • Post still appears nearby'}
+                          </Caption>
+                        </View>
+                      </View>
+
+                      {/* Toggle Switch */}
                       <View
                         style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          backgroundColor: colors.surface,
-                          alignItems: 'center',
+                          width: 50,
+                          height: 30,
+                          borderRadius: 15,
+                          backgroundColor: showLocation ? colors.primary : colors.surface,
                           justifyContent: 'center',
-                          marginRight: 12
+                          alignItems: showLocation ? 'flex-end' : 'flex-start',
+                          paddingHorizontal: 2,
                         }}
                       >
-                        <MapPin size={20} color={colors.textSecondary} />
+                        <View
+                          style={{
+                            width: 26,
+                            height: 26,
+                            borderRadius: 13,
+                            backgroundColor: '#FFFFFF',
+                            shadowColor: colors.shadow,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4,
+                            elevation: 4,
+                          }}
+                        />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Body weight="medium">Location</Body>
-                        <Caption color="secondary">
-                          {locationName} • Visible to nearby students
-                        </Caption>
-                      </View>
-                    </View>
+                    </TouchableOpacity>
                   )}
                 </View>
 

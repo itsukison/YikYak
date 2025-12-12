@@ -395,7 +395,7 @@ export default function PostDetailScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 {/* Repost Button */}
                 <TouchableOpacity
-                  onPress={() => router.push(`/repost/${post.id}`)}
+                  onPress={() => router.push(`/share/${post.id}`)}
                   style={{
                     width: 32,
                     height: 32,

@@ -39,7 +39,7 @@ import PostActionSheet from "../../ui/components/PostActionSheet";
 import { debounce } from "lodash";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from "@tanstack/react-query";
-import { clearAllChats } from "../../services/storage/chatStorage";
+import LocationPermissionPrimer from "../../ui/components/LocationPermissionPrimer";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -54,6 +54,7 @@ export default function HomeScreen() {
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isUsingCachedLocation, setIsUsingCachedLocation] = useState(false);
+  const [isLocationPrimerVisible, setIsLocationPrimerVisible] = useState(false);
 
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
@@ -189,9 +190,20 @@ export default function HomeScreen() {
     };
   }, [feedLocation, user, locationRadius, addPostToCache]);
 
-  const getLocationPermission = async () => {
+  const getLocationPermission = async (skipPrimer = false) => {
     try {
       setLocationError(null);
+
+      if (!skipPrimer) {
+        const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
+        if (existingStatus === 'undetermined') {
+          setIsLocationPrimerVisible(true);
+          return;
+        }
+      }
+
+      setIsLocationPrimerVisible(false); // Close primer if it was open
+
       let { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
@@ -282,30 +294,6 @@ export default function HomeScreen() {
     });
   };
 
-  const handleResetCache = async () => {
-    Alert.alert(
-      "Reset Chat Cache",
-      "This will clear all local chat history. Database messages will remain.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reset",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearAllChats();
-              queryClient.invalidateQueries(["messages"]);
-              queryClient.invalidateQueries(["chats"]);
-              Alert.alert("Success", "Chat cache cleared. Please reload the app if issues persist.");
-            } catch (error) {
-              console.error("Error clearing cache:", error);
-              Alert.alert("Error", "Failed to clear cache");
-            }
-          }
-        }
-      ]
-    );
-  };
 
 
 
@@ -571,7 +559,11 @@ export default function HomeScreen() {
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                router.push(`/repost/${post.id}`);
+                if (String(post.id).startsWith("temp_")) {
+                  Alert.alert("Please wait", "Your post is still uploading.");
+                  return;
+                }
+                router.push('/share/' + post.id);
               }}
               style={{
                 width: 32,
@@ -629,7 +621,7 @@ export default function HomeScreen() {
       style={{
         backgroundColor: colors.background,
         paddingTop: insets.top + 20,
-        paddingBottom: 16,
+        paddingBottom: 8,
         paddingHorizontal: 16,
       }}
     >
@@ -639,13 +631,11 @@ export default function HomeScreen() {
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 16,
+          marginBottom: 4,
         }}
       >
         {/* Left: Title */}
-        <TouchableOpacity onPress={handleResetCache} onLongPress={handleResetCache}>
-          <Heading variant="h2" weight="semibold">HearSay</Heading>
-        </TouchableOpacity>
+        <Heading variant="h2" weight="semibold">HearSay</Heading>
 
         {/* Right: New/Popular Toggle */}
         <View
@@ -706,7 +696,7 @@ export default function HomeScreen() {
       {/* Subtitle */}
       {(feedLocation || location) && (
         <View>
-          <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 12 }}>
+          <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 8 }}>
             Posts within {locationRadius / 1000}km
           </Caption>
           {isUsingCachedLocation && (
@@ -856,7 +846,7 @@ export default function HomeScreen() {
 
       {/* Floating Action Button */}
       <TouchableOpacity
-        onPress={() => router.push({ pathname: "/create-post" })}
+        onPress={() => router.push({ pathname: "/compose" })}
         style={{
           position: "absolute",
           bottom: insets.bottom + 0,
@@ -884,6 +874,15 @@ export default function HomeScreen() {
           setSelectedPost(null);
         }}
         post={selectedPost}
+      />
+
+      <LocationPermissionPrimer
+        visible={isLocationPrimerVisible}
+        onEnable={() => getLocationPermission(true)}
+        onSkip={() => {
+          setIsLocationPrimerVisible(false);
+          // Optional: handle skip logic (maybe show error or default location)
+        }}
       />
     </AppBackground>
   );

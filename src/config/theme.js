@@ -31,11 +31,11 @@ export const useTheme = () => {
       : "rgba(159, 232, 112, 0.1)",
 
     // Secondary CTA
-    secondary: "#8AD460",
-    secondaryText: "#1C1C1E",
+    secondary: isDark ? "#27272A" : "#E4E4E7",
+    secondaryText: isDark ? "#FFFFFF" : "#1C1C1E",
     secondarySubtle: isDark
-      ? "rgba(138, 212, 96, 0.15)"
-      : "rgba(138, 212, 96, 0.1)",
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(0, 0, 0, 0.05)",
 
     // Accent - Neon Green
     accent: "#9FE870",
@@ -90,14 +90,14 @@ export const useTheme = () => {
 
   // Border radius constants
   const radius = {
-    small: 8,
-    card: 16, // Softer cards
-    cardLarge: 24,
+    small: 6,
+    card: 12, // Sharper cards
+    cardLarge: 16,
     button: 9999, // Pill shape
     buttonLarge: 9999,
     pill: 9999,
     pillLarge: 9999,
-    input: 16,
+    input: 12,
     inputLarge: 20,
     avatar: 9999,
   };
@@ -261,7 +261,7 @@ export const gluestackConfig = {
     colors: {
       primary: "#9FE870",
       primaryText: "#1C1C1E",
-      secondary: "#8AD460",
+      secondary: "#E4E4E7",
       secondaryText: "#1C1C1E",
       accent: "#9FE870",
       accentText: "#1C1C1E",
@@ -292,14 +292,14 @@ export const gluestackConfig = {
       "6xl": 64,
     },
     radii: {
-      small: 8,
-      card: 16,
-      cardLarge: 24,
+      small: 6,
+      card: 12,
+      cardLarge: 16,
       button: 9999,
       buttonLarge: 9999,
       pill: 9999,
       pillLarge: 9999,
-      input: 16,
+      input: 12,
       inputLarge: 20,
       full: 9999,
     },

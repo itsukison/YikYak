@@ -6,8 +6,10 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { User } from 'lucide-react-native';
 import { useTheme } from '../config/theme';
 import { SCHOOLS, GUEST_OPTION } from '../core/schools';
 
@@ -16,7 +18,6 @@ export default function SchoolSelectionScreen() {
   const { colors, radius, isDark, typography, shadows, spacing } = useTheme();
 
   const handleSchoolSelect = (school) => {
-    // Navigate to signup with school data
     router.push({
       pathname: '/signup',
       params: {
@@ -45,12 +46,14 @@ export default function SchoolSelectionScreen() {
             </Text>
           </TouchableOpacity>
 
-          <Text style={[styles.title, typography.h1Small, { color: colors.text }]}>
-            Select Your School
-          </Text>
-          <Text style={[styles.subtitle, typography.body, { color: colors.textSecondary }]}>
-            Choose your university to continue
-          </Text>
+          <View style={styles.headerTitleContainer}>
+            <Text style={[styles.title, typography.h1Small, { color: colors.text }]}>
+              Select Your School
+            </Text>
+            <Text style={[styles.subtitle, typography.caption, { color: colors.textSecondary }]}>
+              Choose your university to continue
+            </Text>
+          </View>
         </View>
 
         {/* School List */}
@@ -60,7 +63,6 @@ export default function SchoolSelectionScreen() {
               key={school.id}
               style={[
                 styles.schoolCard,
-                shadows.minimal,
                 {
                   backgroundColor: colors.cardBackground,
                   borderColor: colors.border,
@@ -70,16 +72,28 @@ export default function SchoolSelectionScreen() {
               onPress={() => handleSchoolSelect(school)}
               activeOpacity={0.7}
             >
-              <View style={styles.schoolInfo}>
-                <Text style={[styles.schoolName, typography.h3, { color: colors.text }]}>
-                  {school.displayName}
-                </Text>
-                <Text style={[styles.schoolDescription, typography.bodySmall, { color: colors.textSecondary }]}>
-                  {school.description}
-                </Text>
-                <Text style={[styles.schoolDomain, typography.caption, { color: colors.textTertiary }]}>
-                  @{school.domain}
-                </Text>
+              <View style={styles.cardContent}>
+                {/* Waseda Logo or Placeholder */}
+                {school.id === 'waseda' ? (
+                  <Image
+                    source={require('../../public/waseda.png')}
+                    style={styles.schoolLogo}
+                    resizeMode="contain"
+                  />
+                ) : null}
+
+                <View style={styles.schoolInfo}>
+                  <Text style={[styles.schoolName, typography.h3, { color: colors.text }]}>
+                    {school.displayName.split(' / ')[0]}
+                  </Text>
+                  <Text style={[styles.schoolSubName, typography.bodySmall, { color: colors.textSecondary }]}>
+                    {school.displayName.split(' / ')[1]}
+                  </Text>
+
+                  <Text style={[styles.schoolDomain, typography.caption, { color: colors.textTertiary, marginTop: -2 }]}>
+                    @{school.domain}
+                  </Text>
+                </View>
               </View>
               <Text style={[styles.arrow, { color: colors.text }]}>
                 →
@@ -102,16 +116,18 @@ export default function SchoolSelectionScreen() {
             onPress={() => handleSchoolSelect(GUEST_OPTION)}
             activeOpacity={0.7}
           >
-            <View style={styles.schoolInfo}>
-              <Text style={[styles.schoolName, typography.h3, { color: colors.textSecondary }]}>
-                {GUEST_OPTION.displayName}
-              </Text>
-              <Text style={[styles.schoolDescription, typography.bodySmall, { color: colors.textTertiary }]}>
-                {GUEST_OPTION.description}
-              </Text>
-              <Text style={[styles.guestNote, typography.caption, { color: colors.textTertiary }]}>
-                For testing • No school email required
-              </Text>
+            <View style={styles.cardContent}>
+              <View style={[styles.schoolLogo, { backgroundColor: '#f0f0f0', borderRadius: 24, justifyContent: 'center', alignItems: 'center' }]}>
+                <User size={24} color={colors.textSecondary} />
+              </View>
+              <View style={styles.schoolInfo}>
+                <Text style={[styles.schoolName, typography.h3, { color: colors.textSecondary}]}>
+                  {GUEST_OPTION.displayName}
+                </Text>
+                <Text style={[styles.guestNote, typography.caption, { color: colors.textTertiary }]}>
+                  No school email required
+                </Text>
+              </View>
             </View>
             <Text style={[styles.arrow, { color: colors.textSecondary }]}>
               →
@@ -142,61 +158,81 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   backButton: {
-    marginBottom: 20,
+    marginBottom: 24,
     alignSelf: 'flex-start',
   },
   backText: {
     fontSize: 16,
     fontWeight: '500',
   },
+  headerTitleContainer: {
+    gap: 4,
+  },
   title: {
-    marginBottom: 12,
+    marginBottom: 0,
   },
   subtitle: {
     marginBottom: 0,
+    opacity: 0.8,
   },
   schoolList: {
-    gap: 16,
-    marginBottom: 32,
+    gap: 12,
+    marginBottom: 24,
   },
   schoolCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 16,
     borderWidth: 1,
+    height: 80,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    flex: 1,
+  },
+  schoolLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
   },
   schoolInfo: {
+    justifyContent: 'center',
+    gap: 2,
     flex: 1,
-    gap: 4,
   },
   schoolName: {
-    marginBottom: 4,
+    fontWeight: '600',
   },
-  schoolDescription: {
-    marginBottom: 4,
+  schoolSubName: {
+    marginTop: -2,
   },
   schoolDomain: {
     fontFamily: 'monospace',
+    opacity: 0.6,
   },
   arrow: {
-    fontSize: 24,
+    fontSize: 20,
     marginLeft: 12,
+    opacity: 0.5,
   },
   guestCard: {
     borderWidth: 2,
+    opacity: 0.8,
   },
   guestNote: {
     fontSize: 11,
     marginTop: 2,
   },
   helpContainer: {
-    marginTop: 24,
+    marginTop: 8,
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   helpText: {
     textAlign: 'center',
@@ -205,4 +241,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-

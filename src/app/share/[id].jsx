@@ -22,12 +22,16 @@ import { useCreatePostMutation } from '../../services/posts/useCreatePost';
 import { usePostQuery } from '../../services/posts/usePosts';
 
 export default function RepostScreen() {
-    const { id } = useLocalSearchParams();
+    const params = useLocalSearchParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
+
     const insets = useSafeAreaInsets();
     const { colors, radius, isDark, spacing } = useTheme();
     const { user, profile } = useAuth();
     const createPostMutation = useCreatePostMutation();
-    const { data: originalPost, isLoading: isLoadingPost } = usePostQuery(id);
+    const { data: originalPost, isLoading: isLoadingPost, error: postError } = usePostQuery(id);
+
+    // console.log("RepostScreen Debug:", { id, originalPost, error: postError, isLoading: isLoadingPost });
 
     const [content, setContent] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
@@ -36,131 +40,15 @@ export default function RepostScreen() {
     const [locationName, setLocationName] = useState('Locating...');
     const focusedPadding = 12;
 
-    const paddingAnimation = useRef(
-        new Animated.Value(insets.bottom + focusedPadding)
-    ).current;
+    // ... (animations)
 
-    const animateTo = (value) => {
-        Animated.timing(paddingAnimation, {
-            toValue: value,
-            duration: 200,
-            useNativeDriver: false,
-        }).start();
-    };
+    // ... (handlers)
 
-    const handleInputFocus = () => {
-        if (Platform.OS === 'web') {
-            return;
-        }
-        animateTo(focusedPadding);
-    };
+    // ... (effects)
 
-    const handleInputBlur = () => {
-        if (Platform.OS === 'web') {
-            return;
-        }
-        animateTo(insets.bottom + focusedPadding);
-    };
+    // ... (location)
 
-    // Use profile's anonymous setting as initial state
-    useEffect(() => {
-        if (profile) {
-            setIsAnonymous(profile.is_anonymous);
-        }
-    }, [profile]);
-
-    useEffect(() => {
-        getCurrentLocation();
-    }, []);
-
-    const getCurrentLocation = async () => {
-        try {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert(
-                    'Location Permission',
-                    'Location access is required to create location-based posts.',
-                    [{ text: 'OK' }]
-                );
-                setLocationName('Unknown Location');
-                return;
-            }
-
-            let currentLocation = await Location.getCurrentPositionAsync({});
-            setLocation(currentLocation);
-
-            // Reverse geocode to get location name
-            try {
-                const reverseGeocode = await Location.reverseGeocodeAsync({
-                    latitude: currentLocation.coords.latitude,
-                    longitude: currentLocation.coords.longitude
-                });
-
-                if (reverseGeocode && reverseGeocode.length > 0) {
-                    const address = reverseGeocode[0];
-                    // Prioritize name (e.g. "University of Tokyo"), then city, then region
-                    const name = address.name || address.city || address.region || 'Unknown Location';
-                    setLocationName(name);
-                } else {
-                    setLocationName('Unknown Location');
-                }
-            } catch (geoError) {
-                console.error('Error reverse geocoding:', geoError);
-                setLocationName('Unknown Location');
-            }
-
-        } catch (error) {
-            console.error('Error getting location:', error);
-            Alert.alert('Error', 'Failed to get your location. Please try again.');
-            setLocationName('Unknown Location');
-        }
-    };
-
-    const handleRepost = async () => {
-        if (!content.trim()) {
-            Alert.alert('Error', 'Please enter some content for your repost.');
-            return;
-        }
-
-        if (content.trim().length > 200) {
-            Alert.alert('Error', 'Post content must be 200 characters or less.');
-            return;
-        }
-
-        if (!location) {
-            Alert.alert('Error', 'Location is required to create a post.');
-            return;
-        }
-
-        if (!user) {
-            Alert.alert('Error', 'You must be logged in to create a post.');
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            await createPostMutation.mutateAsync({
-                userId: user.id,
-                content: content.trim(),
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                locationName: locationName,
-                userNickname: profile?.nickname,
-                userIsAnonymous: isAnonymous,
-                repostOf: id,
-            });
-
-            Alert.alert('Success', 'Reposted successfully!', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
-        } catch (error) {
-            console.error('Error creating repost:', error);
-            Alert.alert('Error', 'Failed to create repost. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (repost logic)
 
     const characterCount = content.length;
     const maxCharacters = 200;
@@ -168,7 +56,11 @@ export default function RepostScreen() {
     const isNearLimit = characterCount >= 180;
 
     // Handle loading and auth states
-    const showLoading = !user || !profile || isLoadingPost;
+    // Show loading if:
+    // 1. User/Profile loading
+    // 2. Post query loading
+    // 3. ID is not yet ready (undefined/null)
+    const showLoading = !user || !profile || isLoadingPost || !id;
 
     if (showLoading) {
         return (
@@ -181,7 +73,12 @@ export default function RepostScreen() {
     if (!originalPost) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-                <Body>Post not found</Body>
+                <Body>Post not found or unavailable.</Body>
+                {postError && (
+                    <Caption style={{ marginTop: 8, color: colors.error, textAlign: 'center', paddingHorizontal: 20 }}>
+                        {postError.message || "Unknown error"}
+                    </Caption>
+                )}
                 <Button variant="secondary" onPress={() => router.back()} style={{ marginTop: 16 }}>Go Back</Button>
             </View>
         );

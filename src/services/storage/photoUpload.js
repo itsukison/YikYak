@@ -1,13 +1,14 @@
-import { supabase } from '../../adapters/supabaseClient';
-import * as FileSystem from 'expo-file-system';
-import { decode } from 'base64-arraybuffer';
+import { supabase } from "../../adapters/supabaseClient";
+import * as FileSystem from "expo-file-system";
+import { decode } from "base64-arraybuffer";
+import { moderateImage } from "../moderation/imageModeration";
 
 /**
- * Upload a photo to Supabase Storage
+ * Upload a photo to Supabase Storage with moderation
  * @param {string} userId - User ID for folder organization
  * @param {string} uri - Local file URI
  * @param {number} order - Photo order in post (0-4)
- * @returns {Promise<{url: string, error: null} | {url: null, error: string}>}
+ * @returns {Promise<{url: string, error: null, moderated: true} | {url: null, error: string}>}
  */
 export async function uploadPhoto(userId, uri, order) {
   try {
@@ -22,25 +23,40 @@ export async function uploadPhoto(userId, uri, order) {
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
-      .from('post-photos')
+      .from("post-photos")
       .upload(filename, decode(base64), {
-        contentType: 'image/jpeg',
+        contentType: "image/jpeg",
         upsert: false,
       });
 
     if (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       return { url: null, error: error.message };
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('post-photos')
-      .getPublicUrl(filename);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("post-photos").getPublicUrl(filename);
 
-    return { url: publicUrl, error: null };
+    // Moderate the uploaded image
+    const moderationResult = await moderateImage(publicUrl);
+
+    if (!moderationResult.allowed) {
+      // Delete the uploaded image if it fails moderation
+      await supabase.storage.from("post-photos").remove([filename]);
+
+      return {
+        url: null,
+        error: moderationResult.reason || "Image contains prohibited content",
+        moderationFailed: true,
+        labels: moderationResult.labels,
+      };
+    }
+
+    return { url: publicUrl, error: null, moderated: true };
   } catch (error) {
-    console.error('Upload exception:', error);
+    console.error("Upload exception:", error);
     return { url: null, error: error.message };
   }
 }
@@ -73,7 +89,7 @@ export async function uploadPhotos(userId, uris, maxRetries = 3) {
           errors.push(`Photo ${i + 1}: ${error}`);
         } else {
           // Wait before retry (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
@@ -90,25 +106,25 @@ export async function uploadPhotos(userId, uris, maxRetries = 3) {
 export async function deletePhoto(photoUrl) {
   try {
     // Extract filename from URL
-    const urlParts = photoUrl.split('/post-photos/');
+    const urlParts = photoUrl.split("/post-photos/");
     if (urlParts.length < 2) {
-      return { success: false, error: 'Invalid photo URL' };
+      return { success: false, error: "Invalid photo URL" };
     }
 
     const filename = urlParts[1];
 
     const { error } = await supabase.storage
-      .from('post-photos')
+      .from("post-photos")
       .remove([filename]);
 
     if (error) {
-      console.error('Delete error:', error);
+      console.error("Delete error:", error);
       return { success: false, error: error.message };
     }
 
     return { success: true, error: null };
   } catch (error) {
-    console.error('Delete exception:', error);
+    console.error("Delete exception:", error);
     return { success: false, error: error.message };
   }
 }

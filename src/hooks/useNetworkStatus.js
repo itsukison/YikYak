@@ -46,3 +46,4 @@ export function useIsOnline() {
   const { isOnline, isInternetReachable } = useNetworkStatus();
   return isOnline && isInternetReachable;
 }
+

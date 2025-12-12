@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../services/auth/useAuth';
 import { useTheme } from '../config/theme';
 import { Button, Input, Container, Section } from '../ui/components/ui';
-import { Heading, Body } from '../ui/components/ui/Text';
+import { Heading, Body, Caption } from '../ui/components/ui/Text';
 import AppBackground from '../ui/components/AppBackground';
+import { ArrowLeft } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -22,6 +25,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
   const { colors, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -57,6 +61,20 @@ export default function LoginScreen() {
           }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Return Button */}
+          <TouchableOpacity
+            onPress={() => router.replace('/')}
+            style={{
+              position: 'absolute',
+              top: insets.top + spacing.md,
+              left: spacing.lg,
+              zIndex: 10,
+              padding: spacing.xs,
+            }}
+          >
+            <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+
           {/* Header */}
           <Section spacing="large">
             <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
@@ -96,6 +114,25 @@ export default function LoginScreen() {
             >
               Sign In
             </Button>
+
+            <Caption color={colors.textTertiary} style={{ textAlign: 'center', marginTop: spacing.md }}>
+              By continuing, you agree to our{' '}
+              <Caption
+                color={colors.primary}
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/terms')}
+              >
+                Terms of Service
+              </Caption>
+              {' '}and{' '}
+              <Caption
+                color={colors.primary}
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/privacy')}
+              >
+                Privacy Policy
+              </Caption>
+            </Caption>
           </Section>
 
           {/* Sign Up Link */}

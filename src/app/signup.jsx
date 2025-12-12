@@ -7,12 +7,15 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../services/auth/useAuth';
 import { useTheme } from '../config/theme';
 import { validateEmail } from '../core/schools';
 import { Button, Input, Section } from '../ui/components/ui';
 import { Heading, Body, Caption } from '../ui/components/ui/Text';
 import AppBackground from '../ui/components/AppBackground';
+import { ArrowLeft } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SignupScreen() {
   const [email, setEmail] = useState('');
@@ -26,6 +29,7 @@ export default function SignupScreen() {
   const params = useLocalSearchParams();
   const { signUp } = useAuth();
   const { colors, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const school = params.schoolId ? {
     id: params.schoolId,
@@ -125,10 +129,25 @@ export default function SignupScreen() {
           }}
           keyboardShouldPersistTaps="handled"
         >
+
+          {/* Return Button */}
+          <TouchableOpacity
+            onPress={() => router.replace('/')}
+            style={{
+              position: 'absolute',
+              top: insets.top + spacing.md,
+              left: spacing.lg,
+              zIndex: 10,
+              padding: spacing.xs,
+            }}
+          >
+            <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+
           {/* Header */}
           <Section spacing="large">
             <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
-              Join HearSay Japan
+              Join HearSay
             </Heading>
             <Body color={colors.textSecondary} style={{ textAlign: 'center' }}>
               {school ? school.displayName : 'Create your account'}
@@ -185,7 +204,22 @@ export default function SignupScreen() {
             </Button>
 
             <Caption color={colors.textTertiary} style={{ textAlign: 'center', marginTop: spacing.md }}>
-              By signing up, you agree to our Terms of Service and Privacy Policy
+              By signing up, you agree to our{' '}
+              <Caption
+                color={colors.primary}
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/terms')}
+              >
+                Terms of Service
+              </Caption>
+              {' '}and{' '}
+              <Caption
+                color={colors.primary}
+                style={{ textDecorationLine: 'underline' }}
+                onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/privacy')}
+              >
+                Privacy Policy
+              </Caption>
             </Caption>
           </Section>
 

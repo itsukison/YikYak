@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../services/auth/useAuth';
 import { useTheme } from '../config/theme';
@@ -7,13 +7,12 @@ import { useTheme } from '../config/theme';
 export default function WelcomeScreen() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, radius, typography } = useTheme();
 
   useEffect(() => {
     if (loading) return;
 
     if (user) {
-      // If user is authenticated, redirect them to the appropriate screen
       if (!profile?.onboarding_completed) {
         router.replace('/onboarding');
       } else {
@@ -24,63 +23,77 @@ export default function WelcomeScreen() {
 
   if (loading || user) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: '#fdfdfb' }]}>
+        <ActivityIndicator size="large" color="#000000" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.content, { padding: spacing["2xl"] }]}>
-        <View style={styles.heroSection}>
-          <Text style={[styles.title, typography.hero, { color: colors.text }]}>
-            HearSay
-          </Text>
-          <Text style={[styles.tagline, typography.bodyLarge, { color: colors.textSecondary }]}>
-            The beat of your campus.
-          </Text>
-        </View>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
 
-        <View style={[styles.actionSection, { gap: spacing.md }]}>
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              {
-                backgroundColor: colors.primary,
-                borderRadius: radius.pill,
-              }
-            ]}
-            onPress={() => router.push('/school-selection')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.primaryButtonText, typography.h3, { color: colors.primaryText }]}>
-              Get Started
+          {/* Top Section - Quote */}
+          <View style={styles.topSection}>
+            <Text style={[styles.quote, typography.h1]}>
+              Hear it, say it.
             </Text>
-          </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={[
-              styles.secondaryButton,
-              {
-                borderRadius: radius.pill,
-              }
-            ]}
-            onPress={() => router.push('/login')}
-            activeOpacity={0.6}
-          >
-            <Text style={[styles.secondaryButtonText, typography.bodyMedium, { color: colors.text }]}>
-              I have an account
+          {/* Center Section - Image */}
+          <View style={styles.imageSection}>
+            <Image
+              source={require('../../public/welcome.png')}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Bottom Section - Actions */}
+          <View style={styles.actionSection}>
+            <TouchableOpacity
+              style={[
+                styles.primaryButton,
+                {
+                  backgroundColor: '#000000',
+                  borderRadius: radius.pill,
+                }
+              ]}
+              onPress={() => router.push('/school-selection')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.primaryButtonText, typography.h3, { color: '#FFFFFF' }]}>
+                Get Started
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => router.push('/login')}
+              style={styles.secondaryButton}
+            >
+              <Text style={[styles.secondaryButtonText, { color: '#000000' }]}>
+                I have an account
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={[styles.legalText, { color: colors.textTertiary }]}>
+              By proceeding, you agree to our Terms and Privacy Policy.
             </Text>
-          </TouchableOpacity>
+          </View>
+
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  safeArea: {
     flex: 1,
   },
   loadingContainer: {
@@ -90,41 +103,66 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingHorizontal: 24,
     justifyContent: 'space-between',
+    paddingVertical: 20,
   },
-  heroSection: {
-    flex: 1,
+  topSection: {
+    flex: 0.2, // Reduced from 0.2 to pull quote up
+    justifyContent: 'flex-end', // Keeps it close to image, but since section is smaller, it's higher on screen? No, flex-end of 15% is higher than flex-end of 20%.
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  quote: {
+    // fontStyle: 'italic',
+    textAlign: 'center',
+    color: '#000000',
+    fontWeight: '500',
+    fontFamily: 'Georgia',
+    fontSize: 32, // explicit size for "classic" look
+  },
+  imageSection: {
+    flex: 0.5, // Increased from 0.5 for more image space
     justifyContent: 'center',
     alignItems: 'center',
   },
-  title: {
-    textAlign: 'center',
-    marginBottom: 16,
-    letterSpacing: -2,
-  },
-  tagline: {
-    textAlign: 'center',
+  image: {
+    width: '100%',
+    height: '100%',
+    maxWidth: 400, // Increased to allow bigger image
+    maxHeight: 400,
   },
   actionSection: {
-    width: '100%',
-    marginBottom: 40,
+    flex: 0.28, // Adjusted balance
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 16,
   },
   primaryButton: {
     width: '100%',
-    height: 64,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   primaryButtonText: {
     fontWeight: '700',
   },
   secondaryButton: {
-    width: '100%',
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 8,
   },
   secondaryButtonText: {
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
   },
+  legalText: {
+    fontSize: 11,
+    textAlign: 'center',
+    opacity: 0.5,
+    marginTop: 8,
+  }
 });

@@ -53,11 +53,11 @@ export function usePostsQuery(
 }
 
 // Fetch single post with photos
-export function usePostQuery(postId) {
+export function usePostQuery(postId, options = {}) {
   return useQuery({
     queryKey: ["post", postId],
     queryFn: async () => {
-      // Fetch post
+      // Fetch post with basic info (avoid nested self-referential join)
       const { data: post, error } = await supabase
         .from("posts")
         .select(
@@ -66,16 +66,6 @@ export function usePostQuery(postId) {
           users!posts_user_id_fkey (
             nickname,
             is_anonymous
-          ),
-          reposted_post:posts!posts_repost_of_fkey (
-            id,
-            content,
-            created_at,
-            user_id,
-            users!posts_user_id_fkey (
-              nickname,
-              is_anonymous
-            )
           )
         `
         )
@@ -83,6 +73,36 @@ export function usePostQuery(postId) {
         .single();
 
       if (error) throw error;
+
+      // Fetch reposted post separately if this is a repost
+      if (post.repost_of) {
+        const { data: repostedPost, error: repostError } = await supabase
+          .from("posts")
+          .select(
+            `
+            id,
+            content,
+            created_at,
+            user_id,
+            is_anonymous,
+            users!posts_user_id_fkey (
+              nickname,
+              is_anonymous
+            )
+          `
+          )
+          .eq("id", post.repost_of)
+          .single();
+
+        if (!repostError && repostedPost) {
+          // Flatten the structure to match expected format
+          post.reposted_post = repostedPost;
+          post.reposted_post_content = repostedPost.content;
+          post.reposted_post_author = repostedPost.users?.nickname;
+          post.reposted_post_is_anonymous = repostedPost.users?.is_anonymous || repostedPost.is_anonymous;
+          post.reposted_post_created_at = repostedPost.created_at;
+        }
+      }
 
       // Fetch photos
       const { data: photos, error: photosError } = await supabase
@@ -99,7 +119,7 @@ export function usePostQuery(postId) {
 
       return post;
     },
-    enabled: !!postId,
+    enabled: options.enabled !== undefined ? options.enabled : !!postId,
   });
 }
 

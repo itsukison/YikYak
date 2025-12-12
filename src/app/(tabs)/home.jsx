@@ -563,7 +563,10 @@ export default function HomeScreen() {
                   Alert.alert("Please wait", "Your post is still uploading.");
                   return;
                 }
-                router.push('/share/' + post.id);
+                router.push({
+                  pathname: `/share/${post.id}`,
+                  params: { post: JSON.stringify(post) }
+                });
               }}
               style={{
                 width: 32,

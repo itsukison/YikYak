@@ -20,7 +20,7 @@ import { useAuth } from '../services/auth/useAuth';
 import { supabase } from '../adapters/supabaseClient';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import { Button, Card, Heading, Body, Caption } from '../ui/components/ui';
+import { Button, Card, Heading, Body, Caption, Modal } from '../ui/components/ui';
 import PhotoPicker from '../ui/components/PhotoPicker';
 import { compressImages } from '../services/storage/imageCompression';
 import { uploadPhotos } from '../services/storage/photoUpload';
@@ -47,6 +47,9 @@ export default function CreatePost() {
   const [photos, setPhotos] = useState(initialPost?.photos || []);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showLocation, setShowLocation] = useState(true);
+  const [moderationError, setModerationError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
   const focusedPadding = 12;
 
   const paddingAnimation = useRef(
@@ -220,7 +223,13 @@ export default function CreatePost() {
 
     } catch (error) {
       console.error('Error creating/editing post:', error);
-      Alert.alert('Error', `Failed to ${isEditMode ? 'save' : 'create'} post. Please try again.`);
+
+      // Check for content moderation error
+      if (error.message && error.message.includes('prohibited content')) {
+        setModerationError(error.message);
+      } else {
+        Alert.alert('Error', `Failed to ${isEditMode ? 'save' : 'create'} post. Please try again.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -235,8 +244,7 @@ export default function CreatePost() {
           isAnonymous,
           photos: photoUrls,
         });
-        Alert.alert("Success", "Post updated successfully");
-        router.back();
+        setSuccessMessage("Post updated successfully");
       } else {
         await createPostMutation.mutateAsync({
           userId: user.id,
@@ -278,6 +286,42 @@ export default function CreatePost() {
             setShowCelebration(false);
             router.back();
           }}
+        />
+
+        {/* Moderation Error Modal */}
+        <Modal
+          visible={!!moderationError}
+          onClose={() => setModerationError(null)}
+          title="Post Rejected"
+          message={moderationError}
+          actions={[
+            {
+              text: 'OK',
+              onPress: () => setModerationError(null),
+              style: 'primary'
+            }
+          ]}
+        />
+
+        {/* Success Modal */}
+        <Modal
+          visible={!!successMessage}
+          onClose={() => {
+            setSuccessMessage(null);
+            router.back();
+          }}
+          title="Success"
+          message={successMessage}
+          actions={[
+            {
+              text: 'OK',
+              onPress: () => {
+                setSuccessMessage(null);
+                router.back();
+              },
+              style: 'primary'
+            }
+          ]}
         />
 
         {showLoading ? (

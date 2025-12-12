@@ -92,3 +92,4 @@ export function validateImageBeforeUpload(asset) {
 
   return { valid: true };
 }
+

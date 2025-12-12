@@ -204,10 +204,10 @@ export function useEditPostMutation() {
 
   return useMutation({
     mutationFn: async ({ postId, content, isAnonymous, photos }) => {
+      // Step 1: Update post content and is_anonymous (photos is NOT a column in posts table)
       const updates = {
         content,
         is_anonymous: isAnonymous,
-        photos,
         updated_at: new Date().toISOString(),
       };
 
@@ -219,7 +219,43 @@ export function useEditPostMutation() {
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Step 2: Handle photos separately in post_photos table
+      if (photos !== undefined) {
+        // Delete existing photos for this post
+        const { error: deleteError } = await supabase
+          .from("post_photos")
+          .delete()
+          .eq("post_id", postId);
+
+        if (deleteError) {
+          console.error("Failed to delete old photos:", deleteError);
+          // Continue anyway - we'll try to insert new ones
+        }
+
+        // Insert new photos if any
+        if (photos.length > 0) {
+          const photoRecords = photos.map((url, index) => ({
+            post_id: postId,
+            photo_url: url,
+            photo_order: index,
+          }));
+
+          const { error: photoError } = await supabase
+            .from("post_photos")
+            .insert(photoRecords);
+
+          if (photoError) {
+            console.error("Failed to insert new photos:", photoError);
+            // Don't throw - post content was updated successfully
+          }
+        }
+      }
+
+      return {
+        ...data,
+        photos: photos || [],
+      };
     },
     onMutate: async ({ postId, content, isAnonymous, photos }) => {
       // Cancel any outgoing refetches

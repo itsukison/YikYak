@@ -3,10 +3,10 @@ class CustomFilter {
     constructor() {
         this.list = [
             // English
-            'dick', 'pussy', 'cock', 'cunt',
-            'whore', 'slut', 'fag', 'faggot', 'nigger', 'nigga', 'retard',
+            'dick', 'pussy', 'cunt',
+            'whore', 'fag', 'faggot', 'nigger', 'nigga',
 
-            // Japanese (Romaji & Kanji/Kana)
+            // Japanese
             'aho', 'shine', 'temee',
             '阿呆', '死ね', 'てめえ',
         ];

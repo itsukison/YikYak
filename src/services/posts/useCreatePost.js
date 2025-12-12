@@ -28,6 +28,7 @@ export function useCreatePostMutation() {
         p_longitude: longitude,
         p_location_name: locationName,
         p_repost_of: repostOf,
+        p_is_anonymous: userIsAnonymous,
       });
 
       if (error) throw error;

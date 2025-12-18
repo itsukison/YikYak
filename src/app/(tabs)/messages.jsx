@@ -12,12 +12,14 @@ import { subscribeToMessages } from "../../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../ui/components/ui";
 import { useMultiplePresence } from "../../services/presence/usePresence";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguageStore();
 
   const { data: chats, isLoading } = useChatsQuery(user?.id);
 
@@ -79,7 +81,7 @@ export default function MessagesScreen() {
             alignItems: "center",
           }}
         >
-          <Heading variant="h1">Messages</Heading>
+          <Heading variant="h1">{t('messages_title')}</Heading>
           <TouchableOpacity
             onPress={() => router.push("/search-users")}
             style={{
@@ -94,8 +96,8 @@ export default function MessagesScreen() {
 
         <EmptyState
           Icon={MessageCircle}
-          title="No Direct Messages"
-          description="You can message students you follow. Tap the + button above to find users!"
+          title={t('messages_no_dms')}
+          description={t('messages_start_chat_desc')}
         />
       </AppBackground>
     );
@@ -109,8 +111,8 @@ export default function MessagesScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffMins < 1) return t('messages_just_now');
+    if (diffMins < 60) return `${diffMins}m ago`; // TODO: i18n suffix
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
@@ -118,7 +120,7 @@ export default function MessagesScreen() {
 
   const renderChatItem = ({ item, index }) => {
     const displayName = item.otherUser.is_anonymous
-      ? "Anonymous"
+      ? t('profile.anonymous_user')
       : item.otherUser.nickname || "User";
     const lastMessageText = item.lastMessage?.content || "No messages yet";
     const lastMessageTime = item.lastMessage?.created_at
@@ -220,7 +222,7 @@ export default function MessagesScreen() {
             alignItems: "center",
           }}
         >
-          <Heading variant="h2" weight="semibold">Messages</Heading>
+          <Heading variant="h2" weight="semibold">{t('messages_title')}</Heading>
           <TouchableOpacity
             onPress={() => router.push("/search-users")}
             style={{

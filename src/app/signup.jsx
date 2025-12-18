@@ -17,6 +17,8 @@ import AppBackground from '../ui/components/AppBackground';
 import { ArrowLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useLanguageStore } from '../services/i18n/languageStore';
+
 export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +32,7 @@ export default function SignupScreen() {
   const { signUp } = useAuth();
   const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguageStore();
 
   const school = params.schoolId ? {
     id: params.schoolId,
@@ -51,7 +54,7 @@ export default function SignupScreen() {
     if (school.isGuest) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        setEmailError('Invalid email format');
+        setEmailError(t('auth_error_invalid_email'));
         return false;
       }
       setEmailError('');
@@ -60,7 +63,7 @@ export default function SignupScreen() {
 
     const result = validateEmail(email, school.domain);
     if (!result.valid) {
-      setEmailError(result.error);
+      setEmailError(result.error); // Keep logic error messages or translate them later
       return false;
     }
     setEmailError('');
@@ -75,22 +78,22 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError(t('auth_error_fill_fields'));
       return;
     }
 
     if (!validateSchoolEmail()) {
-      setError('Please use a valid school email address');
+      setError(t('auth_error_invalid_email'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('auth_error_password_length'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth_error_password_match'));
       return;
     }
 
@@ -106,7 +109,7 @@ export default function SignupScreen() {
     });
 
     if (signUpError) {
-      setError(signUpError.message || 'Failed to create account');
+      setError(signUpError.message || t('error'));
       setLoading(false);
     } else {
       setLoading(false);
@@ -147,10 +150,10 @@ export default function SignupScreen() {
           {/* Header */}
           <Section spacing="large">
             <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
-              Join HearSay
+              {t('auth_join_hearsay')}
             </Heading>
             <Body color={colors.textSecondary} style={{ textAlign: 'center' }}>
-              {school ? school.displayName : 'Create your account'}
+              {school ? school.displayName : t('auth_create_account')}
             </Body>
           </Section>
 
@@ -159,10 +162,10 @@ export default function SignupScreen() {
             <Input
               placeholder={
                 school?.isGuest
-                  ? "Email (any email address)"
+                  ? `${t('auth_email_placeholder')} (any email address)`
                   : school
-                    ? `Email (e.g., you@${school.domain})`
-                    : "School email"
+                    ? `${t('auth_email_placeholder')} (e.g., you@${school.domain})`
+                    : t('auth_school_email_placeholder')
               }
               value={email}
               onChangeText={(text) => {
@@ -177,7 +180,7 @@ export default function SignupScreen() {
             />
 
             <Input
-              placeholder="Password (min 6 characters)"
+              placeholder={t('auth_password_min_placeholder')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -185,7 +188,7 @@ export default function SignupScreen() {
             />
 
             <Input
-              placeholder="Confirm Password"
+              placeholder={t('auth_confirm_password_placeholder')}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -200,25 +203,25 @@ export default function SignupScreen() {
               loading={loading}
               disabled={loading}
             >
-              Create Account
+              {t('auth_create_account_button')}
             </Button>
 
             <Caption color={colors.textTertiary} style={{ textAlign: 'center', marginTop: spacing.md }}>
-              By signing up, you agree to our{' '}
+              {t('auth_terms_agreement')}{' '}
               <Caption
                 color={colors.primary}
                 style={{ textDecorationLine: 'underline' }}
                 onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/terms')}
               >
-                Terms of Service
+                {t('auth_terms')}
               </Caption>
-              {' '}and{' '}
+              {' '}{t('auth_and')}{' '}
               <Caption
                 color={colors.primary}
                 style={{ textDecorationLine: 'underline' }}
                 onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/privacy')}
               >
-                Privacy Policy
+                {t('auth_privacy')}
               </Caption>
             </Caption>
           </Section>
@@ -226,11 +229,11 @@ export default function SignupScreen() {
           {/* Sign In Link */}
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm }}>
             <Body color={colors.textSecondary}>
-              Already have an account?{' '}
+              {t('auth_already_have_account')}{' '}
             </Body>
             <TouchableOpacity onPress={() => router.push('/login')}>
               <Body variant="bodyMedium" color={colors.primary}>
-                Sign In
+                {t('auth_sign_in_link')}
               </Body>
             </TouchableOpacity>
           </View>
@@ -239,7 +242,7 @@ export default function SignupScreen() {
           <View style={{ alignItems: 'center' }}>
             <TouchableOpacity onPress={() => router.back()}>
               <Caption color={colors.textTertiary}>
-                ← Wrong school? Go back
+                {t('auth_wrong_school')}
               </Caption>
             </TouchableOpacity>
           </View>

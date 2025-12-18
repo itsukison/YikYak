@@ -15,6 +15,7 @@ import { Button, Input, Card, Section } from '../ui/components/ui';
 import { Heading, Body, Caption } from '../ui/components/ui/Text';
 import AppBackground from '../ui/components/AppBackground';
 import CommunityGuidelinesModal from '../ui/components/CommunityGuidelinesModal';
+import { useLanguageStore } from '../services/i18n/languageStore';
 
 export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
@@ -30,11 +31,14 @@ export default function OnboardingScreen() {
   const { updateProfile, user, profile, setProfile, fetchProfile } = useAuth();
   const { colors, spacing, radius } = useTheme();
 
+  // Language Store
+  const { t, language, setLanguage } = useLanguageStore();
+
   const validateUsername = (value) => {
-    if (!value) return 'Username is required';
-    if (value.length < 3) return 'Username must be at least 3 characters';
-    if (value.length > 20) return 'Username must be 20 characters or less';
-    if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username can only contain letters, numbers, and underscores';
+    if (!value) return t('onboarding.err_username_required');
+    if (value.length < 3) return t('onboarding.err_username_length');
+    if (value.length > 20) return t('onboarding.err_username_max');
+    if (!/^[a-zA-Z0-9_]+$/.test(value)) return t('onboarding.err_username_chars');
     return null;
   };
 
@@ -52,12 +56,12 @@ export default function OnboardingScreen() {
       setCheckingUsername(false);
 
       if (error) {
-        setUsernameError('Error checking username availability');
+        setUsernameError(t('onboarding.err_username_check'));
         return false;
       }
 
       if (data) {
-        setUsernameError('Username is already taken');
+        setUsernameError(t('onboarding.err_username_taken'));
         return false;
       }
 
@@ -65,7 +69,7 @@ export default function OnboardingScreen() {
       return true;
     } catch (error) {
       setCheckingUsername(false);
-      setUsernameError('Error checking username availability');
+      setUsernameError(t('onboarding.err_username_check'));
       return false;
     }
   };
@@ -78,23 +82,23 @@ export default function OnboardingScreen() {
     }
 
     if (!nickname.trim()) {
-      setError('Please enter a nickname');
+      setError(t('onboarding.err_nickname_required'));
       return;
     }
 
     if (nickname.length > 20) {
-      setError('Nickname must be 20 characters or less');
+      setError(t('onboarding.err_nickname_max'));
       return;
     }
 
     if (bio.length > 150) {
-      setError('Bio must be 150 characters or less');
+      setError(t('onboarding.err_bio_max'));
       return;
     }
 
     const isAvailable = await checkUsernameAvailability(username);
     if (!isAvailable) {
-      setError('Username is already taken');
+      setError(t('onboarding.err_username_taken'));
       return;
     }
 
@@ -124,7 +128,7 @@ export default function OnboardingScreen() {
       if (user?.id) {
         await fetchProfile(user.id);
       }
-      setError(updateError.message || 'Failed to update profile');
+      setError(updateError.message || t('onboarding.err_update_failed'));
       setLoading(false);
     } else {
       router.replace('/(tabs)/home');
@@ -159,7 +163,7 @@ export default function OnboardingScreen() {
       if (user?.id) {
         await fetchProfile(user.id);
       }
-      setError(updateError.message || 'Failed to update profile');
+      setError(updateError.message || t('onboarding.err_update_failed'));
       setLoading(false);
     } else {
       router.replace('/(tabs)/home');
@@ -181,21 +185,37 @@ export default function OnboardingScreen() {
           }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Language Selector */}
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md, paddingHorizontal: spacing.sm }}>
+            <TouchableOpacity
+              onPress={() => setLanguage('en')}
+              style={{ padding: spacing.xs, marginRight: spacing.sm, borderBottomWidth: language === 'en' ? 2 : 0, borderBottomColor: colors.primary }}
+            >
+              <Body style={{ fontWeight: language === 'en' ? 'bold' : 'normal', opacity: language === 'en' ? 1 : 0.5 }}>English</Body>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setLanguage('ja')}
+              style={{ padding: spacing.xs, borderBottomWidth: language === 'ja' ? 2 : 0, borderBottomColor: colors.primary }}
+            >
+              <Body style={{ fontWeight: language === 'ja' ? 'bold' : 'normal', opacity: language === 'ja' ? 1 : 0.5 }}>日本語</Body>
+            </TouchableOpacity>
+          </View>
+
           {/* Header */}
           <Section spacing="large">
             <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md, marginTop: spacing.xl }}>
-              Welcome to HearSay
+              {t('onboarding.welcome')}
             </Heading>
             <Body color="secondary" style={{ textAlign: 'center' }}>
-              Let's set up your profile
+              {t('onboarding.subtitle')}
             </Body>
           </Section>
 
           {/* Form */}
           <Section spacing="default">
             <Input
-              label="Username *"
-              placeholder="e.g., tokyo_student"
+              label={t('onboarding.username_label')}
+              placeholder={t('onboarding.username_placeholder')}
               value={username}
               onChangeText={(value) => {
                 const lowercaseValue = value.toLowerCase();
@@ -212,19 +232,19 @@ export default function OnboardingScreen() {
             />
             {checkingUsername && (
               <Caption color="secondary" style={{ marginTop: -spacing.md, marginBottom: spacing.lg }}>
-                Checking availability...
+                {t('onboarding.username_checking')}
               </Caption>
             )}
             {!usernameError && !checkingUsername && username && (
               <Caption color="tertiary" style={{ marginTop: -spacing.md, marginBottom: spacing.lg }}>
-                Your unique identifier (3-20 characters)
+                {t('onboarding.username_helper')}
               </Caption>
             )}
 
             <View>
               <Input
-                label="Nickname *"
-                placeholder="Enter your nickname"
+                label={t('onboarding.nickname_label')}
+                placeholder={t('onboarding.nickname_placeholder')}
                 value={nickname}
                 onChangeText={setNickname}
                 maxLength={20}
@@ -236,8 +256,8 @@ export default function OnboardingScreen() {
 
             <View>
               <Input
-                label="Bio (optional)"
-                placeholder="Tell us about yourself..."
+                label={t('onboarding.bio_label')}
+                placeholder={t('onboarding.bio_placeholder')}
                 value={bio}
                 onChangeText={setBio}
                 maxLength={150}
@@ -252,10 +272,10 @@ export default function OnboardingScreen() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flex: 1, marginRight: spacing.md }}>
                   <Body weight="medium" style={{ marginBottom: spacing.xs }}>
-                    Anonymous Mode
+                    {t('onboarding.anonymous_mode')}
                   </Body>
                   <Caption color="secondary">
-                    Hide your identity in posts
+                    {t('onboarding.anonymous_desc')}
                   </Caption>
                 </View>
                 <Switch
@@ -280,7 +300,7 @@ export default function OnboardingScreen() {
               loading={loading}
               disabled={loading}
             >
-              Get Started
+              {t('onboarding.get_started')}
             </Button>
 
             <TouchableOpacity
@@ -289,7 +309,7 @@ export default function OnboardingScreen() {
               disabled={loading}
             >
               <Body color="secondary">
-                Skip for now
+                {t('onboarding.skip')}
               </Body>
             </TouchableOpacity>
           </Section>

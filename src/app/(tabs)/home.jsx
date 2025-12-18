@@ -40,12 +40,14 @@ import { debounce } from "lodash";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from "@tanstack/react-query";
 import LocationPermissionPrimer from "../../ui/components/LocationPermissionPrimer";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark, spacing } = useTheme();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useLanguageStore();
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
   const [location, setLocation] = useState(null); // Fresh GPS location
@@ -55,6 +57,8 @@ export default function HomeScreen() {
   const [selectedPost, setSelectedPost] = useState(null);
   const [isUsingCachedLocation, setIsUsingCachedLocation] = useState(false);
   const [isLocationPrimerVisible, setIsLocationPrimerVisible] = useState(false);
+
+
 
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
@@ -207,11 +211,11 @@ export default function HomeScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
-        setLocationError("Location permission denied");
+        setLocationError(t('home_location_permission_denied'));
         Alert.alert(
-          "Location Permission",
-          "Location access is required to see nearby posts.",
-          [{ text: "OK" }]
+          t('home_location_permission_title'),
+          t('home_location_permission_msg'),
+          [{ text: t('ok') }]
         );
         return;
       }
@@ -254,7 +258,7 @@ export default function HomeScreen() {
       console.error("Error getting location:", error);
       setLocationError(error.message);
       if (!feedLocation) {
-        Alert.alert("Error", "Failed to get your location. Please try again.");
+        Alert.alert(t('error'), t('home_failed_to_get_location'));
       }
     }
   };
@@ -268,7 +272,7 @@ export default function HomeScreen() {
 
   const handleVote = async (postId, voteType) => {
     if (!user) {
-      Alert.alert("Error", "You must be logged in to vote");
+      Alert.alert(t('error'), t('home_must_be_logged_in_to_vote'));
       return;
     }
 
@@ -282,7 +286,7 @@ export default function HomeScreen() {
 
     // Prevent voting on temporary posts
     if (String(postId).startsWith("temp_")) {
-      Alert.alert("Please wait", "Your post is still uploading.");
+      Alert.alert(t('please_wait'), t('home_post_uploading'));
       return;
     }
 
@@ -456,7 +460,7 @@ export default function HomeScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "left", padding: spacing.sm, opacity: 0.6 }}>
                 <Trash2 size={16} color={colors.textSecondary} />
                 <Body style={{ marginLeft: 8, color: colors.textSecondary }}>
-                  This post has been deleted
+                  {t('home_post_deleted')}
                 </Body>
               </View>
             )}
@@ -560,7 +564,7 @@ export default function HomeScreen() {
               onPress={(e) => {
                 e.stopPropagation();
                 if (String(post.id).startsWith("temp_")) {
-                  Alert.alert("Please wait", "Your post is still uploading.");
+                  Alert.alert(t('please_wait'), t('home_post_uploading'));
                   return;
                 }
                 router.push({
@@ -613,7 +617,7 @@ export default function HomeScreen() {
     return (
       <AppBackground>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Body>Loading...</Body>
+          <Body>{t('loading')}</Body>
         </View>
       </AppBackground>
     );
@@ -638,7 +642,7 @@ export default function HomeScreen() {
         }}
       >
         {/* Left: Title */}
-        <Heading variant="h2" weight="semibold">HearSay</Heading>
+        <Heading variant="h2" weight="semibold">{t('home_title')}</Heading>
 
         {/* Right: New/Popular Toggle */}
         <View
@@ -667,7 +671,7 @@ export default function HomeScreen() {
                 color: activeTab === "new" ? colors.text : colors.textSecondary,
               }}
             >
-              New
+              {t('home_tab_new')}
             </Body>
           </TouchableOpacity>
 
@@ -690,7 +694,7 @@ export default function HomeScreen() {
                 color: activeTab === "popular" ? colors.text : colors.textSecondary,
               }}
             >
-              Popular
+              {t('home_tab_popular')}
             </Body>
           </TouchableOpacity>
         </View>
@@ -700,11 +704,11 @@ export default function HomeScreen() {
       {(feedLocation || location) && (
         <View>
           <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 8 }}>
-            Posts within {locationRadius / 1000}km
+            {t('home_posts_within')} {locationRadius / 1000}km
           </Caption>
           {isUsingCachedLocation && (
             <Caption color="tertiary" style={{ marginBottom: 12, fontSize: 11 }}>
-              Using last known location
+              {t('home_using_cached_location')}
             </Caption>
           )}
         </View>
@@ -771,7 +775,7 @@ export default function HomeScreen() {
     return (
       <View style={{ paddingVertical: 20, alignItems: 'center' }}>
         <ActivityIndicator size="small" color={colors.primary} />
-        <Caption color="secondary" style={{ marginTop: 8 }}>Loading more posts...</Caption>
+        <Caption color="secondary" style={{ marginTop: 8 }}>{t('home_loading_more')}</Caption>
       </View>
     );
   };
@@ -794,7 +798,7 @@ export default function HomeScreen() {
           marginBottom: 8,
         }}
       >
-        No Posts Yet
+        {t('home_no_posts')}
       </Heading>
       <Body
         color="secondary"

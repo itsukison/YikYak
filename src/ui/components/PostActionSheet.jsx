@@ -249,10 +249,10 @@ export default function PostActionSheet({ visible, onClose, post }) {
 
                                     {confirmDelete ? (
                                         <View style={{ padding: spacing.lg }}>
-                                            <Heading variant="h3" style={{ textAlign: "center", marginBottom: spacing.sm }}>
+                                            <Heading variant="h3" style={{ textAlign: "center", marginBottom: spacing.md }}>
                                                 Delete Post?
                                             </Heading>
-                                            <Body color="secondary" style={{ textAlign: "center", marginBottom: spacing.xl }}>
+                                            <Body variant="bodySmall" color="secondary" style={{ textAlign: "center", marginBottom: spacing.xl, lineHeight: 20 }}>
                                                 Are you sure you want to delete this post? This action cannot be undone.
                                             </Body>
 
@@ -283,7 +283,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                 <Heading variant="h3" style={{ marginLeft: spacing.sm }}>Report Post</Heading>
                                             </View>
 
-                                            <Body color="secondary" style={{ marginBottom: spacing.md }}>
+                                            <Body variant="bodySmall" color="secondary" style={{ marginBottom: spacing.md }}>
                                                 Please select a reason for reporting this post:
                                             </Body>
 

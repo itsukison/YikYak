@@ -18,6 +18,7 @@ import { useAuth } from "../../services/auth/useAuth";
 import { useChatMessagesQuery } from "../../services/chat/useChat";
 import { useSendMessageMutation, useMarkMessagesReadMutation } from "../../services/chat/useChatActions";
 import { subscribeToMessages } from "../../services/realtime";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 import ChatHeader from "./components/ChatHeader";
 import MessageInput from "./components/MessageInput";
@@ -57,6 +58,7 @@ export default function ChatDetailScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const flatListRef = useRef(null);
+  const { t } = useLanguageStore();
 
   const [message, setMessage] = useState("");
   const [refreshing, setRefreshing] = useState(false);
@@ -155,10 +157,10 @@ export default function ChatDetailScreen() {
 
   // Get other user's name for header
   const otherUserName = paramOtherUserNickname
-    ? (paramOtherUserIsAnonymous === 'true' ? "Anonymous" : paramOtherUserNickname)
+    ? (paramOtherUserIsAnonymous === 'true' ? t('profile.anonymous_user') : paramOtherUserNickname)
     : (messages && messages.length > 0
       ? messages.find((msg) => msg.sender_id !== user.id)?.sender.is_anonymous
-        ? "Anonymous"
+        ? t('profile.anonymous_user')
         : messages.find((msg) => msg.sender_id !== user.id)?.sender.nickname || "User"
       : "Chat");
 

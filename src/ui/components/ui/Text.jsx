@@ -19,7 +19,8 @@ export function Heading({ variant = "h1", children, style, color, weight, ...pro
     h2: typography.h2,
     h2Medium: typography.h2Medium,
     h2Small: typography.h2Small,
-    h3: typography.h3 || { fontSize: 18, fontWeight: '600', lineHeight: 24 },
+    h3: typography.h3 || { fontSize: 20, fontWeight: '600', lineHeight: 26 },
+    h4: typography.h4 || { fontSize: 17, fontWeight: '600', lineHeight: 22 },
   };
 
   const colorMap = {
@@ -69,6 +70,7 @@ export function Body({
     bodyMedium: typography.bodyMedium,
     bodySmall: typography.bodySmall,
     bodySmallMedium: typography.bodySmallMedium,
+    bodyExtraSmall: typography.bodyExtraSmall || { fontSize: 13, fontWeight: '400', lineHeight: 18 },
     small: typography.bodySmall,
   };
 

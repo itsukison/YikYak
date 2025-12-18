@@ -32,13 +32,13 @@ export default function Modal({
                             }
                         ]}>
                             {title && (
-                                <Heading variant="h2" style={{ textAlign: 'center', marginBottom: spacing.sm }}>
+                                <Heading variant="h3" style={{ textAlign: 'center', marginBottom: spacing.md }}>
                                     {title}
                                 </Heading>
                             )}
 
                             {message && (
-                                <Body variant="small" color="secondary" style={{ textAlign: 'center', marginBottom: spacing.xl }}>
+                                <Body variant="bodySmall" color="secondary" style={{ textAlign: 'center', marginBottom: spacing.xl, lineHeight: 20 }}>
                                     {message}
                                 </Body>
                             )}
@@ -108,10 +108,10 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         maxWidth: 340,
-        padding: 24,
+        padding: 28,
     },
     button: {
-        height: 48,
+        height: 52,
         justifyContent: 'center',
         alignItems: 'center',
         width: '100%',

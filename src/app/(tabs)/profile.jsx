@@ -29,6 +29,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import AppBackground from "../../ui/components/AppBackground";
 import MenuItem from "../../ui/components/MenuItem";
 import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal } from "../../ui/components/ui";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
   const { pickImage, uploadAvatar, removeAvatar, uploading: avatarUploading } = useAvatar();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { t, setLanguage } = useLanguageStore();
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(profile?.is_anonymous || false);
   const [locationRadius, setLocationRadius] = useState(
@@ -65,8 +67,8 @@ export default function ProfileScreen() {
   const currentUser = {
     id: user?.id || "",
     email: user?.email || "",
-    nickname: profile?.nickname || "Anonymous User",
-    bio: profile?.bio || "No bio yet",
+    nickname: profile?.nickname || t('profile.anonymous_user'),
+    bio: profile?.bio || t('profile.no_bio'),
     follower_count: stats?.followerCount || 0,
     following_count: stats?.followingCount || 0,
     post_count: stats?.postCount || 0,
@@ -93,7 +95,7 @@ export default function ProfileScreen() {
     if (!modalConfig.visible && pendingAction) {
       const action = pendingAction;
       setPendingAction(null);
-      
+
       // Small delay to ensure modal animation completes
       setTimeout(async () => {
         try {
@@ -110,7 +112,7 @@ export default function ProfileScreen() {
     return (
       <AppBackground>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Body>Loading profile...</Body>
+          <Body>{t('profile.loading')}</Body>
         </View>
       </AppBackground>
     );
@@ -133,37 +135,37 @@ export default function ProfileScreen() {
     if (error) {
       console.error("Error updating profile:", error);
       setIsAnonymous(!newValue);
-      showModal("Error", "Failed to update anonymous setting.", [
-        { text: "OK", onPress: hideModal }
+      showModal(t('common.error'), t('profile.anonymous_fail'), [
+        { text: t('common.ok'), onPress: hideModal }
       ]);
     }
   };
 
   const handleSettings = () => {
-    showModal("Settings", "Settings screen would open here", [
-      { text: "OK", onPress: hideModal }
+    showModal(t('profile.settings'), t('profile.settings_screen'), [
+      { text: t('common.ok'), onPress: hideModal }
     ]);
   };
 
   const handleHelp = () => {
-    showModal("Help & Support", "Help & Support options would be shown here", [
-      { text: "OK", onPress: hideModal }
+    showModal(t('profile.help'), t('profile.help_screen'), [
+      { text: t('common.ok'), onPress: hideModal }
     ]);
   };
 
   const handleSignOut = () => {
-    showModal("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel", onPress: hideModal },
+    showModal(t('profile.sign_out'), t('profile.sign_out_confirm'), [
+      { text: t('common.cancel'), style: "cancel", onPress: hideModal },
       {
-        text: "Sign Out",
+        text: t('profile.sign_out'),
         style: "destructive",
         onPress: async () => {
           hideModal();
           const { error } = await signOut();
           if (error) {
             setTimeout(() => {
-              showModal("Error", "Failed to sign out", [
-                { text: "OK", onPress: hideModal }
+              showModal(t('common.error'), t('profile.sign_out_fail'), [
+                { text: t('common.ok'), onPress: hideModal }
               ]);
             }, 300);
           } else {
@@ -177,7 +179,7 @@ export default function ProfileScreen() {
   const handleAvatarPress = () => {
     const actions = [
       {
-        text: "Upload Photo",
+        text: t('profile.photo_upload'),
         style: "default",
         onPress: () => {
           // Set pending action and close modal
@@ -195,9 +197,9 @@ export default function ProfileScreen() {
             } catch (error) {
               console.error("Avatar upload error:", error);
               showModal(
-                "Error", 
-                "Failed to upload profile picture. Please try again.",
-                [{ text: "OK", onPress: hideModal }]
+                t('common.error'),
+                t('profile.photo_upload_fail'),
+                [{ text: t('common.ok'), onPress: hideModal }]
               );
             }
           });
@@ -208,7 +210,7 @@ export default function ProfileScreen() {
 
     if (currentUser.avatar_url) {
       actions.push({
-        text: "Remove Photo",
+        text: t('profile.photo_remove'),
         style: "destructive",
         onPress: () => {
           setPendingAction(() => async () => {
@@ -219,9 +221,9 @@ export default function ProfileScreen() {
             } catch (error) {
               console.error("Avatar remove error:", error);
               showModal(
-                "Error",
-                "Failed to remove profile picture. Please try again.",
-                [{ text: "OK", onPress: hideModal }]
+                t('common.error'),
+                t('profile.photo_remove_fail'),
+                [{ text: t('common.ok'), onPress: hideModal }]
               );
             }
           });
@@ -230,15 +232,15 @@ export default function ProfileScreen() {
       });
     }
 
-    actions.push({ text: "Cancel", style: "cancel", onPress: hideModal });
+    actions.push({ text: t('common.cancel'), style: "cancel", onPress: hideModal });
 
-    showModal("Change Profile Photo", "Choose an option to update your profile picture.", actions);
+    showModal(t('profile.photo_title'), t('profile.photo_msg'), actions);
   };
 
   const handleLocationRadius = () => {
     showModal(
-      "Location Radius",
-      "Choose how far you want to see posts from your location",
+      t('profile.radius_title'),
+      t('profile.radius_msg'),
       [
         {
           text: "2km",
@@ -249,8 +251,8 @@ export default function ProfileScreen() {
             const { error } = await updateLocationRadius(2000);
             if (error) {
               setTimeout(() => {
-                showModal("Error", "Failed to update radius preference", [
-                  { text: "OK", onPress: hideModal }
+                showModal(t('common.error'), t('profile.radius_fail'), [
+                  { text: t('common.ok'), onPress: hideModal }
                 ]);
               }, 300);
               setLocationRadius(profile.location_radius / 1000);
@@ -268,8 +270,8 @@ export default function ProfileScreen() {
             const { error } = await updateLocationRadius(5000);
             if (error) {
               setTimeout(() => {
-                showModal("Error", "Failed to update radius preference", [
-                  { text: "OK", onPress: hideModal }
+                showModal(t('common.error'), t('profile.radius_fail'), [
+                  { text: t('common.ok'), onPress: hideModal }
                 ]);
               }, 300);
               setLocationRadius(profile.location_radius / 1000);
@@ -287,8 +289,8 @@ export default function ProfileScreen() {
             const { error } = await updateLocationRadius(10000);
             if (error) {
               setTimeout(() => {
-                showModal("Error", "Failed to update radius preference", [
-                  { text: "OK", onPress: hideModal }
+                showModal(t('common.error'), t('profile.radius_fail'), [
+                  { text: t('common.ok'), onPress: hideModal }
                 ]);
               }, 300);
               setLocationRadius(profile.location_radius / 1000);
@@ -297,18 +299,46 @@ export default function ProfileScreen() {
             }
           }
         },
-        { text: "Cancel", onPress: hideModal },
+        { text: t('common.cancel'), onPress: hideModal },
       ],
+    );
+  };
+
+  const handleLanguage = () => {
+    showModal(
+      t('profile.language'),
+      t('profile.language_sub'),
+      [
+        {
+          text: "English",
+          onPress: () => {
+            setLanguage('en');
+            hideModal();
+          }
+        },
+        {
+          text: "日本語",
+          onPress: () => {
+            setLanguage('ja');
+            hideModal();
+          }
+        },
+        {
+          text: t('common.cancel'),
+          style: "cancel",
+          onPress: hideModal
+        }
+      ]
     );
   };
 
   const accountMenuItems = [
     {
       icon: isAnonymous ? UserX : User,
-      title: "Anonymous Mode",
+      title: t('profile.anonymous_mode'),
       subtitle: isAnonymous
-        ? "You're posting anonymously"
-        : "You're posting with your name",
+        ? t('profile.anonymous_on')
+        : t('profile.anonymous_off'),
       onPress: handleAnonymousToggle,
       showChevron: false,
       rightComponent: (
@@ -325,8 +355,8 @@ export default function ProfileScreen() {
     },
     {
       icon: MapPin,
-      title: "Location Radius",
-      subtitle: `See posts within ${locationRadius}km of your location`,
+      title: t('profile.location_radius'),
+      subtitle: t('profile.location_radius_sub', { radius: locationRadius }),
       onPress: handleLocationRadius,
     },
   ];
@@ -334,20 +364,27 @@ export default function ProfileScreen() {
   const appMenuItems = [
     {
       icon: Settings,
-      title: "Settings",
-      subtitle: "Notifications, privacy, and more",
+      title: t('profile.settings'),
+      subtitle: t('profile.settings_sub'),
       onPress: handleSettings,
     },
     {
+      icon: Settings, // Reusing icon or should find a Language icon if available, using Settings for now or maybe MapPin is wrong. Let's import Globe or Languages from lucide-react-native if available, but for now I'll use Settings or just MapPin? No.
+      // Wait, I should adding Language item.
+      title: t('profile.language'),
+      subtitle: t('profile.language_sub'),
+      onPress: handleLanguage,
+    },
+    {
       icon: HelpCircle,
-      title: "Help & Support",
-      subtitle: "Get help or contact us",
+      title: t('profile.help'),
+      subtitle: t('profile.help_sub'),
       onPress: handleHelp,
     },
     {
       icon: LogOut,
-      title: "Sign Out",
-      subtitle: "Sign out of your account",
+      title: t('profile.sign_out'),
+      subtitle: t('profile.sign_out_sub'),
       onPress: handleSignOut,
     },
   ];
@@ -372,7 +409,7 @@ export default function ProfileScreen() {
         }}
       >
         <Heading variant="h2" weight="semibold" style={{ textAlign: "left", paddingHorizontal: 20 }}>
-          Profile
+          {t('profile.title')}
         </Heading>
       </View>
 
@@ -424,7 +461,7 @@ export default function ProfileScreen() {
             <View style={{ flex: 1, marginLeft: 20, justifyContent: "center" }}>
               {/* User Name */}
               <Body weight="bold" style={{ marginBottom: 8, fontSize: 18 }}>
-                {isAnonymous ? "Anonymous User" : currentUser.nickname}
+                {isAnonymous ? t('profile.anonymous_user') : currentUser.nickname}
               </Body>
 
               {/* Stats Row */}
@@ -441,7 +478,7 @@ export default function ProfileScreen() {
                   style={{ alignItems: "center" }}
                 >
                   <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>{currentUser.post_count}</Heading>
-                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Posts</Caption>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile.posts')}</Caption>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -451,7 +488,7 @@ export default function ProfileScreen() {
                   <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
                     {currentUser.following_count}
                   </Heading>
-                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Following</Caption>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile.following')}</Caption>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -461,7 +498,7 @@ export default function ProfileScreen() {
                   <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
                     {currentUser.follower_count}
                   </Heading>
-                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Followers</Caption>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile.followers')}</Caption>
                 </TouchableOpacity>
               </View>
             </View>
@@ -469,14 +506,14 @@ export default function ProfileScreen() {
 
           {/* User Email/Bio */}
           <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 16 }}>
-            {isAnonymous ? "Your identity is hidden" : currentUser.bio}
+            {isAnonymous ? t('profile.hidden_identity') : currentUser.bio}
           </Body>
         </View>
 
         {/* Account Settings */}
         <Section spacing="lg">
           <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
-            Account Settings
+            {t('profile.account_settings')}
           </Heading>
 
           <View style={{ marginBottom: 20 }}>
@@ -537,7 +574,7 @@ export default function ProfileScreen() {
         {/* App Settings */}
         <Section spacing="lg">
           <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
-            App Settings
+            {t('profile.app_settings')}
           </Heading>
 
           <View>

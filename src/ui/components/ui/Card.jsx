@@ -25,10 +25,10 @@ export default function Card({
 
   const cardStyle = [
     {
-      backgroundColor: colors.cardBackground,
-      borderRadius: radius.card,
+      backgroundColor: interactive ? colors.surface : colors.surfaceSecondary,
+      borderRadius: 14,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.borderLight,
       ...paddingStyles[padding],
       ...(interactive ? shadows.minimal : {}),
     },

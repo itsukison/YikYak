@@ -20,12 +20,14 @@ import {
 import { subscribeToNotifications } from "../../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Container, Heading, Body, Caption, Card, Button, Avatar } from "../../ui/components/ui";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useLanguageStore();
 
   const { data: notifications, isLoading } = useNotificationsQuery(user?.id);
   const markReadMutation = useMarkNotificationReadMutation();
@@ -100,17 +102,19 @@ export default function NotificationScreen() {
   };
 
   const getNotificationText = (notification) => {
+    const actorName = notification.actor_name || t('profile.anonymous_user');
+
     switch (notification.type) {
       case "vote":
-        return `${notification.actor_name} upvoted your post`;
+        return `${actorName} ${t('notification_vote')}`;
       case "comment":
-        return `${notification.actor_name} commented on your post`;
+        return `${actorName} ${t('notification_comment')}`;
       case "follow":
-        return `${notification.actor_name} started following you`;
+        return `${actorName} ${t('notification_follow')}`;
       case "message":
-        return `${notification.actor_name} sent you a message`;
+        return `${actorName} ${t('notification_message')}`;
       default:
-        return "New notification";
+        return t('notifications_title');
     }
   };
 
@@ -122,7 +126,7 @@ export default function NotificationScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "Just now";
+    if (diffMins < 1) return t('messages_just_now');
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -146,8 +150,8 @@ export default function NotificationScreen() {
         <StatusBar style={isDark ? "light" : "dark"} />
         <EmptyState
           Icon={Bell}
-          title="No Notifications"
-          description="You'll see notifications here when someone votes on your posts, comments, or follows you!"
+          title={t('notifications_no_data')}
+          description={t('notifications_desc')}
         />
       </AppBackground>
     );
@@ -263,7 +267,7 @@ export default function NotificationScreen() {
             alignItems: "center",
           }}
         >
-          <Heading variant="h2" weight="semibold">Notifications</Heading>
+          <Heading variant="h2" weight="semibold">{t('notifications_title')}</Heading>
 
           {unreadCount > 0 && (
             <Button
@@ -272,7 +276,7 @@ export default function NotificationScreen() {
               onPress={handleMarkAllRead}
               disabled={markAllReadMutation.isPending}
             >
-              Mark all read
+              {t('notifications_mark_all_read')}
             </Button>
           )}
         </View>

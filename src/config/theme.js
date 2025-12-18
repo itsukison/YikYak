@@ -12,16 +12,17 @@ export const useTheme = () => {
   const isDark = colorScheme === "dark";
 
   const colors = {
-    // Background colors
-    background: isDark ? "#000000" : "#FFFFFF",
-    surface: isDark ? "#1C1C1E" : "#F9F9F9",
-    surfaceElevated: isDark ? "#2C2C2E" : "#F5F5F5",
-    sectionBackground: isDark ? "#000000" : "#FFFFFF",
+    // Background colors - refined gray palette
+    background: isDark ? "#0A0A0A" : "#FFFFFF",
+    surface: isDark ? "#141414" : "#FAFAFA",
+    surfaceSecondary: isDark ? "#1A1A1A" : "#F5F5F5",
+    surfaceElevated: isDark ? "#1F1F1F" : "#F0F0F0",
+    sectionBackground: isDark ? "#0A0A0A" : "#FFFFFF",
 
-    // Text colors
+    // Text colors - improved contrast
     text: isDark ? "#FFFFFF" : "#1C1C1E",
-    textSecondary: isDark ? "#A1A1AA" : "#767676",
-    textTertiary: isDark ? "#71717A" : "#A1A1AA",
+    textSecondary: isDark ? "#A8A8A8" : "#6B6B6B",
+    textTertiary: isDark ? "#737373" : "#999999",
 
     // Primary CTA - Neon Green (Wise)
     primary: "#9FE870",
@@ -44,9 +45,9 @@ export const useTheme = () => {
       ? "rgba(159, 232, 112, 0.15)"
       : "rgba(159, 232, 112, 0.1)",
 
-    // Borders
-    border: isDark ? "#27272A" : "#F4F4F5",
-    borderLight: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)",
+    // Borders - refined for subtle separation
+    border: isDark ? "#262626" : "#E8E8E8",
+    borderLight: isDark ? "#1A1A1A" : "#F0F0F0",
 
     // Status colors
     error: isDark ? "#F87171" : "#EF4444",
@@ -166,10 +167,18 @@ export const useTheme = () => {
 
     // H3 Headings
     h3: {
-      fontSize: 18,
-      lineHeight: 24,
+      fontSize: 20,
+      lineHeight: 26,
       fontWeight: "600",
       letterSpacing: -0.3,
+    },
+
+    // H4 Headings - new variant for sub-headers
+    h4: {
+      fontSize: 17,
+      lineHeight: 22,
+      fontWeight: "600",
+      letterSpacing: -0.2,
     },
 
     // Body text
@@ -197,6 +206,11 @@ export const useTheme = () => {
       fontSize: 14,
       lineHeight: 20,
       fontWeight: "500",
+    },
+    bodyExtraSmall: {
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: "400",
     },
 
     // Caption text

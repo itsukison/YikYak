@@ -16,6 +16,8 @@ import AppBackground from '../ui/components/AppBackground';
 import { ArrowLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useLanguageStore } from '../services/i18n/languageStore';
+
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,10 +28,11 @@ export default function LoginScreen() {
   const { signIn } = useAuth();
   const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguageStore();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError(t('auth_error_fill_fields'));
       return;
     }
 
@@ -39,7 +42,7 @@ export default function LoginScreen() {
     const { data, error: signInError } = await signIn(email, password);
 
     if (signInError) {
-      setError(signInError.message || 'Failed to sign in');
+      setError(signInError.message || t('error'));
       setLoading(false);
     } else {
       setLoading(false);
@@ -78,17 +81,17 @@ export default function LoginScreen() {
           {/* Header */}
           <Section spacing="large">
             <Heading variant="h1" style={{ textAlign: 'center', marginBottom: spacing.md }}>
-              Welcome Back
+              {t('auth_welcome_back')}
             </Heading>
             <Body color={colors.textSecondary} style={{ textAlign: 'center' }}>
-              Sign in to continue
+              {t('auth_sign_in_subtitle')}
             </Body>
           </Section>
 
           {/* Form */}
           <Section spacing="default">
             <Input
-              placeholder="Email"
+              placeholder={t('auth_email_placeholder')}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -97,7 +100,7 @@ export default function LoginScreen() {
             />
 
             <Input
-              placeholder="Password"
+              placeholder={t('auth_password_placeholder')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -112,25 +115,25 @@ export default function LoginScreen() {
               loading={loading}
               disabled={loading}
             >
-              Sign In
+              {t('auth_sign_in_button')}
             </Button>
 
             <Caption color={colors.textTertiary} style={{ textAlign: 'center', marginTop: spacing.md }}>
-              By continuing, you agree to our{' '}
+              {t('auth_terms_agreement')}{' '}
               <Caption
                 color={colors.primary}
                 style={{ textDecorationLine: 'underline' }}
                 onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/terms')}
               >
-                Terms of Service
+                {t('auth_terms')}
               </Caption>
-              {' '}and{' '}
+              {' '}{t('auth_and')}{' '}
               <Caption
                 color={colors.primary}
                 style={{ textDecorationLine: 'underline' }}
                 onPress={() => WebBrowser.openBrowserAsync('https://www.hearsay.ink/privacy')}
               >
-                Privacy Policy
+                {t('auth_privacy')}
               </Caption>
             </Caption>
           </Section>
@@ -138,11 +141,11 @@ export default function LoginScreen() {
           {/* Sign Up Link */}
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
             <Body color={colors.textSecondary}>
-              Don't have an account?{' '}
+              {t('auth_no_account')}{' '}
             </Body>
             <TouchableOpacity onPress={() => router.push('/school-selection')}>
               <Body variant="bodyMedium" color={colors.primary}>
-                Sign Up
+                {t('auth_sign_up_link')}
               </Body>
             </TouchableOpacity>
           </View>

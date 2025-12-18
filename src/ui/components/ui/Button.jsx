@@ -29,24 +29,25 @@ export default function Button({
       borderWidth: 0,
     },
     secondary: {
-      backgroundColor: disabled ? colors.border : colors.secondary,
-      borderWidth: 0,
+      backgroundColor: disabled ? colors.borderLight : colors.surface,
+      borderWidth: 1,
+      borderColor: disabled ? colors.borderLight : colors.border,
     },
     tertiary: {
       backgroundColor: disabled ? colors.border : colors.accent,
       borderWidth: 0,
     },
     ghost: {
-      backgroundColor: disabled ? colors.borderLight : colors.ghost,
+      backgroundColor: "transparent",
       borderWidth: 0,
     },
     outline: {
       backgroundColor: "transparent",
       borderWidth: 1,
-      borderColor: disabled ? colors.border : colors.primary,
+      borderColor: disabled ? colors.border : colors.text,
     },
     destructive: {
-      backgroundColor: disabled ? colors.border : colors.error,
+      backgroundColor: disabled ? colors.border : colors.errorSubtle,
       borderWidth: 0,
     },
   };
@@ -54,11 +55,11 @@ export default function Button({
   // Text color based on variant
   const textColors = {
     primary: colors.primaryText,
-    secondary: colors.secondaryText,
+    secondary: colors.text,
     tertiary: colors.accentText,
-    ghost: colors.ghostText || colors.text, // Fallback for ghost
-    outline: disabled ? colors.textTertiary : colors.primary,
-    destructive: "#FFFFFF",
+    ghost: colors.text,
+    outline: disabled ? colors.textTertiary : colors.text,
+    destructive: colors.error,
   };
 
   // Size styles

@@ -161,16 +161,8 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           hideModal();
-          const { error } = await signOut();
-          if (error) {
-            setTimeout(() => {
-              showModal(t('common.error'), t('profile.sign_out_fail'), [
-                { text: t('common.ok'), onPress: hideModal }
-              ]);
-            }, 300);
-          } else {
-            router.replace("/login");
-          }
+          await signOut();
+          // Global auth listener in _layout.jsx will handle redirection
         },
       },
     ]);

@@ -50,13 +50,18 @@ export default function HomeScreen() {
   const { t } = useLanguageStore();
   const [activeTab, setActiveTab] = useState("new"); // 'new' or 'popular'
   const [timeFilter, setTimeFilter] = useState("week"); // 'day' | 'week' | 'month'
-  const [location, setLocation] = useState(null); // Fresh GPS location
-  const [feedLocation, setFeedLocation] = useState(null); // Location used for feed (cached or fresh)
-  const [locationError, setLocationError] = useState(null);
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [isUsingCachedLocation, setIsUsingCachedLocation] = useState(false);
   const [isLocationPrimerVisible, setIsLocationPrimerVisible] = useState(false);
+  
+  // Simplified location state - consolidated into single object
+  const [locationState, setLocationState] = useState({
+    coords: null, // Current coordinates { latitude, longitude }
+    permission: 'pending', // 'granted' | 'denied' | 'pending'
+    error: null, // Error message if any
+    lastUpdated: null, // Timestamp of last update
+    isFromCache: false, // Whether using cached location
+  });
 
 
 
@@ -75,19 +80,49 @@ export default function HomeScreen() {
     fetchNextPage,
     refetch
   } = usePostsQuery(
-    feedLocation?.coords?.latitude,
-    feedLocation?.coords?.longitude,
+    locationState.coords?.latitude,
+    locationState.coords?.longitude,
     locationRadius,
     activeTab,
     timeFilter,
-    !!feedLocation // Enable query as soon as we have ANY location (cached or fresh)
+    !!locationState.coords // Enable query when we have location
   );
 
   // Flatten infinite query pages into single posts array
   const posts = React.useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flatMap(page => page.posts);
+    return data.pages.flatMap(page => page.posts || []);
   }, [data]);
+
+  // Guard against malformed data
+  if (posts && !Array.isArray(posts)) {
+    console.error('Posts data is not an array:', posts);
+    return (
+      <AppBackground>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 }}>
+          <AlertCircle size={48} color={colors.error} />
+          <Heading variant="h2" style={{ marginTop: 16, textAlign: 'center' }}>
+            Unable to load feed
+          </Heading>
+          <Body color="secondary" style={{ marginTop: 8, textAlign: 'center' }}>
+            There was an error loading posts. Please try refreshing.
+          </Body>
+          <TouchableOpacity
+            onPress={handleRefresh}
+            style={{
+              marginTop: 24,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              backgroundColor: colors.primary,
+              borderRadius: radius.button,
+            }}
+          >
+            <Body style={{ color: colors.primaryText }}>Refresh</Body>
+          </TouchableOpacity>
+        </View>
+      </AppBackground>
+    );
+  }
 
   // Fetch user's votes
   const { data: userVotes = {} } = useUserVotesQuery(user?.id);
@@ -107,8 +142,13 @@ export default function HomeScreen() {
       if (cached) {
         const parsedLocation = JSON.parse(cached);
         console.log("Using cached location:", parsedLocation);
-        setFeedLocation(parsedLocation);
-        setIsUsingCachedLocation(true);
+        setLocationState({
+          coords: parsedLocation.coords,
+          permission: 'granted',
+          error: null,
+          lastUpdated: parsedLocation.timestamp || Date.now(),
+          isFromCache: true,
+        });
       }
     } catch (e) {
       console.error("Failed to load cached location", e);
@@ -121,7 +161,7 @@ export default function HomeScreen() {
 
   // Refresh posts when radius changes
   useEffect(() => {
-    if (feedLocation) {
+    if (locationState.coords) {
       refetch();
     }
   }, [locationRadius]);
@@ -171,11 +211,9 @@ export default function HomeScreen() {
 
   // Subscribe to new posts (Optimized with fewer channels)
   useEffect(() => {
-    // Pass the location and radius to subscription
-    // We use feedLocation to ensure we subscribe even if using cached data
-    if (!feedLocation?.coords || !user) return;
+    if (!locationState.coords || !user) return;
 
-    const { latitude, longitude } = feedLocation.coords;
+    const { latitude, longitude } = locationState.coords;
 
     const unsubscribe = subscribeToNewPosts(
       latitude,
@@ -192,11 +230,12 @@ export default function HomeScreen() {
       unsubscribe();
       addPostToCache.cancel();
     };
-  }, [feedLocation, user, locationRadius, addPostToCache]);
+  }, [locationState.coords, user, locationRadius, addPostToCache]);
 
   const getLocationPermission = async (skipPrimer = false) => {
     try {
-      setLocationError(null);
+      // Clear error
+      setLocationState(prev => ({ ...prev, error: null }));
 
       if (!skipPrimer) {
         const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
@@ -211,7 +250,11 @@ export default function HomeScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
-        setLocationError(t('home_location_permission_denied'));
+        setLocationState(prev => ({
+          ...prev,
+          permission: 'denied',
+          error: t('home_location_permission_denied'),
+        }));
         Alert.alert(
           t('home_location_permission_title'),
           t('home_location_permission_msg'),
@@ -220,11 +263,10 @@ export default function HomeScreen() {
         return;
       }
 
-      // Race condition: Location vs Timeout
-      // We want to wait for location, but if it takes too long, we just stick with cache if we have it.
-      // However, startAsync doesn't support timeout natively easily without wrapper.
-      // We can wrap it.
+      // Location permission granted
+      setLocationState(prev => ({ ...prev, permission: 'granted' }));
 
+      // Fetch location with timeout
       const locationPromise = Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
@@ -236,28 +278,42 @@ export default function HomeScreen() {
       try {
         let currentLocation = await Promise.race([locationPromise, timeoutPromise]);
 
-        // If successful, update state and cache
-        setLocation(currentLocation);
-        setFeedLocation(currentLocation); // Switch to fresh location
-        setIsUsingCachedLocation(false);
-        setLocationError(null);
-        await AsyncStorage.setItem('lastKnownLocation', JSON.stringify(currentLocation));
+        // Update state with fresh location
+        const newLocationState = {
+          coords: currentLocation.coords,
+          permission: 'granted',
+          error: null,
+          lastUpdated: Date.now(),
+          isFromCache: false,
+        };
+        
+        setLocationState(newLocationState);
+        
+        // Cache for next time
+        await AsyncStorage.setItem('lastKnownLocation', JSON.stringify({
+          coords: currentLocation.coords,
+          timestamp: Date.now(),
+        }));
 
       } catch (err) {
         console.warn("Location fetch failed or timed out:", err);
-        // If we have cached location, we suppress the error from UI or show a toast
-        if (!feedLocation) {
-          setLocationError("Could not retrieve current location. " + err.message);
-        } else {
-          // We are still using cached location, maybe show a small indicator?
-          // For now, silent fail is better than blocking if we have cache.
+        // If we don't have any location yet, show error
+        if (!locationState.coords) {
+          setLocationState(prev => ({
+            ...prev,
+            error: "Could not retrieve current location. " + err.message,
+          }));
         }
+        // If we have cached location, silently fail
       }
 
     } catch (error) {
       console.error("Error getting location:", error);
-      setLocationError(error.message);
-      if (!feedLocation) {
+      setLocationState(prev => ({
+        ...prev,
+        error: error.message,
+      }));
+      if (!locationState.coords) {
         Alert.alert(t('error'), t('home_failed_to_get_location'));
       }
     }
@@ -387,28 +443,22 @@ export default function HomeScreen() {
                 </Body>
               </TouchableOpacity>
 
-              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                {post.author_username && !post.is_anonymous && (
-                  <Caption color="secondary" style={{ marginRight: 4 }}>
-                    @{post.author_username} •
+              {/* Location (Moved here) */}
+              {post.location_name && (
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                  <MapPin size={12} color={colors.textTertiary} />
+                  <Caption color="tertiary" style={{ marginLeft: 2 }}>
+                    {post.location_name}
                   </Caption>
-                )}
-                <Caption color="secondary">
-                  {formatTimeAgo(post.created_at)}
-                </Caption>
-              </View>
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Location (Optional, kept minimal) */}
-          {post.location_name && (
-            <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
-              <MapPin size={12} color={colors.textTertiary} />
-              <Caption color="tertiary" style={{ marginLeft: 2 }}>
-                {post.location_name}
-              </Caption>
-            </View>
-          )}
+          {/* Time (Moved to Top Right) */}
+          <Caption color="secondary" style={{ marginLeft: 8 }}>
+            {formatTimeAgo(post.created_at)}
+          </Caption>
         </View>
 
         {/* Repost Content */}
@@ -701,21 +751,16 @@ export default function HomeScreen() {
       </View>
 
       {/* Subtitle */}
-      {(feedLocation || location) && (
+      {locationState.coords && (
         <View>
-          <Caption color="secondary" style={{ marginBottom: isUsingCachedLocation ? 4 : 8 }}>
+          <Caption color="secondary" style={{ marginBottom: 8 }}>
             {t('home_posts_within')} {locationRadius / 1000}km
           </Caption>
-          {isUsingCachedLocation && (
-            <Caption color="tertiary" style={{ marginBottom: 12, fontSize: 11 }}>
-              {t('home_using_cached_location')}
-            </Caption>
-          )}
         </View>
       )}
 
       {/* Show location error */}
-      {locationError && (
+      {locationState.error && (
         <View
           style={{
             backgroundColor: colors.errorSubtle || "#FFE5E5",
@@ -725,7 +770,7 @@ export default function HomeScreen() {
           }}
         >
           <Caption style={{ color: colors.error || "#D32F2F" }}>
-            📍 {locationError}
+            📍 {locationState.error}
           </Caption>
         </View>
       )}

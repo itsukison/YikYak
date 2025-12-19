@@ -219,18 +219,71 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = React.useState(false);
+  const [criticalDataLoaded, setCriticalDataLoaded] = React.useState(false);
+  const [minimumDelayPassed, setMinimumDelayPassed] = React.useState(false);
+
+  // Show app only when BOTH conditions are met
+  const shouldShowApp = criticalDataLoaded && minimumDelayPassed;
 
   useEffect(() => {
-    // Hide splash screen after a short delay
-    setTimeout(() => {
-      SplashScreen.hideAsync();
-      setIsReady(true);
-    }, 100);
+    const initializeApp = async () => {
+      try {
+        // Start minimum delay timer (1.5 seconds)
+        const minDelayPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            setMinimumDelayPassed(true);
+            resolve();
+          }, 1500);
+        });
+
+        // Check critical data
+        const criticalDataPromise = (async () => {
+          // 1. Verify Supabase client is initialized
+          const supabaseReady = supabase && supabase.auth;
+          
+          // 2. Check network connectivity (basic ping to Supabase)
+          let networkAvailable = false;
+          try {
+            const { error } = await supabase.auth.getSession();
+            networkAvailable = !error || error.message !== 'Network request failed';
+          } catch {
+            networkAvailable = false; // Network issues, but continue anyway
+          }
+          
+          // 3. Load persisted auth state
+          await new Promise(resolve => setTimeout(resolve, 300)); // Give auth time to load
+          
+          // 4. Check if cached query data exists
+          const cacheRestored = await queryClient.getQueryCache().getAll().length > 0;
+          
+          console.log('Critical data check:', {
+            supabaseReady,
+            networkAvailable,
+            cacheRestored
+          });
+
+          // Mark as loaded even if some checks fail (graceful degradation)
+          setCriticalDataLoaded(true);
+        })();
+
+        // Wait for both promises
+        await Promise.all([minDelayPromise, criticalDataPromise]);
+        
+        // Hide splash screen
+        await SplashScreen.hideAsync();
+      } catch (error) {
+        console.error('Error during app initialization:', error);
+        // Even if there's an error, show the app after minimum delay
+        setCriticalDataLoaded(true);
+        await SplashScreen.hideAsync();
+      }
+    };
+
+    initializeApp();
   }, []);
 
-  if (!isReady) {
-    return null;
+  if (!shouldShowApp) {
+    return null; // Keep splash screen visible
   }
 
   return (

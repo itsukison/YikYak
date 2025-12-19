@@ -1,3 +1,17 @@
+-- Backup old broken function (if exists) before replacing
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_proc p
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = 'get_feed_v2' AND n.nspname = 'public'
+  ) THEN
+    -- Drop the broken function since it has errors
+    DROP FUNCTION IF EXISTS get_feed_v2(double precision, double precision, double precision, text, text, integer, bigint, double precision);
+  END IF;
+END $$;
+
+-- Create simplified, working version of get_feed_v2
 CREATE OR REPLACE FUNCTION get_feed_v2(
   user_lat double precision,
   user_lon double precision,
@@ -38,25 +52,35 @@ DECLARE
   center_geohash TEXT;
   neighbor_hashes TEXT[];
   all_hashes TEXT[];
+  effective_sort text;
+  effective_time_filter text;
+  cursor_timestamp TIMESTAMPTZ;
 BEGIN
-  -- Calculate time filter cutoff
-  IF sort_by = 'popular' THEN
-    CASE time_filter
+  -- Normalize inputs to lowercase
+  effective_sort := lower(sort_by);
+  effective_time_filter := lower(time_filter);
+
+  -- Calculate time filter cutoff (only for popular feed)
+  IF effective_sort = 'popular' THEN
+    CASE effective_time_filter
       WHEN 'day' THEN cutoff_date := NOW() - INTERVAL '1 day';
       WHEN 'week' THEN cutoff_date := NOW() - INTERVAL '7 days';
       WHEN 'month' THEN cutoff_date := NOW() - INTERVAL '30 days';
-      ELSE cutoff_date := NOW() - INTERVAL '7 days';
+      ELSE cutoff_date := NOW() - INTERVAL '7 days'; -- Default fallback
     END CASE;
   ELSE
     cutoff_date := NULL;
   END IF;
 
+  -- Convert cursor_value to timestamp for "new" feed
+  IF cursor_value IS NOT NULL AND effective_sort != 'popular' THEN
+    cursor_timestamp := to_timestamp(cursor_value / 1000.0);
+  END IF;
+
   -- Calculate geohash for user location (precision 6 = ~1.2km x 0.6km)
   center_geohash := ST_GeoHash(ST_SetSRID(ST_MakePoint(user_lon, user_lat), 4326), 6);
   
-  -- Get neighboring geohashes for expanded coverage. 
-  -- Note: This assumes radius fits within the neighbor grid (~3km). 
-  -- For larger radii, this optimization might exclude posts.
+  -- Get neighboring geohashes for expanded coverage
   SELECT ARRAY[
     ST_GeoHash(ST_SetSRID(ST_MakePoint(user_lon + 0.02, user_lat), 4326), 6),
     ST_GeoHash(ST_SetSRID(ST_MakePoint(user_lon - 0.02, user_lat), 4326), 6),
@@ -81,7 +105,8 @@ BEGIN
     p.location_name,
     p.score,
     p.comment_count,
-    u.nickname as author_nickname,
+    -- Fix NULL nickname issue with debugging-friendly fallback
+    COALESCE(u.nickname, u.username, 'User_' || substring(u.id::text, 1, 8)) as author_nickname,
     u.is_anonymous,
     u.username as author_username,
     p.repost_of,
@@ -119,27 +144,21 @@ BEGIN
     ) <= radius_meters
     -- Step 4: Time filter (only for popular)
     AND (cutoff_date IS NULL OR p.created_at >= cutoff_date)
-    -- Step 5: Cursor-based pagination
+    -- Step 5: Cursor-based pagination (SIMPLIFIED - no subqueries!)
     AND (
       cursor_post_id IS NULL OR
       (
-        CASE
-          WHEN sort_by = 'popular' THEN
-            -- For popular, key is (score, id). We are sorting DESC.
-            (p.score < cursor_value OR (p.score = cursor_value AND p.id < cursor_post_id))
-          ELSE
-            -- For new, key is (created_at, id). We are sorting DESC.
-            -- Using a subquery for cursor_post_id allows for precise continuation
-            (p.created_at < (SELECT p2.created_at FROM posts p2 WHERE p2.id = cursor_post_id) OR 
-             (p.created_at = (SELECT p2.created_at FROM posts p2 WHERE p2.id = cursor_post_id) AND p.id < cursor_post_id))
-        END
+        -- For popular: use (score, id) comparison
+        (effective_sort = 'popular' AND (p.score, p.id) < (cursor_value::integer, cursor_post_id)) OR
+        -- For new: use (created_at, id) comparison  
+        (effective_sort != 'popular' AND (p.created_at, p.id) < (cursor_timestamp, cursor_post_id))
       )
     )
   ORDER BY
-    (CASE WHEN sort_by = 'popular' THEN p.score END) DESC NULLS LAST,
-    -- Add secondary sort for Popular? No, rely on ID as tiebreaker.
-    (CASE WHEN sort_by = 'new' THEN p.created_at END) DESC NULLS LAST,
-    p.id DESC
+    -- Primary sort by score for popular, by created_at for new
+    (CASE WHEN effective_sort = 'popular' THEN p.score END) DESC NULLS LAST,
+    p.created_at DESC, -- Secondary sort (and primary for 'new')
+    p.id DESC -- Tiebreaker
   LIMIT limit_count;
 END;
 $$;

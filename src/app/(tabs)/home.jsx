@@ -164,13 +164,18 @@ export default function HomeScreen() {
     }
   }, [location]);
 
-
-
   // REMOVED: Real-time subscriptions to reduce costs and complexity
-  // Posts now only load on:
+  // Posts fetch strategy:
   // 1. App startup (initial query)
   // 2. Manual pull-to-refresh
-  // 3. After user creates a new post (optimistic update in useCreatePost)
+  // 3. Location/radius changes
+  // 4. After post creation (optimistic update)
+  // 5. After post deletion (cache invalidation)
+  //
+  // Tab switching uses React Query's smart caching:
+  // - Shows cached data instantly if < 5min old (staleTime)
+  // - Background refetch if > 5min old
+  // - Each tab (new/popular) has separate cache
 
   const getLocationPermission = async (skipPrimer = false) => {
     try {
@@ -376,6 +381,7 @@ export default function HomeScreen() {
             >
               <Avatar
                 name={post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+                source={!post.is_anonymous && post.author_avatar_url ? { uri: post.author_avatar_url } : null}
                 size="small" // 40px
                 style={{ marginRight: 12 }} // Gap 12px
               />

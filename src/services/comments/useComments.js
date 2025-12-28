@@ -15,7 +15,7 @@ export function useCommentsQuery(postId) {
                 .select(
                     `
           *,
-          author:users!comments_user_id_fkey(id, nickname, is_anonymous)
+          author:users!comments_user_id_fkey(id, nickname, is_anonymous, avatar_url)
         `
                 )
                 .eq("post_id", postId)
@@ -23,12 +23,15 @@ export function useCommentsQuery(postId) {
 
             if (error) throw error;
 
-            // Transform to include display name
+            // Transform to include display name and avatar URL
             return data.map((comment) => ({
                 ...comment,
                 author_nickname: comment.author.is_anonymous
                     ? "Anonymous"
                     : comment.author.nickname || "User",
+                author_avatar_url: comment.author.is_anonymous
+                    ? null
+                    : comment.author.avatar_url || null,
             }));
         },
         enabled: !!postId,

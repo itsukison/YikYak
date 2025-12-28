@@ -136,6 +136,15 @@ export function useCreatePostMutation() {
       }
     },
     onSuccess: (newPost) => {
+      // Transform newPost to match get_feed_v2 format
+      // create_post returns { sender: { nickname } }, but feed expects { author_nickname }
+      const transformedPost = {
+        ...newPost,
+        author_nickname: newPost.sender?.nickname || newPost.sender?.username || "User",
+        author_username: newPost.sender?.username,
+        // Keep sender for backwards compatibility if needed
+      };
+
       // Remove temp post and add real post with server data
       queryClient.setQueriesData({ queryKey: ["posts"] }, (old) => {
         if (!old?.pages) return old;
@@ -147,7 +156,7 @@ export function useCreatePostMutation() {
               return {
                 ...page,
                 posts: [
-                  newPost,
+                  transformedPost,
                   ...page.posts.filter(
                     (p) => !String(p.id).startsWith("temp_")
                   ),

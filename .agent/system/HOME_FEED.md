@@ -6,6 +6,16 @@
 **Recent Fixes (2025-12-28):**
 1. Resolved critical bug where posts appeared after creation but disappeared on app restart due to missing `status` and `location` fields in create_post RPC
 2. Fixed vote button UI not updating instantly - added `extraData={userVotes}` to FlatList so it re-renders when votes change
+3. Fixed "type geography does not exist" error when creating posts - enabled PostGIS extension
+
+## Prerequisites
+
+**PostGIS Extension Required:** This system uses PostGIS for spatial queries. Ensure PostGIS is enabled in your database:
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+```
+
+Migration `20251228_enable_postgis.sql` handles this automatically.
 
 ## Overview
 

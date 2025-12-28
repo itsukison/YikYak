@@ -213,6 +213,7 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="compose" />
+      <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
       <Stack.Screen name="share/[id]" options={{ headerShown: false }} />
     </Stack>
   );
@@ -240,7 +241,7 @@ export default function RootLayout() {
         const criticalDataPromise = (async () => {
           // 1. Verify Supabase client is initialized
           const supabaseReady = supabase && supabase.auth;
-          
+
           // 2. Check network connectivity (basic ping to Supabase)
           let networkAvailable = false;
           try {
@@ -249,13 +250,13 @@ export default function RootLayout() {
           } catch {
             networkAvailable = false; // Network issues, but continue anyway
           }
-          
+
           // 3. Load persisted auth state
           await new Promise(resolve => setTimeout(resolve, 300)); // Give auth time to load
-          
+
           // 4. Check if cached query data exists
           const cacheRestored = await queryClient.getQueryCache().getAll().length > 0;
-          
+
           console.log('Critical data check:', {
             supabaseReady,
             networkAvailable,
@@ -268,7 +269,7 @@ export default function RootLayout() {
 
         // Wait for both promises
         await Promise.all([minDelayPromise, criticalDataPromise]);
-        
+
         // Hide splash screen
         await SplashScreen.hideAsync();
       } catch (error) {

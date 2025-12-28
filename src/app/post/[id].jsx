@@ -227,6 +227,7 @@ export default function PostDetailScreen() {
                 >
                   <Avatar
                     name={post.is_anonymous ? "Anonymous" : post.author_nickname || "Unknown"}
+                    source={!post.is_anonymous && post.users?.avatar_url ? { uri: post.users.avatar_url } : null}
                     size="small"
                     style={{ marginRight: 12 }}
                   />
@@ -464,6 +465,7 @@ export default function PostDetailScreen() {
                       >
                         <Avatar
                           name={commentItem.author.is_anonymous ? "Anonymous" : commentItem.author_nickname || "Unknown"}
+                          source={!commentItem.author.is_anonymous && commentItem.author_avatar_url ? { uri: commentItem.author_avatar_url } : null}
                           size="small"
                           style={{ marginRight: 12 }}
                         />

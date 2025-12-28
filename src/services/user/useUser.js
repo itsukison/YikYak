@@ -26,7 +26,7 @@ export function useUserSearchQuery(searchTerm, currentUserId) {
             if (isUUID(trimmedTerm)) {
                 const { data, error } = await supabase
                     .from("users")
-                    .select("id, username, nickname, bio, is_anonymous, school_name")
+                    .select("id, username, nickname, bio, is_anonymous, school_name, avatar_url")
                     .eq("id", trimmedTerm)
                     .neq("id", currentUserId)
                     .single();
@@ -38,7 +38,7 @@ export function useUserSearchQuery(searchTerm, currentUserId) {
             // Search by username (partial match, case-insensitive)
             const { data, error } = await supabase
                 .from("users")
-                .select("id, username, nickname, bio, is_anonymous, school_name")
+                .select("id, username, nickname, bio, is_anonymous, school_name, avatar_url")
                 .ilike("username", `%${trimmedTerm}%`)
                 .neq("id", currentUserId)
                 .limit(20);
@@ -62,7 +62,7 @@ export function useUserByIdQuery(userId) {
 
             const { data, error } = await supabase
                 .from("users")
-                .select("id, username, nickname, bio, is_anonymous, school_name")
+                .select("id, username, nickname, bio, is_anonymous, school_name, avatar_url")
                 .eq("id", userId)
                 .single();
 
@@ -108,7 +108,7 @@ export function useUserPostsQuery(userId) {
                 .from("posts")
                 .select(`
           *,
-          author:users!posts_user_id_fkey(id, nickname, is_anonymous)
+          author:users!posts_user_id_fkey(id, nickname, is_anonymous, avatar_url)
         `)
                 .eq("user_id", userId)
                 .order("created_at", { ascending: false })
@@ -121,6 +121,9 @@ export function useUserPostsQuery(userId) {
                 author_nickname: post.author.is_anonymous
                     ? "Anonymous"
                     : post.author.nickname || "User",
+                author_avatar_url: post.author.is_anonymous
+                    ? null
+                    : post.author.avatar_url || null,
             }));
         },
         enabled: !!userId,
@@ -158,10 +161,20 @@ export function useProfileStatsQuery(userId) {
 
             if (followingError) throw followingError;
 
+            // Fetch upvote count (Karma) using RPC
+            const { data: upvoteCount, error: upvoteError } = await supabase
+                .rpc('get_user_total_score', { target_user_id: userId });
+
+            if (upvoteError) {
+                console.error('Error fetching user karma:', upvoteError);
+                // Don't throw, just default to 0 to keep other stats working
+            }
+
             return {
                 postCount: postCount || 0,
                 followerCount: followerCount || 0,
                 followingCount: followingCount || 0,
+                upvoteCount: upvoteCount || 0,
             };
         },
         enabled: !!userId,

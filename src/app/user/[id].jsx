@@ -187,6 +187,7 @@ export default function UserProfileScreen() {
                   {/* Avatar */}
                   <Avatar
                     name={displayName}
+                    source={!targetProfile?.is_anonymous && targetProfile?.avatar_url ? { uri: targetProfile.avatar_url } : null}
                     size="xlarge"
                   />
 

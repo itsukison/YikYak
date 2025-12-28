@@ -193,7 +193,8 @@ export function useDeletePostMutation() {
       }
     },
     onSuccess: () => {
-      // No global invalidation - optimistic update handles it
+      // Invalidate posts queries to ensure deleted post doesn't reappear from cache
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 }

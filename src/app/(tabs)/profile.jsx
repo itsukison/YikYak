@@ -28,7 +28,7 @@ import { useProfileStatsQuery } from "../../services/user/useUser";
 import { useQueryClient } from "@tanstack/react-query";
 import AppBackground from "../../ui/components/AppBackground";
 import MenuItem from "../../ui/components/MenuItem";
-import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal } from "../../ui/components/ui";
+import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal, Button } from "../../ui/components/ui";
 import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function ProfileScreen() {
@@ -50,7 +50,6 @@ export default function ProfileScreen() {
     message: "",
     actions: [],
   });
-  const [pendingAction, setPendingAction] = useState(null);
 
   const showModal = (title, message, actions = []) => {
     setModalConfig({ visible: true, title, message, actions });
@@ -74,6 +73,7 @@ export default function ProfileScreen() {
     post_count: stats?.postCount || 0,
     is_anonymous: profile?.is_anonymous || false,
     avatar_url: profile?.avatar_url || null,
+    upvoteCount: stats?.upvoteCount || 0,
   };
 
   // Sync anonymous state with profile when it loads
@@ -89,23 +89,6 @@ export default function ProfileScreen() {
       setLocationRadius(profile.location_radius < 0 ? -1 : profile.location_radius / 1000);
     }
   }, [profile?.location_radius]);
-
-  // Execute pending action after modal closes
-  React.useEffect(() => {
-    if (!modalConfig.visible && pendingAction) {
-      const action = pendingAction;
-      setPendingAction(null);
-
-      // Small delay to ensure modal animation completes
-      setTimeout(async () => {
-        try {
-          await action();
-        } catch (error) {
-          console.error("Pending action error:", error);
-        }
-      }, 100);
-    }
-  }, [modalConfig.visible, pendingAction]);
 
   // If no user or profile, show loading (root layout will handle redirect)
   if (!user || !profile) {
@@ -168,65 +151,64 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const handleAvatarPress = () => {
-    const actions = [
-      {
-        text: t('profile.photo_upload'),
-        style: "default",
-        onPress: () => {
-          // Set pending action and close modal
-          setPendingAction(() => async () => {
-            try {
-              const image = await pickImage();
-              if (image) {
-                const url = await uploadAvatar(user.id, image);
-                if (url) {
-                  await updateProfile({ avatar_url: url });
-                  // Invalidate queries to refresh avatar everywhere
-                  queryClient.invalidateQueries({ queryKey: ['profile'] });
-                }
-              }
-            } catch (error) {
-              console.error("Avatar upload error:", error);
-              showModal(
-                t('common.error'),
-                t('profile.photo_upload_fail'),
-                [{ text: t('common.ok'), onPress: hideModal }]
-              );
-            }
-          });
-          hideModal();
+  const handleAvatarPress = async () => {
+    try {
+      // Direct image picker call (no modal first)
+      const image = await pickImage();
+
+      if (image) {
+        // Upload the selected image
+        const url = await uploadAvatar(user.id, image);
+        if (url) {
+          await updateProfile({ avatar_url: url });
+          // Invalidate all relevant caches
+          queryClient.invalidateQueries({ queryKey: ['profile'] });
+          queryClient.invalidateQueries({ queryKey: ['posts'] });
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['comments'] });
+          queryClient.invalidateQueries({ queryKey: ['chats'] });
         }
       }
-    ];
-
-    if (currentUser.avatar_url) {
-      actions.push({
-        text: t('profile.photo_remove'),
-        style: "destructive",
-        onPress: () => {
-          setPendingAction(() => async () => {
-            try {
-              await removeAvatar(user.id, currentUser.avatar_url);
-              await updateProfile({ avatar_url: null });
-              queryClient.invalidateQueries({ queryKey: ['profile'] });
-            } catch (error) {
-              console.error("Avatar remove error:", error);
-              showModal(
-                t('common.error'),
-                t('profile.photo_remove_fail'),
-                [{ text: t('common.ok'), onPress: hideModal }]
-              );
-            }
-          });
-          hideModal();
-        }
-      });
+    } catch (error) {
+      console.error("Avatar picker error:", error);
+      // Handle permission denied or other errors
+      if (error.code === 'PERMISSION_DENIED') {
+        showModal(
+          t('common.error'),
+          error.message,
+          [{ text: t('common.ok'), onPress: hideModal }]
+        );
+      } else if (error.message && !error.message.includes('cancelled')) {
+        // Show error for actual errors, but not for user cancellations
+        showModal(
+          t('common.error'),
+          t('profile.photo_upload_fail'),
+          [{ text: t('common.ok'), onPress: hideModal }]
+        );
+      }
     }
+  };
 
-    actions.push({ text: t('common.cancel'), style: "cancel", onPress: hideModal });
-
-    showModal(t('profile.photo_title'), t('profile.photo_msg'), actions);
+  const handleRemoveAvatar = async () => {
+    try {
+      await removeAvatar(user.id, currentUser.avatar_url);
+      await updateProfile({ avatar_url: null });
+      // Invalidate all relevant caches
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+    } catch (error) {
+      console.error("Avatar remove error:", error);
+      showModal(
+        t('common.error'),
+        t('profile.photo_remove_fail'),
+        [{ text: t('common.ok'), onPress: hideModal }]
+      );
+    }
   };
 
   const handleLocationRadius = () => {
@@ -424,6 +406,7 @@ export default function ProfileScreen() {
           paddingHorizontal: 0,
         }}>
           {/* Top Section: Avatar + Name + Stats */}
+          {/* Top Section: Avatar + Name + Stats */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {/* Profile Avatar */}
             <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
@@ -439,14 +422,19 @@ export default function ProfileScreen() {
                     position: "absolute",
                     bottom: 0,
                     right: 0,
-                    backgroundColor: colors.primary,
+                    backgroundColor: colors.surface,
                     borderRadius: radius.pill,
-                    padding: 8,
-                    borderWidth: 3,
-                    borderColor: colors.background,
+                    padding: 6,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    shadowColor: colors.shadow,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 2,
                   }}
                 >
-                  <Camera size={20} color={colors.primaryText} />
+                  <Camera size={14} color={colors.textSecondary} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -464,25 +452,21 @@ export default function ProfileScreen() {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   width: "100%",
-                  paddingRight: 20,
                 }}
               >
+                <View style={{ alignItems: "center" }}>
+                  <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
+                    {currentUser.upvoteCount || 0}
+                  </Heading>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Upvotes</Caption>
+                </View>
+
                 <TouchableOpacity
                   onPress={() => router.push(`/user/${user.id}`)}
                   style={{ alignItems: "center" }}
                 >
                   <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>{currentUser.post_count}</Heading>
                   <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile.posts')}</Caption>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => router.push(`/user/following/${user.id}`)}
-                  style={{ alignItems: "center" }}
-                >
-                  <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
-                    {currentUser.following_count}
-                  </Heading>
-                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile.following')}</Caption>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -499,9 +483,28 @@ export default function ProfileScreen() {
           </View>
 
           {/* User Email/Bio */}
-          <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 16 }}>
+          <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 8 }}>
             {isAnonymous ? t('profile.hidden_identity') : currentUser.bio}
           </Body>
+
+          {/* Edit Profile Button */}
+          <Button
+            variant="outline"
+            size="small"
+            onPress={() => router.push('/edit-profile')}
+            style={{
+              marginBottom: 0,
+              alignSelf: 'flex-start',
+              paddingHorizontal: 16, // Reduced padding
+              paddingVertical: 6,    // Reduced padding
+              minHeight: 32,         // Reduced height
+            }}
+            textStyle={{
+              fontSize: 13,
+            }}
+          >
+            Edit Profile
+          </Button>
         </View>
 
         {/* Account Settings */}

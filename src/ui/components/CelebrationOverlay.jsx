@@ -215,7 +215,7 @@ export default function CelebrationOverlay({ visible, onComplete }) {
                 ]}
             >
                 {/* Particles */}
-                <View style={{ position: 'absolute', left: SCREEN_WIDTH / 2, top: SCREEN_HEIGHT / 2 }} pointerEvents="none">
+                <View style={{ position: 'absolute', left: SCREEN_WIDTH / 2, top: SCREEN_HEIGHT / 2 - 150 }} pointerEvents="none">
                     {Array.from({ length: NUM_PARTICLES }).map((_, i) => (
                         <Particle key={i} index={i} />
                     ))}

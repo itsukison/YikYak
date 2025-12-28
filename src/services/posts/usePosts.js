@@ -63,7 +63,8 @@ export function usePostQuery(postId, options = {}) {
           *,
           users!posts_user_id_fkey (
             nickname,
-            is_anonymous
+            is_anonymous,
+            avatar_url
           )
         `
         )
@@ -85,7 +86,8 @@ export function usePostQuery(postId, options = {}) {
             is_anonymous,
             users!posts_user_id_fkey (
               nickname,
-              is_anonymous
+              is_anonymous,
+              avatar_url
             )
           `
           )
@@ -99,6 +101,7 @@ export function usePostQuery(postId, options = {}) {
           post.reposted_post_author = repostedPost.users?.nickname;
           post.reposted_post_is_anonymous = repostedPost.users?.is_anonymous || repostedPost.is_anonymous;
           post.reposted_post_created_at = repostedPost.created_at;
+          post.reposted_post_author_avatar_url = repostedPost.users?.is_anonymous ? null : repostedPost.users?.avatar_url || null;
         }
       }
 
@@ -165,7 +168,8 @@ export async function fetchPostDetails(postId, userLatitude, userLongitude) {
         users!posts_user_id_fkey (
           nickname,
           username,
-          is_anonymous
+          is_anonymous,
+          avatar_url
         ),
         repost:posts!posts_repost_of_fkey (
           id,
@@ -173,7 +177,8 @@ export async function fetchPostDetails(postId, userLatitude, userLongitude) {
           created_at,
           user:users!posts_user_id_fkey (
             nickname,
-            is_anonymous
+            is_anonymous,
+            avatar_url
           )
         )
       `)
@@ -206,6 +211,7 @@ export async function fetchPostDetails(postId, userLatitude, userLongitude) {
       author_nickname: post.users?.nickname || post.users?.username || "Unknown",
       is_anonymous: post.users?.is_anonymous,
       author_username: post.users?.username,
+      author_avatar_url: post.users?.is_anonymous ? null : post.users?.avatar_url || null,
 
       // Repost info
       repost_of: post.repost_of,
@@ -213,6 +219,7 @@ export async function fetchPostDetails(postId, userLatitude, userLongitude) {
       reposted_post_author: post.repost?.user?.nickname,
       reposted_post_is_anonymous: post.repost?.user?.is_anonymous,
       reposted_post_created_at: post.repost?.created_at,
+      reposted_post_author_avatar_url: post.repost?.user?.is_anonymous ? null : post.repost?.user?.avatar_url || null,
 
       // Distance (if user location provided)
       distance_meters: (userLatitude && userLongitude && post.latitude && post.longitude)

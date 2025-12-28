@@ -18,8 +18,8 @@ export function useChatsQuery(userId) {
         .select(
           `
           *,
-          user1:users!chats_user1_id_fkey(id, nickname, is_anonymous),
-          user2:users!chats_user2_id_fkey(id, nickname, is_anonymous),
+          user1:users!chats_user1_id_fkey(id, nickname, is_anonymous, avatar_url),
+          user2:users!chats_user2_id_fkey(id, nickname, is_anonymous, avatar_url),
           messages(content, created_at, is_read, sender_id)
         `
         )
@@ -109,7 +109,7 @@ export function useChatMessagesQuery(chatId, userId) {
         .select(
           `
           *,
-          sender:users!messages_sender_id_fkey(id, nickname, is_anonymous)
+          sender:users!messages_sender_id_fkey(id, nickname, is_anonymous, avatar_url)
         `
         )
         .eq("chat_id", chatId)

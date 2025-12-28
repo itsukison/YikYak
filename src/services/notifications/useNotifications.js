@@ -14,7 +14,7 @@ export function useNotificationsQuery(userId) {
         .from("notifications")
         .select(`
           *,
-          actor:users!notifications_actor_id_fkey(id, nickname, is_anonymous),
+          actor:users!notifications_actor_id_fkey(id, nickname, is_anonymous, avatar_url),
           post:posts(id, content),
           comment:comments(id, content)
         `)
@@ -24,12 +24,15 @@ export function useNotificationsQuery(userId) {
 
       if (error) throw error;
 
-      // Transform data to include display names
+      // Transform data to include display names and avatar URLs
       return data.map((notification) => ({
         ...notification,
         actor_name: notification.actor?.is_anonymous
           ? "Anonymous"
           : notification.actor?.nickname || "Someone",
+        actor_avatar_url: notification.actor?.is_anonymous
+          ? null
+          : notification.actor?.avatar_url || null,
       }));
     },
     enabled: !!userId,

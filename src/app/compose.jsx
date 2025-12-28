@@ -268,6 +268,7 @@ export default function CreatePost() {
         });
         setSuccessMessage("Post updated successfully");
       } else {
+        console.log('[Compose] Creating post with photos:', photoUrls);
         await createPostMutation.mutateAsync({
           userId: user.id,
           content: content.trim(),
@@ -278,10 +279,13 @@ export default function CreatePost() {
           userIsAnonymous: isAnonymous,
           photos: photoUrls,
         });
+        console.log('[Compose] Post created successfully, showing confetti');
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setShowCelebration(true);
+        console.log('[Compose] Celebration state set to:', true);
       }
     } catch (error) {
+      console.error('[Compose] Error in submitPost:', error);
       throw error;
     }
   };

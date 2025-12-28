@@ -155,6 +155,7 @@ export default function MessagesScreen() {
           <View style={{ position: 'relative', marginRight: 12 }}>
             <Avatar
               name={displayName}
+              source={!item.otherUser.is_anonymous && item.otherUser.avatar_url ? { uri: item.otherUser.avatar_url } : null}
               size="medium"
             />
             {isOnline && (

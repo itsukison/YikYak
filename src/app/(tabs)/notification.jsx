@@ -157,7 +157,10 @@ export default function NotificationScreen() {
     );
   }
 
+
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+  // Filter out message notifications as per user request
+  const filteredNotifications = notifications.filter(n => n.type !== 'message');
 
   const renderNotification = ({ item }) => {
     const IconComponent = getNotificationIcon(item.type);
@@ -171,8 +174,8 @@ export default function NotificationScreen() {
         onPress={() => handleNotificationPress(item)}
         style={{
           backgroundColor: item.is_read ? "transparent" : colors.primarySubtle,
-          paddingHorizontal: 20,
-          paddingVertical: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
           borderBottomWidth: 0.5,
           borderBottomColor: colors.borderLight,
         }}
@@ -180,32 +183,12 @@ export default function NotificationScreen() {
       >
         <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
           {/* Avatar */}
-          <View style={{ marginRight: 12, position: 'relative' }}>
+          <View style={{ marginRight: 8, marginTop: 2 }}>
             <Avatar
               name={avatarName}
-              size="medium"
+              source={item.actor_avatar_url ? { uri: item.actor_avatar_url } : null}
+              size="small"
             />
-            {/* Type Icon Badge */}
-            <View
-              style={{
-                position: 'absolute',
-                bottom: -4,
-                right: -4,
-                backgroundColor: colors.primary,
-                borderRadius: 10,
-                width: 20,
-                height: 20,
-                alignItems: 'center',
-                justifyContent: 'center',
-                shadowColor: colors.shadow,
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 2,
-              }}
-            >
-              <IconComponent size={12} color="#173300" />
-            </View>
           </View>
 
           {/* Content */}
@@ -283,7 +266,7 @@ export default function NotificationScreen() {
 
         {/* Notifications List */}
         <FlatList
-          data={notifications}
+          data={filteredNotifications}
           renderItem={renderNotification}
           keyExtractor={(item) => item.id.toString()}
         />

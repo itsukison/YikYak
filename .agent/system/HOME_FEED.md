@@ -3,7 +3,9 @@
 **Last Updated:** 2025-12-28
 **Status:** Active - Fixed post visibility bug
 
-**Recent Fix (2025-12-28):** Resolved critical bug where posts appeared after creation but disappeared on app restart due to missing `status` and `location` fields in create_post RPC.
+**Recent Fixes (2025-12-28):**
+1. Resolved critical bug where posts appeared after creation but disappeared on app restart due to missing `status` and `location` fields in create_post RPC
+2. Fixed vote button UI not updating instantly - added `extraData={userVotes}` to FlatList so it re-renders when votes change
 
 ## Overview
 
@@ -265,10 +267,13 @@ User Writes Post + Adds Photos
 - Check photo_order is sequential (0, 1, 2)
 - Verify photo URLs are public Supabase URLs
 
-**Votes not working**
+**Votes not working (FIXED 2025-12-28)**
+- ✅ **Root Cause:** FlatList wasn't re-rendering when userVotes changed (missing extraData prop)
+- ✅ **Fix:** Added `extraData={userVotes}` to FlatList component
 - Ensure user is authenticated
 - Check handle_post_vote accepts 0 for removal
 - Verify trigger is firing on votes_posts changes
+- **Note:** Vote mutation already had proper optimistic updates, issue was purely FlatList rendering
 
 **Feed not updating after post creation**
 - Check optimistic update in useCreatePostMutation

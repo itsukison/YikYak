@@ -850,6 +850,7 @@ export default function HomeScreen() {
         data={posts}
         renderItem={({ item, index }) => renderPost(item, index)}
         keyExtractor={(item) => item.id.toString()}
+        extraData={userVotes}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={!isLoading ? renderEmpty : null}

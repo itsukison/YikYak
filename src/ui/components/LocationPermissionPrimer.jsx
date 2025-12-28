@@ -40,7 +40,7 @@ export default function LocationPermissionPrimer({ visible, onEnable, onSkip }) 
                         </Heading>
 
                         <Body style={{ textAlign: 'center', marginBottom: spacing.lg, color: colors.textSecondary }}>
-                            HearSay uses your location to show you posts from people nearby. Your exact location is never shared with other users.
+                            Hearsay uses your location to show you posts from people nearby. Your exact location is never shared with other users.
                         </Body>
 
                         <View style={{ width: '100%', gap: spacing.md }}>

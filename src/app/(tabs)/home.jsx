@@ -7,6 +7,7 @@ import {
   Alert,
   Pressable,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -27,20 +28,22 @@ import { useTheme } from "../../config/theme";
 import { useAuth } from "../../services/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery } from "../../services/posts/usePosts";
 import { useVotePostMutation } from "../../services/posts/usePostActions";
-import { subscribeToNewPosts } from "../../services/realtime";
 import AppBackground from "../../ui/components/AppBackground";
 import { Card, Avatar } from "../../ui/components/ui";
 import { Heading, Body, Caption } from "../../ui/components/ui/Text";
 import PhotoGrid from "../../ui/components/PhotoGrid";
-import * as Location from "expo-location";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import PostActionSheet from "../../ui/components/PostActionSheet";
-import { debounce } from "lodash";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from "@tanstack/react-query";
 import LocationPermissionPrimer from "../../ui/components/LocationPermissionPrimer";
 import { useLanguageStore } from "../../services/i18n/languageStore";
+
+// Platform-specific imports for native modules
+// On mobile: use native expo modules
+// On web: these will be null and we'll use browser APIs
+const Location = Platform.OS === 'web' ? null : require('expo-location');
+const Haptics = Platform.OS === 'web' ? null : require('expo-haptics');
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -53,15 +56,10 @@ export default function HomeScreen() {
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [isLocationPrimerVisible, setIsLocationPrimerVisible] = useState(false);
-  
-  // Simplified location state - consolidated into single object
-  const [locationState, setLocationState] = useState({
-    coords: null, // Current coordinates { latitude, longitude }
-    permission: 'pending', // 'granted' | 'denied' | 'pending'
-    error: null, // Error message if any
-    lastUpdated: null, // Timestamp of last update
-    isFromCache: false, // Whether using cached location
-  });
+
+  // Simplified location state
+  const [location, setLocation] = useState(null); // { latitude, longitude }
+  const [locationError, setLocationError] = useState(null);
 
 
 
@@ -71,21 +69,21 @@ export default function HomeScreen() {
 
 
   // Fetch posts from Supabase with infinite scroll
-  // Note: feedLocation structure should match expo-location object { coords: { latitude, longitude } }
   const {
     data,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-    refetch
+    refetch,
+    error: queryError
   } = usePostsQuery(
-    locationState.coords?.latitude,
-    locationState.coords?.longitude,
+    location?.latitude,
+    location?.longitude,
     locationRadius,
     activeTab,
     timeFilter,
-    !!locationState.coords // Enable query when we have location
+    !!location // Enable query when we have location
   );
 
   // Flatten infinite query pages into single posts array
@@ -136,191 +134,147 @@ export default function HomeScreen() {
   }, []);
 
   const loadLocationStrategy = async () => {
-    // 1. Try to load cached location immediately
+    // 1. Try cached location first for fast load
     try {
       const cached = await AsyncStorage.getItem('lastKnownLocation');
       if (cached) {
         const parsedLocation = JSON.parse(cached);
         console.log("Using cached location:", parsedLocation);
-        setLocationState({
-          coords: parsedLocation.coords,
-          permission: 'granted',
-          error: null,
-          lastUpdated: parsedLocation.timestamp || Date.now(),
-          isFromCache: true,
-        });
+        setLocation(parsedLocation);
       }
     } catch (e) {
       console.error("Failed to load cached location", e);
     }
 
-    // 2. Fetch fresh location (with timeout)
+    // 2. Then fetch fresh location
     getLocationPermission();
   };
 
-
   // Refresh posts when radius changes
   useEffect(() => {
-    if (locationState.coords) {
+    if (location) {
       refetch();
     }
   }, [locationRadius]);
 
-
-
-  // Optimized: Add new posts directly to cache instead of refetching
-  // Debounced to prevent excessive updates
-  const addPostToCache = React.useCallback(
-    debounce((newPost) => {
-      queryClient.setQueriesData(
-        {
-          queryKey: ['posts'],
-          // Only update feeds that are sorted by 'new'
-          // Query Key: ["posts", latitude, longitude, radius, sortBy, timeFilter]
-          predicate: (query) => {
-            return query.queryKey[4] === 'new';
-          }
-        },
-        (old) => {
-          if (!old?.pages) return old;
-
-          // Check if post already exists in cache
-          const postExists = old.pages.some(page =>
-            page.posts.some(p => p.id === newPost.id)
-          );
-
-          if (postExists) return old;
-
-          // Add to first page only
-          return {
-            ...old,
-            pages: old.pages.map((page, index) => {
-              if (index === 0) {
-                return {
-                  ...page,
-                  posts: [newPost, ...page.posts],
-                };
-              }
-              return page;
-            }),
-          };
-        });
-    }, 3000), // Increased debounce from 1s to 3s for better performance
-    [queryClient]
-  );
-
-  // Subscribe to new posts (Optimized with fewer channels)
+  // Refresh posts when location loads (fixes race condition on app startup)
   useEffect(() => {
-    if (!locationState.coords || !user) return;
+    if (location) {
+      refetch();
+    }
+  }, [location]);
 
-    const { latitude, longitude } = locationState.coords;
 
-    const unsubscribe = subscribeToNewPosts(
-      latitude,
-      longitude,
-      locationRadius,
-      (newPost, distance) => {
-        // Distance is already checked in subscription, but we have the data
-        // Add directly to cache instead of refetching (huge performance win)
-        addPostToCache(newPost);
-      }
-    );
 
-    return () => {
-      unsubscribe();
-      addPostToCache.cancel();
-    };
-  }, [locationState.coords, user, locationRadius, addPostToCache]);
+  // REMOVED: Real-time subscriptions to reduce costs and complexity
+  // Posts now only load on:
+  // 1. App startup (initial query)
+  // 2. Manual pull-to-refresh
+  // 3. After user creates a new post (optimistic update in useCreatePost)
 
   const getLocationPermission = async (skipPrimer = false) => {
     try {
-      // Clear error
-      setLocationState(prev => ({ ...prev, error: null }));
+      setLocationError(null);
 
-      if (!skipPrimer) {
-        const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
-        if (existingStatus === 'undetermined') {
-          setIsLocationPrimerVisible(true);
+      // Platform-specific location handling
+      if (Platform.OS === 'web') {
+        // Web: Use browser geolocation API
+        if (!navigator.geolocation) {
+          throw new Error('Geolocation is not supported by your browser');
+        }
+
+        setIsLocationPrimerVisible(false);
+        // Browser will show its own permission prompt
+      } else {
+        // Native: Use expo-location (original behavior unchanged)
+        if (!Location) {
+          throw new Error('Location module not available');
+        }
+
+        // Show primer for first-time users
+        if (!skipPrimer) {
+          const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
+          if (existingStatus === 'undetermined') {
+            setIsLocationPrimerVisible(true);
+            return;
+          }
+        }
+
+        setIsLocationPrimerVisible(false);
+
+        // Request permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setLocationError(t('home_location_permission_denied'));
+          Alert.alert(
+            t('home_location_permission_title'),
+            t('home_location_permission_msg'),
+            [{ text: t('ok') }]
+          );
           return;
         }
       }
 
-      setIsLocationPrimerVisible(false); // Close primer if it was open
+      // Fetch location with timeout (platform-specific)
+      let currentLocation;
+      if (Platform.OS === 'web') {
+        // Web: Use browser geolocation
+        const position = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error("Location timeout")), 5000);
 
-      let { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== "granted") {
-        setLocationState(prev => ({
-          ...prev,
-          permission: 'denied',
-          error: t('home_location_permission_denied'),
-        }));
-        Alert.alert(
-          t('home_location_permission_title'),
-          t('home_location_permission_msg'),
-          [{ text: t('ok') }]
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              clearTimeout(timeout);
+              resolve(pos);
+            },
+            (err) => {
+              clearTimeout(timeout);
+              reject(err);
+            },
+            {
+              enableHighAccuracy: false,
+              timeout: 5000,
+              maximumAge: 0,
+            }
+          );
+        });
+        currentLocation = position;
+      } else {
+        // Native: Use expo-location
+        const locationPromise = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Location timeout")), 5000)
         );
-        return;
+        currentLocation = await Promise.race([locationPromise, timeoutPromise]);
       }
 
-      // Location permission granted
-      setLocationState(prev => ({ ...prev, permission: 'granted' }));
+      const coords = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      };
 
-      // Fetch location with timeout
-      const locationPromise = Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      setLocation(coords);
 
-      const timeoutPromise = new Promise((resolve, reject) =>
-        setTimeout(() => reject(new Error("Location timeout")), 5000)
-      );
-
-      try {
-        let currentLocation = await Promise.race([locationPromise, timeoutPromise]);
-
-        // Update state with fresh location
-        const newLocationState = {
-          coords: currentLocation.coords,
-          permission: 'granted',
-          error: null,
-          lastUpdated: Date.now(),
-          isFromCache: false,
-        };
-        
-        setLocationState(newLocationState);
-        
-        // Cache for next time
-        await AsyncStorage.setItem('lastKnownLocation', JSON.stringify({
-          coords: currentLocation.coords,
-          timestamp: Date.now(),
-        }));
-
-      } catch (err) {
-        console.warn("Location fetch failed or timed out:", err);
-        // If we don't have any location yet, show error
-        if (!locationState.coords) {
-          setLocationState(prev => ({
-            ...prev,
-            error: "Could not retrieve current location. " + err.message,
-          }));
-        }
-        // If we have cached location, silently fail
-      }
+      // Cache for next time
+      await AsyncStorage.setItem('lastKnownLocation', JSON.stringify(coords));
 
     } catch (error) {
       console.error("Error getting location:", error);
-      setLocationState(prev => ({
-        ...prev,
-        error: error.message,
-      }));
-      if (!locationState.coords) {
+      if (!location) {
+        setLocationError(error.message);
         Alert.alert(t('error'), t('home_failed_to_get_location'));
       }
+      // If we have cached location, silently fail
     }
   };
 
   const handleRefresh = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Haptic feedback only on native platforms
+    if (Platform.OS !== 'web' && Haptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     // Refresh both location and posts
     await loadLocationStrategy(); // Re-trigger the strategy
     await refetch();
@@ -747,20 +701,28 @@ export default function HomeScreen() {
               {t('home_tab_popular')}
             </Body>
           </TouchableOpacity>
+
+          {/* Loading Indicator */}
+          {(isLoading || isFetchingNextPage) && (
+            <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 4 }} />
+          )}
         </View>
       </View>
 
       {/* Subtitle */}
-      {locationState.coords && (
+      {location && (
         <View>
           <Caption color="secondary" style={{ marginBottom: 8 }}>
-            {t('home_posts_within')} {locationRadius / 1000}km
+            {locationRadius < 0
+              ? (t('home_posts_global') || "Global Universe")
+              : `${t('home_posts_within')} ${locationRadius / 1000}km`
+            }
           </Caption>
         </View>
       )}
 
       {/* Show location error */}
-      {locationState.error && (
+      {locationError && (
         <View
           style={{
             backgroundColor: colors.errorSubtle || "#FFE5E5",
@@ -770,7 +732,23 @@ export default function HomeScreen() {
           }}
         >
           <Caption style={{ color: colors.error || "#D32F2F" }}>
-            📍 {locationState.error}
+            📍 {locationError}
+          </Caption>
+        </View>
+      )}
+
+      {/* Show query error */}
+      {queryError && (
+        <View
+          style={{
+            backgroundColor: colors.errorSubtle || "#FFE5E5",
+            borderRadius: 12,
+            padding: 8,
+            marginBottom: 12,
+          }}
+        >
+          <Caption style={{ color: colors.error || "#D32F2F" }}>
+            ⚠️ Failed to load posts: {queryError.message}
           </Caption>
         </View>
       )}

@@ -33,22 +33,20 @@ export function usePostsQuery(
         nextCursor:
           data && data.length === 20
             ? {
-                cursorPostId: data[data.length - 1].id,
-                cursorValue:
-                  sortBy === "popular"
-                    ? data[data.length - 1].score
-                    : new Date(data[data.length - 1].created_at).getTime(),
-              }
+              cursorPostId: data[data.length - 1].id,
+              cursorValue:
+                sortBy === "popular"
+                  ? data[data.length - 1].score
+                  : new Date(data[data.length - 1].created_at).getTime(),
+            }
             : undefined,
       };
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: enabled && latitude != null && longitude != null,
-    staleTime: 1000 * 60 * 5, // 5 minutes (increased from 1 minute)
-    gcTime: 1000 * 60 * 30, // 30 minutes garbage collection time
-    // Keep previous data during fetches for smooth UX
-    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
   });
 }
 
@@ -152,4 +150,100 @@ export function useUserVotesQuery(userId) {
     staleTime: 1000 * 60 * 10, // 10 minutes cache
     gcTime: 1000 * 60 * 30, // 30 minutes garbage collection
   });
+}
+
+// Helper to fetch full post details (for realtime updates)
+// Returns data in the exact same shape as get_feed_v2
+export async function fetchPostDetails(postId, userLatitude, userLongitude) {
+  try {
+    // 1. Fetch the post with author and simple fields
+    // We also join repost data if needed
+    const { data: post, error } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        users!posts_user_id_fkey (
+          nickname,
+          username,
+          is_anonymous
+        ),
+        repost:posts!posts_repost_of_fkey (
+          id,
+          content,
+          created_at,
+          user:users!posts_user_id_fkey (
+            nickname,
+            is_anonymous
+          )
+        )
+      `)
+      .eq("id", postId)
+      .single();
+
+    if (error) throw error;
+    if (!post) return null;
+
+    // 2. Fetch photos
+    const { data: photos } = await supabase
+      .from("post_photos")
+      .select("photo_url, photo_order")
+      .eq("post_id", postId)
+      .order("photo_order", { ascending: true });
+
+    // 3. Transform to Feed Format (matching get_feed_v2 output)
+    const formattedPost = {
+      id: post.id,
+      user_id: post.user_id,
+      content: post.content,
+      created_at: post.created_at,
+      latitude: post.latitude,
+      longitude: post.longitude,
+      location_name: post.location_name,
+      score: post.score,
+      comment_count: post.comment_count,
+
+      // Author info
+      author_nickname: post.users?.nickname || post.users?.username || "Unknown",
+      is_anonymous: post.users?.is_anonymous,
+      author_username: post.users?.username,
+
+      // Repost info
+      repost_of: post.repost_of,
+      reposted_post_content: post.repost?.content,
+      reposted_post_author: post.repost?.user?.nickname,
+      reposted_post_is_anonymous: post.repost?.user?.is_anonymous,
+      reposted_post_created_at: post.repost?.created_at,
+
+      // Distance (if user location provided)
+      distance_meters: (userLatitude && userLongitude && post.latitude && post.longitude)
+        ? calculateDistance(userLatitude, userLongitude, post.latitude, post.longitude)
+        : null,
+
+      // Photos
+      photos: photos || [],
+
+      status: post.status
+    };
+
+    return formattedPost;
+
+  } catch (err) {
+    console.error("Error fetching post details:", err);
+    return null;
+  }
+}
+
+// Helper for distance (Haversine) - duplicated from realtime.js to keep this pure
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }

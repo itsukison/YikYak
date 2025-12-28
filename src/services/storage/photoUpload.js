@@ -12,12 +12,20 @@ import { moderateImage } from "../moderation/imageModeration";
  */
 export async function uploadPhoto(userId, uri, order) {
   try {
+    console.log('[uploadPhoto] Received URI type:', typeof uri);
+    console.log('[uploadPhoto] Received URI value:', uri);
+    console.log('[uploadPhoto] Received URI JSON:', JSON.stringify(uri));
+    
     // Generate unique filename
     const timestamp = Date.now();
     const filename = `${userId}/${timestamp}_${order}.jpg`;
 
+    // Ensure URI is a string
+    const uriString = typeof uri === 'string' ? uri : (uri?.uri || String(uri));
+    console.log('[uploadPhoto] Using URI string:', uriString);
+
     // Read file as base64
-    const base64 = await FileSystem.readAsStringAsync(uri, {
+    const base64 = await FileSystem.readAsStringAsync(uriString, {
       encoding: FileSystem.EncodingType.Base64,
     });
 

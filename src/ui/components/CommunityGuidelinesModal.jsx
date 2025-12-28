@@ -50,7 +50,7 @@ export default function CommunityGuidelinesModal() {
                     <Card style={{ maxHeight: '80%', padding: 0, overflow: 'hidden' }}>
                         <ScrollView contentContainerStyle={{ padding: spacing.xl }}>
                             <Heading variant="h2" style={{ textAlign: 'center', marginBottom: spacing.lg }}>
-                                Welcome to HearSay
+                                Welcome to Hearsay
                             </Heading>
 
                             <Body style={{ marginBottom: spacing.md, textAlign: 'center' }}>

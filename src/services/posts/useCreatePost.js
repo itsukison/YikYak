@@ -34,7 +34,8 @@ export function useCreatePostMutation() {
 
       if (error) throw error;
 
-      // Step 2: Insert photos if any
+      // Step 2: Insert photos if any (with error handling)
+      let finalPhotos = [];
       if (photos.length > 0) {
         const photoRecords = photos.map((url, index) => ({
           post_id: post.id,
@@ -42,20 +43,24 @@ export function useCreatePostMutation() {
           photo_order: index,
         }));
 
-        const { error: photoError } = await supabase
+        const { data: insertedPhotos, error: photoError } = await supabase
           .from("post_photos")
-          .insert(photoRecords);
+          .insert(photoRecords)
+          .select();
 
         if (photoError) {
           console.error("Failed to link photos to post:", photoError);
-          // We don't throw here to avoid rolling back the post creation,
-          // but in a production app we might want to alert the user or retry.
+          // Rollback: delete the post if photo insertion fails
+          await supabase.from("posts").delete().eq("id", post.id);
+          throw new Error("Failed to attach photos. Post creation cancelled.");
         }
+        
+        finalPhotos = insertedPhotos || photoRecords;
       }
 
       return {
         ...post,
-        photos: photos.map((url, i) => ({ photo_url: url, photo_order: i })),
+        photos: finalPhotos,
       };
     },
     onMutate: async ({

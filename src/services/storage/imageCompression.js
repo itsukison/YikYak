@@ -41,12 +41,20 @@ export async function compressImages(uris, options = {}) {
 
   for (const uri of uris) {
     try {
+      // Validate URI is a string
+      if (typeof uri !== 'string') {
+        console.error('Invalid URI type:', typeof uri, 'Value:', uri);
+        throw new Error(`Expected string URI, got ${typeof uri}`);
+      }
+      
       const compressed = await compressImage(uri, options);
       results.push(compressed);
     } catch (error) {
       console.error(`Failed to compress ${uri}:`, error);
-      // Use original if compression fails
-      results.push({ uri, width: 0, height: 0 });
+      // Use original if compression fails and uri is valid
+      if (typeof uri === 'string') {
+        results.push({ uri, width: 0, height: 0 });
+      }
     }
   }
 

@@ -48,14 +48,25 @@ export default function PhotoPicker({ photos, onPhotosChange }) {
         const validPhotos = [];
         const errors = [];
 
+        console.log('[PhotoPicker] Raw result.assets:', JSON.stringify(result.assets, null, 2));
+
         for (const asset of result.assets) {
+          console.log('[PhotoPicker] Processing asset:', JSON.stringify(asset, null, 2));
+          console.log('[PhotoPicker] asset.uri type:', typeof asset.uri);
+          console.log('[PhotoPicker] asset.uri value:', asset.uri);
+          
           const validation = validateImageBeforeUpload(asset);
           if (validation.valid) {
-            validPhotos.push(asset.uri);
+            // Explicitly ensure we're pushing a STRING, not an object
+            const uriString = typeof asset.uri === 'string' ? asset.uri : asset.uri?.uri || String(asset.uri);
+            console.log('[PhotoPicker] Pushing URI (type: ' + typeof uriString + '):', uriString);
+            validPhotos.push(uriString);
           } else {
             errors.push(validation.error);
           }
         }
+        
+        console.log('[PhotoPicker] Final validPhotos array:', validPhotos);
 
         if (errors.length > 0) {
           Alert.alert(

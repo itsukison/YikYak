@@ -93,7 +93,7 @@ export default function VerifyEmailScreen() {
         {/* Instructions */}
         <View style={styles.instructionsContainer}>
           <Text style={[styles.instructions, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
-            1. Open the email from HearSay Japan
+            1. Open the email from Hearsay Japan
           </Text>
           <Text style={[styles.instructions, { color: isDark ? 'rgba(255,255,255,0.7)' : '#8E8E93' }]}>
             2. Click the verification link

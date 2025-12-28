@@ -44,7 +44,17 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
   const [locationName, setLocationName] = useState('Locating...');
-  const [photos, setPhotos] = useState(initialPost?.photos || []);
+  // Standardize photos to always be array of URL strings
+  const [photos, setPhotos] = useState(() => {
+    if (!initialPost?.photos) return [];
+    return initialPost.photos.map(p => {
+      // Handle both object format {photo_url: "..."} and string format
+      if (typeof p === 'string') return p;
+      if (p && typeof p === 'object' && p.photo_url) return p.photo_url;
+      console.warn('Invalid photo format:', p);
+      return null;
+    }).filter(Boolean); // Remove any null values
+  });
   const [showCelebration, setShowCelebration] = useState(false);
   const [showLocation, setShowLocation] = useState(true);
   const [moderationError, setModerationError] = useState(null);
@@ -182,39 +192,51 @@ export default function CreatePost() {
     try {
       // Step 1: Compress and upload photos if any
       let photoUrls = [];
-      const newPhotosToUpload = photos.filter(p => !p.startsWith('http'));
-      const existingPhotos = photos.filter(p => p.startsWith('http'));
+      
+      // Validate and separate photos
+      // Existing photos: already uploaded (start with http/https)
+      const existingPhotos = photos.filter(p => 
+        typeof p === 'string' && (p.startsWith('http://') || p.startsWith('https://'))
+      );
+      
+      // New photos: local URIs (typically start with file://)
+      const newPhotoUris = photos.filter(p => 
+        typeof p === 'string' && 
+        !p.startsWith('http://') && 
+        !p.startsWith('https://') &&
+        p.length > 0
+      );
+      
+      console.log('[Compose] Photos state length:', photos.length);
+      console.log('[Compose] Photos state types:', photos.map(p => typeof p));
+      console.log('[Compose] Photos state values:', photos);
+      console.log('[Compose] Existing photos:', existingPhotos);
+      console.log('[Compose] New photo URIs to upload:', newPhotoUris);
+      console.log('[Compose] New photo URI types:', newPhotoUris.map(p => typeof p));
 
-      if (newPhotosToUpload.length > 0) {
-        // ... (existing compression logic mostly same, but need to handle mixed types if `photos` state has objects vs strings)
-        // Adjusting assumption: `photos` state in PhotoPicker usually holds objects with `uri`. 
-        // If initialPost.photos is array of strings, we need to handle that.
-        // Let's assume PhotoPicker handles standardizing, but let's be safe.
-
-        const photoUris = newPhotosToUpload.map(p => p.uri || p);
-        const imagesToCompress = newPhotosToUpload.filter(p => p.uri); // Only compress objects with URI
-
-        let finalNewUrls = [];
-
-        if (imagesToCompress.length > 0) {
-          const compressed = await compressImages(imagesToCompress, {
-            maxWidth: 1920,
-            quality: 0.8,
-          });
-          const compressedUris = compressed.map(img => img.uri);
-          const { urls, errors } = await uploadPhotos(user.id, compressedUris);
-          if (errors.length > 0) {
-            console.error('Photo upload errors:', errors);
-            Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
-              { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
-              { text: 'Continue', onPress: () => submitPost([...existingPhotos, ...urls]) },
-            ]);
-            return;
-          }
-          finalNewUrls = urls;
+      if (newPhotoUris.length > 0) {
+        // Compress images (compressImages expects array of URI strings)
+        console.log('Starting compression...');
+        const compressed = await compressImages(newPhotoUris, {
+          maxWidth: 1920,
+          quality: 0.8,
+        });
+        
+        console.log('Compression complete, uploading...');
+        // Upload compressed images
+        const compressedUris = compressed.map(img => img.uri);
+        const { urls, errors } = await uploadPhotos(user.id, compressedUris);
+        
+        if (errors.length > 0) {
+          console.error('Photo upload errors:', errors);
+          Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
+            { text: 'Cancel', style: 'cancel', onPress: () => setLoading(false) },
+            { text: 'Continue', onPress: () => submitPost([...existingPhotos, ...urls]) },
+          ]);
+          return;
         }
-
-        photoUrls = [...existingPhotos, ...finalNewUrls];
+        
+        photoUrls = [...existingPhotos, ...urls];
       } else {
         photoUrls = existingPhotos;
       }

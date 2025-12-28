@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(profile?.is_anonymous || false);
   const [locationRadius, setLocationRadius] = useState(
-    profile?.location_radius ? profile.location_radius / 1000 : 5
+    profile?.location_radius ? (profile.location_radius < 0 ? -1 : profile.location_radius / 1000) : 5
   );
   const [modalConfig, setModalConfig] = useState({
     visible: false,
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
   // Sync location radius with profile when it loads
   React.useEffect(() => {
     if (profile?.location_radius) {
-      setLocationRadius(profile.location_radius / 1000);
+      setLocationRadius(profile.location_radius < 0 ? -1 : profile.location_radius / 1000);
     }
   }, [profile?.location_radius]);
 
@@ -235,12 +235,12 @@ export default function ProfileScreen() {
       t('profile.radius_msg'),
       [
         {
-          text: "2km",
+          text: t('profile.radius_classroom') || "Classroom (300m)",
           style: "secondary",
           onPress: async () => {
             hideModal();
-            setLocationRadius(2);
-            const { error } = await updateLocationRadius(2000);
+            setLocationRadius(0.3);
+            const { error } = await updateLocationRadius(300);
             if (error) {
               setTimeout(() => {
                 showModal(t('common.error'), t('profile.radius_fail'), [
@@ -254,7 +254,7 @@ export default function ProfileScreen() {
           }
         },
         {
-          text: "5km",
+          text: t('profile.radius_campus') || "Campus (5km)",
           style: "secondary",
           onPress: async () => {
             hideModal();
@@ -273,12 +273,12 @@ export default function ProfileScreen() {
           }
         },
         {
-          text: "10km",
+          text: t('profile.radius_unlimited') || "Unlimited (Global)",
           style: "secondary",
           onPress: async () => {
             hideModal();
-            setLocationRadius(10);
-            const { error } = await updateLocationRadius(10000);
+            setLocationRadius(-1);
+            const { error } = await updateLocationRadius(-1); // -1 for unlimited
             if (error) {
               setTimeout(() => {
                 showModal(t('common.error'), t('profile.radius_fail'), [
@@ -348,7 +348,9 @@ export default function ProfileScreen() {
     {
       icon: MapPin,
       title: t('profile.location_radius'),
-      subtitle: t('profile.location_radius_sub', { radius: locationRadius }),
+      subtitle: locationRadius === -1
+        ? (t('profile.location_radius_unlimited') || "Global")
+        : t('profile.location_radius_sub', { radius: locationRadius }),
       onPress: handleLocationRadius,
     },
   ];
@@ -627,7 +629,7 @@ export default function ProfileScreen() {
           }}
         >
           <Caption color="tertiary" style={{ letterSpacing: 0.5 }}>
-            HearSay Japan v1.0.0
+            Hearsay Japan v1.0.0
           </Caption>
         </View>
       </ScrollView>

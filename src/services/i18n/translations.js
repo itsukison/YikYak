@@ -22,7 +22,7 @@ export const translations = {
         auth_and: "and",
 
         // Auth - Signup
-        auth_join_hearsay: "Join HearSay",
+        auth_join_hearsay: "Join Hearsay",
         auth_create_account: "Create your account",
         auth_school_email_placeholder: "School email",
         auth_password_min_placeholder: "Password (min 6 characters)",
@@ -39,7 +39,7 @@ export const translations = {
         auth_error_password_length: "Password must be at least 6 characters",
 
         // Home
-        home_title: "HearSay",
+        home_title: "Hearsay",
         home_tab_new: "New",
         home_tab_popular: "Popular",
         home_posts_within: "Posts within",
@@ -70,7 +70,7 @@ export const translations = {
         chat_input_placeholder: "Type a message...",
         chat_send: "Send",
         onboarding: {
-            welcome: "Welcome to HearSay",
+            welcome: "Welcome to Hearsay",
             subtitle: "Let's set up your profile",
             username_label: "Username *",
             username_placeholder: "e.g., tokyo_student",
@@ -168,7 +168,7 @@ export const translations = {
         auth_and: "および",
 
         // Auth - Signup
-        auth_join_hearsay: "HearSayに参加",
+        auth_join_hearsay: "Hearsayに参加",
         auth_create_account: "アカウントを作成",
         auth_school_email_placeholder: "学校のメールアドレス",
         auth_password_min_placeholder: "パスワード（6文字以上）",
@@ -185,7 +185,7 @@ export const translations = {
         auth_error_password_length: "パスワードは6文字以上である必要があります",
 
         // Home
-        home_title: "HearSay",
+        home_title: "Hearsay",
         home_tab_new: "新着",
         home_tab_popular: "人気",
         home_posts_within: "近隣の投稿",
@@ -216,7 +216,7 @@ export const translations = {
         chat_input_placeholder: "メッセージを入力...",
         chat_send: "送信",
         onboarding: {
-            welcome: "HearSayへようこそ",
+            welcome: "Hearsayへようこそ",
             subtitle: "プロフィールを設定しましょう",
             username_label: "ユーザーID *",
             username_placeholder: "例: tokyo_student",

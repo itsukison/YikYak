@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   FlatList,
@@ -38,6 +38,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from "@tanstack/react-query";
 import LocationPermissionPrimer from "../../ui/components/LocationPermissionPrimer";
 import { useLanguageStore } from "../../services/i18n/languageStore";
+import { getRadiusLabel } from "../../services/location/locationRadius";
 
 // Platform-specific imports for native modules
 // On mobile: use native expo modules
@@ -127,6 +128,9 @@ export default function HomeScreen() {
 
   // Vote mutation
   const votePostMutation = useVotePostMutation();
+
+  // Track in-flight vote requests to prevent rapid clicking
+  const votingInProgress = useRef(new Set());
 
   // Get location on mount (Cached + Fresh)
   useEffect(() => {
@@ -291,6 +295,12 @@ export default function HomeScreen() {
       return;
     }
 
+    // DEBOUNCING: Prevent multiple rapid votes on same post
+    if (votingInProgress.current.has(postId)) {
+      console.log('Vote already in progress for post:', postId);
+      return;
+    }
+
     const currentVote = userVotes[postId] || null;
     let newVote = voteType;
 
@@ -305,12 +315,23 @@ export default function HomeScreen() {
       return;
     }
 
+    // Mark vote as in progress
+    votingInProgress.current.add(postId);
+
     // Optimistic update handled by React Query
-    votePostMutation.mutate({
-      userId: user.id,
-      postId,
-      voteType: newVote,
-    });
+    votePostMutation.mutate(
+      {
+        userId: user.id,
+        postId,
+        voteType: newVote,
+      },
+      {
+        // Remove from in-progress set when done (success or error)
+        onSettled: () => {
+          votingInProgress.current.delete(postId);
+        },
+      }
+    );
   };
 
 
@@ -347,17 +368,17 @@ export default function HomeScreen() {
     };
 
     return (
-      <Pressable
+      <TouchableOpacity
         key={post.id}
         onPress={navigateToPost}
-        style={({ pressed }) => ({
-          backgroundColor: "transparent", // Removed gray background
+        activeOpacity={1} // No dimming on press
+        style={{
+          backgroundColor: "transparent",
           paddingHorizontal: 20,
           paddingVertical: 24,
-          borderBottomWidth: 0.5, // Very thin separator
+          borderBottomWidth: 0.5,
           borderBottomColor: colors.borderLight,
-          opacity: pressed ? 0.7 : 1,
-        })}
+        }}
       >
         {/* Post Header */}
         <View
@@ -618,7 +639,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </Pressable >
+      </TouchableOpacity>
     );
   };
 
@@ -719,10 +740,7 @@ export default function HomeScreen() {
       {location && (
         <View>
           <Caption color="secondary" style={{ marginBottom: 8 }}>
-            {locationRadius < 0
-              ? (t('home_posts_global') || "Global Universe")
-              : `${t('home_posts_within')} ${locationRadius / 1000}km`
-            }
+            {getRadiusLabel(locationRadius, t, 'display')}
           </Caption>
         </View>
       )}

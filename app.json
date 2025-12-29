@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Create mobile app",
+    "name": "Hearsay",
     "slug": "yikyak-japan",
     "scheme": "yikyak",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/hearsay_icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/hearsay_icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -66,7 +66,7 @@
     ],
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/hearsay_icon.png"
     },
     "experiments": {
       "typedRoutes": true

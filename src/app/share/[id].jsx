@@ -21,6 +21,8 @@ import * as Location from 'expo-location';
 import { Button, Heading, Body, Caption, Avatar } from '../../ui/components/ui';
 import { useCreatePostMutation } from '../../services/posts/useCreatePost';
 import { usePostQuery } from '../../services/posts/usePosts';
+import CelebrationOverlay from '../../ui/components/CelebrationOverlay';
+import * as Haptics from 'expo-haptics';
 
 export default function RepostScreen() {
     const params = useLocalSearchParams();
@@ -47,6 +49,7 @@ export default function RepostScreen() {
     const [location, setLocation] = useState(null);
     const [locationName, setLocationName] = useState('Locating...');
     const [showLocation, setShowLocation] = useState(true);
+    const [showCelebration, setShowCelebration] = useState(false);
     const focusedPadding = 12;
 
     // Animation for keyboard
@@ -182,8 +185,12 @@ export default function RepostScreen() {
                 repostOf: parseInt(id),
             });
 
-            Alert.alert('Success', 'Post shared successfully!');
-            router.back();
+            // Success! Show celebration animation with confetti
+            if (Platform.OS !== 'web' && Haptics) {
+                await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+            setShowCelebration(true);
+            // Navigation handled by celebration onComplete callback
         } catch (error) {
             console.error('Error creating repost:', error);
             Alert.alert('Error', 'Failed to share post. Please try again.');
@@ -540,6 +547,15 @@ export default function RepostScreen() {
                     }}
                 />
             </View>
+
+            {/* Celebration Overlay */}
+            <CelebrationOverlay
+                visible={showCelebration}
+                onComplete={() => {
+                    setShowCelebration(false);
+                    router.back();
+                }}
+            />
         </KeyboardAvoidingView>
     );
 }

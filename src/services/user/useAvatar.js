@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { supabase } from '../../adapters/supabaseClient';
 import { decode } from 'base64-arraybuffer';
 
@@ -38,10 +39,10 @@ export function useAvatar() {
 
             const selectedImage = result.assets[0];
 
-            // Validate file type
-            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic'];
+            // Validate file type (allow common image formats - we'll convert to JPEG)
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp'];
             if (selectedImage.mimeType && !validTypes.includes(selectedImage.mimeType.toLowerCase())) {
-                const error = new Error('Please select a JPEG, PNG, or HEIC image file');
+                const error = new Error('Please select a valid image file (JPEG, PNG, HEIC, or WebP)');
                 error.code = 'INVALID_FILE_TYPE';
                 throw error;
             }
@@ -66,40 +67,58 @@ export function useAvatar() {
                 throw new Error('No image file provided');
             }
 
-            // Validate file size (5MB limit)
-            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
-            if (imageFile.fileSize && imageFile.fileSize > MAX_FILE_SIZE) {
-                const error = new Error('Image file is too large. Please select an image smaller than 5MB');
+            // Validate file size before processing (10MB limit for original, will be reduced after optimization)
+            const MAX_ORIGINAL_FILE_SIZE = 10 * 1024 * 1024; // 10MB for original
+            if (imageFile.fileSize && imageFile.fileSize > MAX_ORIGINAL_FILE_SIZE) {
+                const error = new Error('Image file is too large. Please select an image smaller than 10MB');
                 error.code = 'FILE_TOO_LARGE';
                 throw error;
             }
 
-            // Get file extension
-            const fileExt = imageFile.uri.split('.').pop()?.toLowerCase() || 'jpg';
-            const validExtensions = ['jpg', 'jpeg', 'png', 'heic'];
-            
-            if (!validExtensions.includes(fileExt)) {
-                const error = new Error('Invalid file format. Please use JPG, PNG, or HEIC');
-                error.code = 'INVALID_FILE_FORMAT';
-                throw error;
+            // OPTIMIZATION: Resize to 400x400 and convert to JPEG
+            console.log('Optimizing image (resize to 400x400, convert to JPEG)...');
+            const optimizedImage = await ImageManipulator.manipulateAsync(
+                imageFile.uri,
+                [{ resize: { width: 400, height: 400 } }],
+                {
+                    compress: 0.8,
+                    format: ImageManipulator.SaveFormat.JPEG // Always convert to JPEG
+                }
+            );
+
+            // Check optimized file size (should be < 1MB after optimization)
+            const optimizedFileInfo = await FileSystem.getInfoAsync(optimizedImage.uri);
+            const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB for optimized
+            if (optimizedFileInfo.size && optimizedFileInfo.size > MAX_FILE_SIZE) {
+                // Try higher compression if still too large
+                console.log('Image still too large, applying higher compression...');
+                const recompressed = await ImageManipulator.manipulateAsync(
+                    optimizedImage.uri,
+                    [],
+                    {
+                        compress: 0.5, // Higher compression
+                        format: ImageManipulator.SaveFormat.JPEG
+                    }
+                );
+                optimizedImage.uri = recompressed.uri;
             }
 
-            // Create file path
-            const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+            // Create file path (always .jpg extension now)
+            const fileName = `${currentUserId}/${Date.now()}.jpg`;
             const filePath = `${fileName}`;
 
-            // Read file as base64
-            console.log('Reading image file...');
-            const base64 = await FileSystem.readAsStringAsync(imageFile.uri, {
+            // Read optimized file as base64
+            console.log('Reading optimized image...');
+            const base64 = await FileSystem.readAsStringAsync(optimizedImage.uri, {
                 encoding: FileSystem.EncodingType.Base64,
             });
 
-            // Upload to Supabase Storage
+            // Upload to Supabase Storage (always JPEG now)
             console.log('Uploading to Supabase Storage...');
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, decode(base64), {
-                    contentType: imageFile.mimeType || 'image/jpeg',
+                    contentType: 'image/jpeg', // Always JPEG after optimization
                     upsert: true,
                 });
 

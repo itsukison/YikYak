@@ -30,6 +30,7 @@ import AppBackground from "../../ui/components/AppBackground";
 import MenuItem from "../../ui/components/MenuItem";
 import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal, Button } from "../../ui/components/ui";
 import { useLanguageStore } from "../../services/i18n/languageStore";
+import { getRadiusLabel } from "../../services/location/locationRadius";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -330,9 +331,11 @@ export default function ProfileScreen() {
     {
       icon: MapPin,
       title: t('profile.location_radius'),
-      subtitle: locationRadius === -1
-        ? (t('profile.location_radius_unlimited') || "Global")
-        : t('profile.location_radius_sub', { radius: locationRadius }),
+      subtitle: getRadiusLabel(
+        profile?.location_radius || 5000,
+        t,
+        'subtitle'
+      ),
       onPress: handleLocationRadius,
     },
   ];

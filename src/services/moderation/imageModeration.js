@@ -82,11 +82,18 @@ export function validateImageBeforeUpload(asset) {
   }
 
   // Check mime type
-  const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  const validTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",  // iOS default format
+    "image/heif"   // iOS default format (variant)
+  ];
   if (asset.mimeType && !validTypes.includes(asset.mimeType.toLowerCase())) {
     return {
       valid: false,
-      error: "Invalid image format. Please use JPEG, PNG, or WebP.",
+      error: "Invalid image format. Please use JPEG, PNG, WebP, or HEIC.",
     };
   }
 

@@ -128,9 +128,25 @@ export function useVotePostMutation() {
       }
     },
     onSuccess: (_, variables) => {
-      // NO GLOBAL INVALIDATION - rely on optimistic updates
-      // Only invalidate user votes to stay in sync with server
-      // This prevents flickering and unnecessary refetches
+      // HYBRID APPROACH: Optimistic updates + server reconciliation
+      // Invalidate user votes to sync with server (fixes vote drift)
+      queryClient.invalidateQueries({
+        queryKey: ["user-votes", variables.userId],
+        exact: true,
+      });
+
+      // Mark post data as stale but don't refetch immediately (no loading spinner)
+      // This ensures next time we fetch, we get accurate server data
+      queryClient.invalidateQueries({
+        queryKey: ["post", variables.postId],
+        refetchType: "none", // Don't refetch now, just mark stale
+      });
+
+      // Mark posts lists as stale (will refetch on next mount or focus)
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none", // Don't refetch now
+      });
     },
   });
 }

@@ -1,6 +1,6 @@
-import { serializeError } from 'serialize-error';
+const { serializeError } = require('serialize-error');
 
-export const reportErrorToRemote = async ({ error }) => {
+const reportErrorToRemote = async ({ error }) => {
   if (
     !process.env.EXPO_PUBLIC_LOGS_ENDPOINT ||
     !process.env.EXPO_PUBLIC_PROJECT_GROUP_ID ||
@@ -35,3 +35,5 @@ export const reportErrorToRemote = async ({ error }) => {
   }
   return { success: true };
 };
+
+module.exports = { reportErrorToRemote };

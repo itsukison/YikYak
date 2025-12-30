@@ -19,7 +19,7 @@ export default function LocationPermissionPrimer({ visible, onEnable, onSkip }) 
             statusBarTranslucent
         >
             <BlurView intensity={20} style={StyleSheet.absoluteFill}>
-                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.lg }}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: spacing.xl, paddingHorizontal: spacing['2xl'] }}>
                     <Card style={{ padding: spacing.xl, alignItems: 'center' }}>
                         <View
                             style={{
@@ -39,7 +39,7 @@ export default function LocationPermissionPrimer({ visible, onEnable, onSkip }) 
                             Find Your Local Community
                         </Heading>
 
-                        <Body style={{ textAlign: 'center', marginBottom: spacing.lg, color: colors.textSecondary }}>
+                        <Body style={{ textAlign: 'center', marginBottom: spacing.lg, color: colors.textSecondary, fontSize: 13, lineHeight: 18 }}>
                             Hearsay uses your location to show you posts from people nearby. Your exact location is never shared with other users.
                         </Body>
 

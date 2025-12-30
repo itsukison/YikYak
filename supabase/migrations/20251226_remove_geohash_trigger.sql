@@ -14,3 +14,4 @@ DROP TRIGGER IF EXISTS posts_set_geohash ON posts;
 DROP FUNCTION IF EXISTS update_post_geohash();
 
 
+

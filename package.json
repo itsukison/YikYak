@@ -107,8 +107,9 @@
     "@types/react": "^19.1.0",
     "@types/three": "^0.182.0",
     "autoprefixer": "10.4.20",
-    "patch-package": "^8.0.0",
+    "patch-package": "^8.0.1",
     "postcss": "8.5.2",
+    "postinstall-postinstall": "^2.1.0",
     "supabase": "^2.65.7",
     "typescript": "~5.8.3"
   },

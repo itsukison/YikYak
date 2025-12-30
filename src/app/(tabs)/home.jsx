@@ -202,10 +202,17 @@ export default function HomeScreen() {
 
         // Show primer for first-time users
         if (!skipPrimer) {
-          const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
-          if (existingStatus === 'undetermined') {
-            setIsLocationPrimerVisible(true);
-            return;
+          try {
+            const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
+            console.log('Permission status:', existingStatus);
+            if (existingStatus === 'undetermined') {
+              setIsLocationPrimerVisible(true);
+              return;
+            }
+          } catch (permissionError) {
+            console.error('Error checking location permission status:', permissionError);
+            // If permission check fails, skip primer and proceed to request permission
+            // This prevents the screen from freezing
           }
         }
 

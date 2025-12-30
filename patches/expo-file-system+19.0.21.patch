@@ -1,0 +1,179 @@
+diff --git a/node_modules/expo-file-system/src/legacy/ExponentFileSystemShim.ts b/node_modules/expo-file-system/src/legacy/ExponentFileSystemShim.ts
+index 35368b6..7501a84 100644
+--- a/node_modules/expo-file-system/src/legacy/ExponentFileSystemShim.ts
++++ b/node_modules/expo-file-system/src/legacy/ExponentFileSystemShim.ts
+@@ -1,7 +1,12 @@
+ import { NativeModule } from 'expo-modules-core';
+ 
+ import type { ExponentFileSystemModule, FileSystemEvents } from './types';
++import { EncodingType } from './FileSystem.types';
+ 
++/**
++ * Web implementation of FileSystem
++ * Provides readAsStringAsync and getInfoAsync using Web APIs
++ */
+ export default class FileSystemShim
+   extends NativeModule<FileSystemEvents>
+   implements ExponentFileSystemModule
+@@ -9,4 +14,161 @@ export default class FileSystemShim
+   documentDirectory = null;
+   cacheDirectory = null;
+   bundleDirectory = null;
++
++  // ========================================================================
++  // HELPER METHODS (Private)
++  // ========================================================================
++
++  /**
++   * Fetch a blob from a URI (blob:, http:, https:, data:)
++   */
++  private async fetchBlob(uri: string): Promise<Blob> {
++    if (uri.startsWith('file://')) {
++      throw new Error(
++        'file:// URIs are not supported on web. Use blob: or http(s): URIs instead.'
++      );
++    }
++
++    try {
++      const response = await fetch(uri);
++      if (!response.ok) {
++        throw new Error(
++          `Failed to fetch file: ${response.status} ${response.statusText}`
++        );
++      }
++      return await response.blob();
++    } catch (error) {
++      if (error instanceof TypeError) {
++        throw new Error(
++          `Network error while fetching file: ${(error as Error).message}`
++        );
++      }
++      throw error;
++    }
++  }
++
++  /**
++   * Convert Blob to base64 string using FileReader
++   */
++  private async blobToBase64(blob: Blob): Promise<string> {
++    return new Promise((resolve, reject) => {
++      const reader = new FileReader();
++      reader.onloadend = () => {
++        const dataUrl = reader.result as string;
++        // Remove "data:*/*;base64," prefix to get pure base64
++        const base64 = dataUrl.split(',')[1] || dataUrl;
++        resolve(base64);
++      };
++      reader.onerror = () => {
++        reject(new Error('Failed to read blob as base64'));
++      };
++      reader.readAsDataURL(blob);
++    });
++  }
++
++  /**
++   * Convert Blob to UTF8 text
++   */
++  private async blobToText(blob: Blob): Promise<string> {
++    // Modern browsers support blob.text()
++    if (blob.text) {
++      return await blob.text();
++    }
++    // Fallback for older browsers
++    return new Promise((resolve, reject) => {
++      const reader = new FileReader();
++      reader.onloadend = () => resolve(reader.result as string);
++      reader.onerror = () => reject(new Error('Failed to read blob as text'));
++      reader.readAsText(blob);
++    });
++  }
++
++  /**
++   * Extract base64 from a data: URL
++   */
++  private dataUrlToBase64(dataUrl: string): string {
++    if (!dataUrl.startsWith('data:')) {
++      throw new Error('Invalid data URL: must start with "data:"');
++    }
++    const parts = dataUrl.split(',');
++    if (parts.length < 2) {
++      throw new Error('Invalid data URL: missing base64 data');
++    }
++    return parts[1];
++  }
++
++  // ========================================================================
++  // PUBLIC API METHODS
++  // ========================================================================
++
++  /**
++   * Read file as string (base64 or UTF8)
++   * Required by: photoUpload.js, useAvatar.js
++   */
++  async readAsStringAsync(
++    fileUri: string,
++    options?: { encoding?: EncodingType | 'utf8' | 'base64' }
++  ): Promise<string> {
++    const encoding = options?.encoding || EncodingType.UTF8;
++
++    // Handle data: URLs directly
++    if (fileUri.startsWith('data:')) {
++      if (encoding === EncodingType.Base64 || encoding === 'base64') {
++        return this.dataUrlToBase64(fileUri);
++      } else {
++        const dataBlob = await (await fetch(fileUri)).blob();
++        return await this.blobToText(dataBlob);
++      }
++    }
++
++    // For blob: and http(s): URLs, fetch the blob
++    const blob = await this.fetchBlob(fileUri);
++
++    if (encoding === EncodingType.Base64 || encoding === 'base64') {
++      return await this.blobToBase64(blob);
++    } else {
++      return await this.blobToText(blob);
++    }
++  }
++
++  /**
++   * Get file metadata
++   * Required by: useAvatar.js
++   */
++  async getInfoAsync(
++    fileUri: string,
++    options?: { md5?: boolean }
++  ): Promise<any> {
++    try {
++      // Handle data: URLs
++      if (fileUri.startsWith('data:')) {
++        const base64Part = this.dataUrlToBase64(fileUri);
++        const size = Math.ceil((base64Part.length * 3) / 4);
++        return {
++          exists: true,
++          uri: fileUri,
++          size: size,
++          isDirectory: false,
++          modificationTime: 0,
++        };
++      }
++
++      // For blob: and http(s): URLs
++      const blob = await this.fetchBlob(fileUri);
++      return {
++        exists: true,
++        uri: fileUri,
++        size: blob.size,
++        isDirectory: false,
++        modificationTime: Date.now(),
++      };
++    } catch (error) {
++      // Return exists: false for fetch failures
++      return {
++        exists: false,
++        uri: fileUri,
++        isDirectory: false,
++      };
++    }
++  }
+ }

@@ -34,6 +34,7 @@ import { Heading, Body, Caption } from "../../ui/components/ui/Text";
 import PhotoGrid from "../../ui/components/PhotoGrid";
 import { router } from "expo-router";
 import PostActionSheet from "../../ui/components/PostActionSheet";
+import SkeletonPost from "../../ui/components/SkeletonPost";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQueryClient } from "@tanstack/react-query";
 import LocationPermissionPrimer from "../../ui/components/LocationPermissionPrimer";
@@ -736,8 +737,8 @@ export default function HomeScreen() {
             </Body>
           </TouchableOpacity>
 
-          {/* Loading Indicator */}
-          {(isLoading || isFetchingNextPage) && (
+          {/* Loading Indicator - Only show for pagination, not initial load */}
+          {isFetchingNextPage && !isLoading && (
             <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 4 }} />
           )}
         </View>
@@ -867,6 +868,14 @@ export default function HomeScreen() {
     </View>
   );
 
+  const renderSkeletonList = () => (
+    <View>
+      {[...Array(5)].map((_, index) => (
+        <SkeletonPost key={`skeleton-${index}`} index={index} />
+      ))}
+    </View>
+  );
+
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -884,7 +893,7 @@ export default function HomeScreen() {
         extraData={userVotes}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
-        ListEmptyComponent={!isLoading ? renderEmpty : null}
+        ListEmptyComponent={!isLoading ? renderEmpty : renderSkeletonList}
         contentContainerStyle={{
           paddingBottom: insets.bottom + 80,
           flexGrow: 1,
@@ -892,7 +901,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isLoading && posts.length === 0}
+            refreshing={isLoading && posts.length > 0}
             onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}

@@ -3,7 +3,6 @@ import {
   View,
   ScrollView,
   Alert,
-  Switch,
   TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,9 +12,6 @@ import {
   Settings,
   HelpCircle,
   LogOut,
-  User,
-  UserX,
-  MapPin,
   ChevronRight,
   Camera,
   Upload,
@@ -30,21 +26,16 @@ import AppBackground from "../../ui/components/AppBackground";
 import MenuItem from "../../ui/components/MenuItem";
 import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal, Button } from "../../ui/components/ui";
 import { useLanguageStore } from "../../services/i18n/languageStore";
-import { getRadiusLabel } from "../../services/location/locationRadius";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { colors, radius, isDark } = useTheme();
-  const { user, profile, signOut, updateProfile, updateLocationRadius } = useAuth();
+  const { user, profile, signOut, updateProfile } = useAuth();
   const { pickImage, uploadAvatar, removeAvatar, uploading: avatarUploading } = useAvatar();
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { t, setLanguage } = useLanguageStore();
+  const { t } = useLanguageStore();
   const [showHeaderBorder, setShowHeaderBorder] = useState(false);
-  const [isAnonymous, setIsAnonymous] = useState(profile?.is_anonymous || false);
-  const [locationRadius, setLocationRadius] = useState(
-    profile?.location_radius ? (profile.location_radius < 0 ? -1 : profile.location_radius / 1000) : 5
-  );
   const [modalConfig, setModalConfig] = useState({
     visible: false,
     title: "",
@@ -77,20 +68,6 @@ export default function ProfileScreen() {
     upvoteCount: stats?.upvoteCount || 0,
   };
 
-  // Sync anonymous state with profile when it loads
-  React.useEffect(() => {
-    if (profile?.is_anonymous !== undefined) {
-      setIsAnonymous(profile.is_anonymous);
-    }
-  }, [profile?.is_anonymous]);
-
-  // Sync location radius with profile when it loads
-  React.useEffect(() => {
-    if (profile?.location_radius) {
-      setLocationRadius(profile.location_radius < 0 ? -1 : profile.location_radius / 1000);
-    }
-  }, [profile?.location_radius]);
-
   // If no user or profile, show loading (root layout will handle redirect)
   if (!user || !profile) {
     return (
@@ -105,36 +82,6 @@ export default function ProfileScreen() {
   const handleScroll = (event) => {
     const scrollY = event.nativeEvent.contentOffset.y;
     setShowHeaderBorder(scrollY > 10);
-  };
-
-  const handleAnonymousToggle = async () => {
-    const newValue = !isAnonymous;
-    setIsAnonymous(newValue);
-
-    // Update in Supabase
-    const { error } = await updateProfile({
-      is_anonymous: newValue,
-    });
-
-    if (error) {
-      console.error("Error updating profile:", error);
-      setIsAnonymous(!newValue);
-      showModal(t('common.error'), t('profile.anonymous_fail'), [
-        { text: t('common.ok'), onPress: hideModal }
-      ]);
-    }
-  };
-
-  const handleSettings = () => {
-    showModal(t('profile.settings'), t('profile.settings_screen'), [
-      { text: t('common.ok'), onPress: hideModal }
-    ]);
-  };
-
-  const handleHelp = () => {
-    showModal(t('profile.help'), t('profile.help_screen'), [
-      { text: t('common.ok'), onPress: hideModal }
-    ]);
   };
 
   const handleSignOut = () => {
@@ -212,153 +159,18 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLocationRadius = () => {
-    showModal(
-      t('profile.radius_title'),
-      t('profile.radius_msg'),
-      [
-        {
-          text: t('profile.radius_classroom') || "Classroom (300m)",
-          style: "secondary",
-          onPress: async () => {
-            hideModal();
-            setLocationRadius(0.3);
-            const { error } = await updateLocationRadius(300);
-            if (error) {
-              setTimeout(() => {
-                showModal(t('common.error'), t('profile.radius_fail'), [
-                  { text: t('common.ok'), onPress: hideModal }
-                ]);
-              }, 300);
-              setLocationRadius(profile.location_radius / 1000);
-            } else {
-              queryClient.invalidateQueries({ queryKey: ['posts'] });
-            }
-          }
-        },
-        {
-          text: t('profile.radius_campus') || "Campus (5km)",
-          style: "secondary",
-          onPress: async () => {
-            hideModal();
-            setLocationRadius(5);
-            const { error } = await updateLocationRadius(5000);
-            if (error) {
-              setTimeout(() => {
-                showModal(t('common.error'), t('profile.radius_fail'), [
-                  { text: t('common.ok'), onPress: hideModal }
-                ]);
-              }, 300);
-              setLocationRadius(profile.location_radius / 1000);
-            } else {
-              queryClient.invalidateQueries({ queryKey: ['posts'] });
-            }
-          }
-        },
-        {
-          text: t('profile.radius_unlimited') || "Unlimited (Global)",
-          style: "secondary",
-          onPress: async () => {
-            hideModal();
-            setLocationRadius(-1);
-            const { error } = await updateLocationRadius(-1); // -1 for unlimited
-            if (error) {
-              setTimeout(() => {
-                showModal(t('common.error'), t('profile.radius_fail'), [
-                  { text: t('common.ok'), onPress: hideModal }
-                ]);
-              }, 300);
-              setLocationRadius(profile.location_radius / 1000);
-            } else {
-              queryClient.invalidateQueries({ queryKey: ['posts'] });
-            }
-          }
-        },
-        { text: t('common.cancel'), onPress: hideModal },
-      ],
-    );
-  };
-
-  const handleLanguage = () => {
-    showModal(
-      t('profile.language'),
-      t('profile.language_sub'),
-      [
-        {
-          text: "English",
-          onPress: () => {
-            setLanguage('en');
-            hideModal();
-          }
-        },
-        {
-          text: "日本語",
-          onPress: () => {
-            setLanguage('ja');
-            hideModal();
-          }
-        },
-        {
-          text: t('common.cancel'),
-          style: "cancel",
-          onPress: hideModal
-        }
-      ]
-    );
-  };
-
-  const accountMenuItems = [
-    {
-      icon: isAnonymous ? UserX : User,
-      title: t('profile.anonymous_mode'),
-      subtitle: isAnonymous
-        ? t('profile.anonymous_on')
-        : t('profile.anonymous_off'),
-      onPress: handleAnonymousToggle,
-      showChevron: false,
-      rightComponent: (
-        <Switch
-          value={isAnonymous}
-          onValueChange={handleAnonymousToggle}
-          trackColor={{
-            false: colors.inputBackground,
-            true: colors.accent,
-          }}
-          thumbColor={"#FFFFFF"}
-        />
-      ),
-    },
-    {
-      icon: MapPin,
-      title: t('profile.location_radius'),
-      subtitle: getRadiusLabel(
-        profile?.location_radius || 5000,
-        t,
-        'subtitle'
-      ),
-      onPress: handleLocationRadius,
-    },
-  ];
-
   const appMenuItems = [
     {
       icon: Settings,
       title: t('profile.settings'),
       subtitle: t('profile.settings_sub'),
-      onPress: handleSettings,
-    },
-    {
-      icon: Settings, // Reusing icon or should find a Language icon if available, using Settings for now or maybe MapPin is wrong. Let's import Globe or Languages from lucide-react-native if available, but for now I'll use Settings or just MapPin? No.
-      // Wait, I should adding Language item.
-      title: t('profile.language'),
-      subtitle: t('profile.language_sub'),
-      onPress: handleLanguage,
+      onPress: () => router.push('/settings'),
     },
     {
       icon: HelpCircle,
       title: t('profile.help'),
       subtitle: t('profile.help_sub'),
-      onPress: handleHelp,
+      onPress: () => router.push('/help'),
     },
     {
       icon: LogOut,
@@ -446,7 +258,7 @@ export default function ProfileScreen() {
             <View style={{ flex: 1, marginLeft: 20, justifyContent: "center" }}>
               {/* User Name */}
               <Body weight="bold" style={{ marginBottom: 8, fontSize: 18 }}>
-                {isAnonymous ? t('profile.anonymous_user') : currentUser.nickname}
+                {currentUser.is_anonymous ? t('profile.anonymous_user') : currentUser.nickname}
               </Body>
 
               {/* Stats Row */}
@@ -487,7 +299,7 @@ export default function ProfileScreen() {
 
           {/* User Email/Bio */}
           <Body variant="small" color="secondary" style={{ textAlign: "left", marginBottom: 8 }}>
-            {isAnonymous ? t('profile.hidden_identity') : currentUser.bio}
+            {currentUser.is_anonymous ? t('profile.hidden_identity') : currentUser.bio}
           </Body>
 
           {/* Edit Profile Button */}
@@ -510,71 +322,10 @@ export default function ProfileScreen() {
           </Button>
         </View>
 
-        {/* Account Settings */}
+        {/* More Section */}
         <Section spacing="lg">
           <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
-            {t('profile.account_settings')}
-          </Heading>
-
-          <View style={{ marginBottom: 20 }}>
-            {accountMenuItems.map((item, index) => (
-              <View key={index}>
-                <TouchableOpacity
-                  onPress={item.onPress}
-                  activeOpacity={0.7}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingVertical: 16,
-                    paddingHorizontal: 4,
-                    borderBottomWidth: 0.5,
-                    borderBottomColor: colors.borderLight,
-                  }}
-                >
-                  {/* Icon */}
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: radius.pill,
-                      backgroundColor: colors.surfaceElevated,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      marginRight: 16,
-                    }}
-                  >
-                    <item.icon
-                      size={22}
-                      color={colors.textSecondary}
-                    />
-                  </View>
-
-                  {/* Text Content */}
-                  <View style={{ flex: 1 }}>
-                    <Body weight="bold" style={{ marginBottom: 2 }}>
-                      {item.title}
-                    </Body>
-                    <Caption color="secondary">
-                      {item.subtitle}
-                    </Caption>
-                  </View>
-
-                  {/* Right Component */}
-                  {item.rightComponent ? (
-                    item.rightComponent
-                  ) : item.showChevron !== false ? (
-                    <ChevronRight size={24} color={colors.textTertiary} />
-                  ) : null}
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </Section>
-
-        {/* App Settings */}
-        <Section spacing="lg">
-          <Heading variant="h3" style={{ marginBottom: 16, paddingHorizontal: 4 }}>
-            {t('profile.app_settings')}
+            {t('profile.more')}
           </Heading>
 
           <View>

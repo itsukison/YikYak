@@ -150,7 +150,7 @@ export default function EditProfileScreen() {
                                 </View>
                             </View>
                         </TouchableOpacity>
-                        <Caption style={{ marginTop: 12, color: colors.primary }}>
+                        <Caption style={{ marginTop: 12, color: colors.textSecondary }}>
                             {avatarUploading ? "Uploading..." : "Change Profile Photo"}
                         </Caption>
                     </View>

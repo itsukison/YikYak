@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
@@ -99,4 +99,23 @@ async function registerForPushNotificationsAsync() {
     }
 
     return token;
+}
+
+// Helper functions for settings page
+export async function checkPushPermissions() {
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted';
+}
+
+export async function requestPushPermissions() {
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === 'granted';
+}
+
+export async function openAppSettings() {
+    if (Platform.OS === 'ios') {
+        Linking.openURL('app-settings:');
+    } else {
+        Linking.openSettings();
+    }
 }

@@ -153,6 +153,72 @@ export const translations = {
             // Placeholders for unimplemented features
             settings_screen: "Settings screen would open here",
             help_screen: "Help & Support options would be shown here",
+
+            // Updated menu items
+            more: "More",
+        },
+        settings: {
+            title: "Settings",
+            account_section: "Account",
+            notifications_section: "Notifications",
+            privacy_section: "Privacy & Security",
+            account_management_section: "Account Management",
+
+            // Notifications
+            push_notifications: "Push Notifications",
+            push_notifications_sub: "Receive notifications on this device",
+            notify_votes: "Upvotes on your posts",
+            notify_comments: "Comments on your posts",
+            notify_follows: "New followers",
+            notify_messages: "Direct messages",
+            push_disabled: "Push notifications are disabled",
+            push_disabled_msg: "Enable notifications in your device settings.",
+            open_settings: "Open Settings",
+
+            // Privacy
+            blocked_users: "Blocked Users",
+            blocked_users_sub: "Manage blocked accounts",
+            no_blocked_users: "No blocked users",
+            unblock: "Unblock",
+            unblock_confirm_title: "Unblock User?",
+            unblock_confirm_msg: "Are you sure you want to unblock @{username}?",
+            change_password: "Change Password",
+            delete_account: "Delete Account",
+            delete_account_sub: "Permanently delete your account",
+            delete_confirm_title: "Delete Account?",
+            delete_confirm_msg: "This action cannot be undone. Type DELETE to confirm.",
+            type_delete: "Type DELETE",
+            delete_placeholder: "Type DELETE to confirm",
+            delete_success: "Account deleted successfully",
+            delete_failed: "Failed to delete account",
+        },
+        help: {
+            title: "Help & Support",
+            faq_title: "Frequently Asked Questions",
+            guidelines_title: "Community Guidelines",
+            contact_title: "Contact Us",
+            feedback_placeholder: "Describe your issue or feedback...",
+            submit_feedback: "Submit Feedback",
+            terms_of_service: "Terms of Service",
+            privacy_policy: "Privacy Policy",
+            app_version: "App Version",
+            feedback_success: "Thank you for your feedback!",
+            feedback_failed: "Failed to submit feedback",
+
+            // FAQ
+            faq_anonymous_q: "How does Anonymous Mode work?",
+            faq_anonymous_a: "When enabled, your posts show 'Anonymous User' instead of your name. Your profile remains visible to followers.",
+            faq_radius_q: "How do I change my location radius?",
+            faq_radius_a: "Go to Settings > Location Radius to choose between Classroom (300m), Campus (5km), or Unlimited (global).",
+            faq_block_q: "How do I block someone?",
+            faq_block_a: "Tap the three dots on any post or user profile, then select 'Block User'. You can manage blocked users in Settings > Privacy & Security.",
+            faq_report_q: "How do I report content?",
+            faq_report_a: "Tap the three dots on any post or comment, then select 'Report'. Our team will review it within 24 hours.",
+            faq_privacy_q: "What is your privacy policy?",
+            faq_privacy_a: "We take privacy seriously. Your location data is never stored permanently, and anonymous posts cannot be traced back to you. Read our full privacy policy in the legal section below.",
+
+            // Guidelines
+            guidelines_text: "Our community thrives on mutual respect. Please follow these simple rules:\n\n• Be respectful to all members\n• No harassment, hate speech, or bullying\n• No illegal content or activities\n• Keep interactions authentic\n• Report violations to keep our community safe\n\nViolations may result in account suspension or removal.",
         }
     },
     ja: {
@@ -309,6 +375,72 @@ export const translations = {
             // Placeholders for unimplemented features
             settings_screen: "設定画面はここに表示されます",
             help_screen: "サポートオプションはここに表示されます",
+
+            // Updated menu items
+            more: "その他",
+        },
+        settings: {
+            title: "設定",
+            account_section: "アカウント",
+            notifications_section: "通知",
+            privacy_section: "プライバシーとセキュリティ",
+            account_management_section: "アカウント管理",
+
+            // Notifications
+            push_notifications: "プッシュ通知",
+            push_notifications_sub: "このデバイスで通知を受け取る",
+            notify_votes: "投稿へのいいね",
+            notify_comments: "投稿へのコメント",
+            notify_follows: "新しいフォロワー",
+            notify_messages: "ダイレクトメッセージ",
+            push_disabled: "プッシュ通知が無効です",
+            push_disabled_msg: "デバイスの設定で通知を有効にしてください。",
+            open_settings: "設定を開く",
+
+            // Privacy
+            blocked_users: "ブロック済みユーザー",
+            blocked_users_sub: "ブロック済みアカウントを管理",
+            no_blocked_users: "ブロック済みユーザーはいません",
+            unblock: "ブロック解除",
+            unblock_confirm_title: "ブロックを解除しますか？",
+            unblock_confirm_msg: "@{username}のブロックを解除してもよろしいですか？",
+            change_password: "パスワード変更",
+            delete_account: "アカウント削除",
+            delete_account_sub: "アカウントを完全に削除",
+            delete_confirm_title: "アカウントを削除しますか？",
+            delete_confirm_msg: "この操作は取り消せません。DELETEと入力して確認してください。",
+            type_delete: "DELETEと入力",
+            delete_placeholder: "DELETEと入力して確認",
+            delete_success: "アカウントが削除されました",
+            delete_failed: "アカウントの削除に失敗しました",
+        },
+        help: {
+            title: "ヘルプ・サポート",
+            faq_title: "よくある質問",
+            guidelines_title: "コミュニティガイドライン",
+            contact_title: "お問い合わせ",
+            feedback_placeholder: "問題やフィードバックを記入してください...",
+            submit_feedback: "フィードバック送信",
+            terms_of_service: "利用規約",
+            privacy_policy: "プライバシーポリシー",
+            app_version: "アプリバージョン",
+            feedback_success: "フィードバックありがとうございます！",
+            feedback_failed: "フィードバックの送信に失敗しました",
+
+            // FAQ
+            faq_anonymous_q: "匿名モードはどのように機能しますか？",
+            faq_anonymous_a: "有効にすると、投稿に名前の代わりに「匿名ユーザー」と表示されます。プロフィールはフォロワーに表示されたままです。",
+            faq_radius_q: "位置情報の範囲を変更するには？",
+            faq_radius_a: "設定 > 位置情報の範囲から、教室（300m）、キャンパス（5km）、または無制限（グローバル）を選択できます。",
+            faq_block_q: "ユーザーをブロックするには？",
+            faq_block_a: "投稿またはユーザープロフィールの3つの点をタップし、「ユーザーをブロック」を選択します。設定 > プライバシーとセキュリティでブロック済みユーザーを管理できます。",
+            faq_report_q: "コンテンツを報告するには？",
+            faq_report_a: "投稿またはコメントの3つの点をタップし、「報告」を選択します。チームが24時間以内に確認します。",
+            faq_privacy_q: "プライバシーポリシーは？",
+            faq_privacy_a: "プライバシーを真剣に考えています。位置情報は永続的に保存されず、匿名投稿はあなたに遡って追跡できません。下の法的セクションで完全なプライバシーポリシーをお読みください。",
+
+            // Guidelines
+            guidelines_text: "私たちのコミュニティは相互尊重によって成り立っています。以下のシンプルなルールに従ってください：\n\n• すべてのメンバーを尊重する\n• 嫌がらせ、ヘイトスピーチ、いじめは禁止\n• 違法なコンテンツや活動は禁止\n• 誠実な交流を心がける\n• コミュニティを安全に保つために違反を報告する\n\n違反はアカウントの停止または削除につながる可能性があります。",
         }
     }
 };

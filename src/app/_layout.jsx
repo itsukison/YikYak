@@ -213,6 +213,15 @@ function RootLayoutNav() {
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="compose" />
+      <Stack.Screen
+        name="notification"
+        options={{
+          animation: 'slide_from_right',
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}
+      />
       <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
       <Stack.Screen name="share/[id]" options={{ headerShown: false }} />
     </Stack>

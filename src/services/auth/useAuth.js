@@ -39,6 +39,7 @@ export function useAuth() {
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
+        setLoading(false); // Ensures loading is false when auth is cleared
       }
     });
 
@@ -111,10 +112,12 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
+      setLoading(true); // Signal that signout is in progress
       const { error } = await supabase.auth.signOut();
       resetAuth();
       return { error };
     } catch (error) {
+      setLoading(false); // Clear loading on error
       return { error };
     }
   };

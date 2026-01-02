@@ -1,17 +1,13 @@
 import { Tabs, useRouter } from "expo-router";
-import { View } from "react-native";
-import { Home, MessageCircle, Bell, User } from "lucide-react-native";
+import { Home, MessageCircle, User } from "lucide-react-native";
 import { useTheme } from "../../config/theme";
 import { useAuth } from "../../services/auth/useAuth";
-import { useUnreadCountQuery } from "../../services/notifications/useNotifications";
 import { useEffect } from "react";
-import { Badge } from "../../ui/components/ui";
 
 export default function TabLayout() {
-  const { colors, radius } = useTheme();
+  const { colors } = useTheme();
   const { user, profile, loading } = useAuth();
   const router = useRouter();
-  const { data: unreadCount } = useUnreadCountQuery(user?.id);
 
   // Root layout handles auth routing, just show loading if needed
   if (loading || !user) {
@@ -58,30 +54,6 @@ export default function TabLayout() {
           title: "Messages",
           tabBarIcon: ({ color, size }) => (
             <MessageCircle size={24} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notification"
-        options={{
-          title: "Notifications",
-          tabBarIcon: ({ color, size }) => (
-            <View style={{ position: 'relative' }}>
-              <Bell size={24} color={color} />
-              {unreadCount > 0 && (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: -6,
-                    right: -10,
-                  }}
-                >
-                  <Badge variant="error" size="small">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </Badge>
-                </View>
-              )}
-            </View>
           ),
         }}
       />

@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, MessageCircle, MapPin, ArrowUp, ArrowDown, Repeat, Share } from "lucide-react-native";
+import { ArrowLeft, MessageCircle, MoreVertical, MapPin, ArrowUp, ArrowDown, Repeat, Share } from "lucide-react-native";
 import AppBackground from "../../ui/components/AppBackground";
 import { useTheme } from "../../config/theme";
 import { useAuth } from "../../services/auth/useAuth";
@@ -24,6 +24,8 @@ import {
 import { useCreateChatMutation } from "../../services/chat/useChatActions";
 import { useVotePostMutation } from "../../services/posts/usePostActions";
 import { useUserVotesQuery } from "../../services/posts/usePosts";
+import { useBlockStatusQuery } from "../../services/user/useUserActions";
+import UserActionSheet from "../../ui/components/UserActionSheet";
 import { Heading, Body, Caption, Card, Avatar, Button } from "../../ui/components/ui";
 
 export default function UserProfileScreen() {
@@ -31,6 +33,7 @@ export default function UserProfileScreen() {
   const { isDark, colors, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
+  const [showActionSheet, setShowActionSheet] = useState(false);
 
   const { data: targetProfile, isLoading: profileLoading } =
     useUserProfileQuery(targetUserId);
@@ -39,6 +42,7 @@ export default function UserProfileScreen() {
   const { data: targetStats } = useProfileStatsQuery(targetUserId);
   const { data: isFollowing, isLoading: followStatusLoading } =
     useFollowStatusQuery(user?.id, targetUserId);
+  const { data: isBlocked } = useBlockStatusQuery(user?.id, targetUserId);
 
   const { data: userVotes } = useUserVotesQuery(user?.id);
 
@@ -266,22 +270,19 @@ export default function UserProfileScreen() {
                     </Button>
 
                     <TouchableOpacity
-                      onPress={handleMessage}
-                      disabled={createChatMutation.isPending}
+                      onPress={() => setShowActionSheet(true)}
                       style={{
                         backgroundColor: colors.surface,
-                        width: 40, // Reduced size
-                        height: 40, // Reduced size
+                        width: 40,
+                        height: 40,
                         borderRadius: 20,
                         alignItems: "center",
                         justifyContent: "center",
+                        borderWidth: 1,
+                        borderColor: colors.border,
                       }}
                     >
-                      {createChatMutation.isPending ? (
-                        <ActivityIndicator size="small" color={colors.text} />
-                      ) : (
-                        <MessageCircle size={18} color={colors.text} />
-                      )}
+                      <MoreVertical size={20} color={colors.text} />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -476,6 +477,17 @@ export default function UserProfileScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* User Action Sheet */}
+      {!isOwnProfile && (
+        <UserActionSheet
+          visible={showActionSheet}
+          onClose={() => setShowActionSheet(false)}
+          targetUser={targetProfile}
+          isBlocked={isBlocked}
+          onChatPress={handleMessage}
+        />
+      )}
     </AppBackground>
   );
 }

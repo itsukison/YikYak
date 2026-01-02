@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, FlatList, TouchableOpacity, ActivityIndicator } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { UserPlus, MessageCircle } from "lucide-react-native";
+import { UserPlus, MessageCircle, Bell } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import AppBackground from "../../ui/components/AppBackground";
 import EmptyState from "../../ui/components/EmptyState";
@@ -10,9 +10,10 @@ import { useAuth } from "../../services/auth/useAuth";
 import { useChatsQuery } from "../../services/chat/useChat";
 import { subscribeToMessages } from "../../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
-import { Container, Heading, Body, Caption, Card, Avatar, Badge } from "../../ui/components/ui";
+import { Container, Heading, Body, Caption, Avatar, Badge } from "../../ui/components/ui";
 import { useMultiplePresence } from "../../services/presence/usePresence";
 import { useLanguageStore } from "../../services/i18n/languageStore";
+import { useUnreadCountQuery } from "../../services/notifications/useNotifications";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -22,6 +23,7 @@ export default function MessagesScreen() {
   const { t } = useLanguageStore();
 
   const { data: chats, isLoading } = useChatsQuery(user?.id);
+  const { data: unreadCount } = useUnreadCountQuery(user?.id);
 
   // Track online status for all chat participants
   const otherUserIds = chats?.map((chat) => chat.otherUser.id) || [];
@@ -70,7 +72,7 @@ export default function MessagesScreen() {
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
 
-        {/* Header with Find Users Button */}
+        {/* Header with Notification Bell and Find Users Button */}
         <View
           style={{
             paddingHorizontal: 20,
@@ -82,16 +84,49 @@ export default function MessagesScreen() {
           }}
         >
           <Heading variant="h1">{t('messages_title')}</Heading>
-          <TouchableOpacity
-            onPress={() => router.push("/search-users")}
-            style={{
-              backgroundColor: colors.accentSubtle,
-              padding: 12,
-              borderRadius: 24,
-            }}
-          >
-            <UserPlus size={20} color={colors.accent} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            {/* Notification Bell Button */}
+            <TouchableOpacity
+              onPress={() => router.push("/notification")}
+              style={{
+                backgroundColor: colors.surface,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <View style={{ position: 'relative' }}>
+                <Bell size={20} color={colors.text} />
+                {unreadCount > 0 && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -10,
+                    }}
+                  >
+                    <Badge variant="error" size="small">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Find People Button */}
+            <TouchableOpacity
+              onPress={() => router.push("/search-users")}
+              style={{
+                backgroundColor: colors.accentSubtle,
+                padding: 12,
+                borderRadius: 24,
+              }}
+            >
+              <UserPlus size={20} color={colors.accent} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <EmptyState
@@ -224,19 +259,52 @@ export default function MessagesScreen() {
           }}
         >
           <Heading variant="h2" weight="semibold">{t('messages_title')}</Heading>
-          <TouchableOpacity
-            onPress={() => router.push("/search-users")}
-            style={{
-              backgroundColor: colors.surface,
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <UserPlus size={20} color={colors.text} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            {/* Notification Bell Button */}
+            <TouchableOpacity
+              onPress={() => router.push("/notification")}
+              style={{
+                backgroundColor: colors.surface,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <View style={{ position: 'relative' }}>
+                <Bell size={20} color={colors.text} />
+                {unreadCount > 0 && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: -6,
+                      right: -10,
+                    }}
+                  >
+                    <Badge variant="error" size="small">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {/* Find People Button */}
+            <TouchableOpacity
+              onPress={() => router.push("/search-users")}
+              style={{
+                backgroundColor: colors.surface,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <UserPlus size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Chat List */}

@@ -6,21 +6,21 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { ArrowUp, MessageCircle, UserPlus, Mail, Bell } from "lucide-react-native";
+import { ArrowUp, MessageCircle, UserPlus, Mail, Bell, ArrowLeft } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import AppBackground from "../../ui/components/AppBackground";
-import EmptyState from "../../ui/components/EmptyState";
-import { useTheme } from "../../config/theme";
-import { useAuth } from "../../services/auth/useAuth";
-import { useNotificationsQuery } from "../../services/notifications/useNotifications";
+import AppBackground from "../ui/components/AppBackground";
+import EmptyState from "../ui/components/EmptyState";
+import { useTheme } from "../config/theme";
+import { useAuth } from "../services/auth/useAuth";
+import { useNotificationsQuery } from "../services/notifications/useNotifications";
 import {
   useMarkNotificationReadMutation,
   useMarkAllReadMutation,
-} from "../../services/notifications/useNotificationActions";
-import { subscribeToNotifications } from "../../services/realtime";
+} from "../services/notifications/useNotificationActions";
+import { subscribeToNotifications } from "../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
-import { Container, Heading, Body, Caption, Card, Button, Avatar } from "../../ui/components/ui";
-import { useLanguageStore } from "../../services/i18n/languageStore";
+import { Container, Heading, Body, Caption, Avatar } from "../ui/components/ui";
+import { useLanguageStore } from "../services/i18n/languageStore";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -44,6 +44,16 @@ export default function NotificationScreen() {
 
     return unsubscribe;
   }, [user?.id, queryClient]);
+
+  // Auto-mark all notifications as read when screen opens
+  useEffect(() => {
+    if (!user?.id || !notifications || notifications.length === 0) return;
+
+    const hasUnread = notifications.some((n) => !n.is_read);
+    if (hasUnread) {
+      markAllReadMutation.mutate({ userId: user.id });
+    }
+  }, [user?.id]);
 
   if (!user) {
     return (
@@ -82,9 +92,6 @@ export default function NotificationScreen() {
     }
   };
 
-  const handleMarkAllRead = () => {
-    markAllReadMutation.mutate({ userId: user.id });
-  };
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -158,7 +165,6 @@ export default function NotificationScreen() {
   }
 
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
   // Filter out message notifications as per user request
   const filteredNotifications = notifications.filter(n => n.type !== 'message');
 
@@ -246,22 +252,29 @@ export default function NotificationScreen() {
             paddingTop: 60,
             paddingBottom: 20,
             flexDirection: "row",
-            justifyContent: "space-between",
             alignItems: "center",
+            gap: 16,
           }}
         >
-          <Heading variant="h2" weight="semibold">{t('notifications_title')}</Heading>
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: colors.surface,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ArrowLeft size={20} color={colors.text} />
+          </TouchableOpacity>
 
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="small"
-              onPress={handleMarkAllRead}
-              disabled={markAllReadMutation.isPending}
-            >
-              {t('notifications_mark_all_read')}
-            </Button>
-          )}
+          {/* Title */}
+          <Heading variant="h2" weight="semibold">
+            {t('notifications_title')}
+          </Heading>
         </View>
 
         {/* Notifications List */}

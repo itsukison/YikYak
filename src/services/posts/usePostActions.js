@@ -129,10 +129,12 @@ export function useVotePostMutation() {
     },
     onSuccess: (_, variables) => {
       // HYBRID APPROACH: Optimistic updates + server reconciliation
-      // Invalidate user votes to sync with server (fixes vote drift)
+      // Mark user votes as stale but don't refetch immediately
+      // This prevents race condition with optimistic update
       queryClient.invalidateQueries({
         queryKey: ["user-votes", variables.userId],
         exact: true,
+        refetchType: "none", // Don't refetch now, prevents overwriting optimistic update
       });
 
       // Mark post data as stale but don't refetch immediately (no loading spinner)

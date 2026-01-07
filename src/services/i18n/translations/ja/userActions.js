@@ -1,0 +1,20 @@
+export const user_actions = {
+  "block_title": "ユーザーをブロック",
+  "block_message": "{name}をブロックしてもよろしいですか？このユーザーの投稿が表示されなくなります。",
+  "unblock_title": "ブロックを解除",
+  "unblock_message": "{name}のブロックを解除してもよろしいですか？",
+  "block": "ブロック",
+  "unblock": "ブロック解除",
+  "cancel": "キャンセル",
+  "send_message": "メッセージを送信",
+  "block_user": "ユーザーをブロック",
+  "unblock_user": "ブロックを解除",
+  "alert_blocked": "ブロックしました",
+  "alert_blocked_message": "{name}をブロックしました。",
+  "alert_unblocked": "ブロック解除しました",
+  "alert_unblocked_message": "{name}のブロックを解除しました。",
+  "alert_error": "エラー",
+  "alert_block_error": "ユーザーのブロックに失敗しました。",
+  "alert_unblock_error": "ブロックの解除に失敗しました。",
+  "this_user": "このユーザー"
+};

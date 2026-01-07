@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HearSay is a location-based social media mobile application built with React Native and Expo. It's a YikYak-style app that allows users to create anonymous posts and chat with people nearby. The backend uses Supabase for database, authentication, realtime subscriptions, and edge functions.
+HearSay is a location-based social media mobile application built with React Native and Expo. It's a Hearsay app that allows users to create anonymous posts and chat with people nearby. The backend uses Supabase for database, authentication, realtime subscriptions, and edge functions.
 
 ## Development Commands
 

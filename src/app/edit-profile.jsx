@@ -100,7 +100,7 @@ export default function EditProfileScreen() {
                     <ArrowLeft size={24} color={colors.text} />
                 </TouchableOpacity>
 
-                <Heading variant="h3" weight="semibold">Edit Profile</Heading>
+                <Heading variant="h3" weight="semibold">{t('edit_profile.title')}</Heading>
 
                 {saving ? (
                     <ActivityIndicator size="small" color={colors.primary} />
@@ -151,14 +151,14 @@ export default function EditProfileScreen() {
                             </View>
                         </TouchableOpacity>
                         <Caption style={{ marginTop: 12, color: colors.textSecondary }}>
-                            {avatarUploading ? "Uploading..." : "Change Profile Photo"}
+                            {avatarUploading ? t('edit_profile.uploading') : t('edit_profile.change_photo')}
                         </Caption>
                     </View>
 
                     {/* Form Fields */}
                     <View style={{ gap: 20 }}>
                         <View>
-                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>Name</Caption>
+                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>{t('edit_profile.label_name')}</Caption>
                             <View style={{
                                 backgroundColor: colors.surface,
                                 borderRadius: 12,
@@ -172,7 +172,7 @@ export default function EditProfileScreen() {
                                 <TextInput
                                     value={nickname}
                                     onChangeText={setNickname}
-                                    placeholder="Display Name"
+                                    placeholder={t('edit_profile.placeholder_name')}
                                     autoCapitalize="words"
                                     style={{
                                         flex: 1,
@@ -187,7 +187,7 @@ export default function EditProfileScreen() {
                         </View>
 
                         <View>
-                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>Username</Caption>
+                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>{t('edit_profile.label_username')}</Caption>
                             <View style={{
                                 backgroundColor: colors.surface,
                                 borderRadius: 12,
@@ -201,7 +201,7 @@ export default function EditProfileScreen() {
                                 <TextInput
                                     value={username}
                                     onChangeText={setUsername}
-                                    placeholder="Username"
+                                    placeholder={t('edit_profile.placeholder_username')}
                                     autoCapitalize="none"
                                     style={{
                                         flex: 1,
@@ -216,11 +216,11 @@ export default function EditProfileScreen() {
                         </View>
 
                         <View>
-                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>Bio</Caption>
+                            <Caption style={{ marginBottom: 6, marginLeft: 4, fontWeight: '600', color: colors.textSecondary }}>{t('edit_profile.label_bio')}</Caption>
                             <TextInput
                                 value={bio}
                                 onChangeText={setBio}
-                                placeholder="Write a short bio..."
+                                placeholder={t('edit_profile.placeholder_bio')}
                                 multiline
                                 maxLength={150}
                                 style={{

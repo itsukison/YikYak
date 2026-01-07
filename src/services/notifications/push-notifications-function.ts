@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         const message = {
             to: user.push_token,
             sound: 'default',
-            title: 'YikYak',
+            title: 'Hearsay',
             body: body,
             data: { url: `yikyak://notifications` },
         };

@@ -14,6 +14,7 @@ import { Container, Heading, Body, Caption, Avatar, Badge } from "../../ui/compo
 import { useMultiplePresence } from "../../services/presence/usePresence";
 import { useLanguageStore } from "../../services/i18n/languageStore";
 import { useUnreadCountQuery } from "../../services/notifications/useNotifications";
+import SkeletonChat from "../../ui/components/SkeletonChat";
 
 export default function MessagesScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -56,13 +57,56 @@ export default function MessagesScreen() {
     );
   }
 
+
+
   if (isLoading) {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+
+        {/* Header Skeleton */}
+        <Container padding="none">
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 60,
+              paddingBottom: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Heading variant="h2" weight="semibold">{t('messages_title')}</Heading>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              {/* Notification Bell Button Skeleton Placeholder */}
+              <View
+                style={{
+                  backgroundColor: colors.surface,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                }}
+              />
+              {/* Find People Button Skeleton Placeholder */}
+              <View
+                style={{
+                  backgroundColor: colors.surface,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                }}
+              />
+            </View>
+          </View>
+
+          {/* Skeleton List */}
+          <FlatList
+            data={[...Array(8)]}
+            renderItem={({ index }) => <SkeletonChat index={index} />}
+            keyExtractor={(_, index) => `skeleton-${index}`}
+            showsVerticalScrollIndicator={false}
+          />
+        </Container>
       </AppBackground>
     );
   }

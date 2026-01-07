@@ -6,7 +6,7 @@ import { useTheme } from '../../config/theme';
 import { Button, Card } from './ui';
 import { Heading, Body } from './ui/Text';
 
-export default function LocationPermissionPrimer({ visible, onEnable, onSkip }) {
+export default function LocationPermissionPrimer({ visible, onEnable }) {
     const { colors, spacing } = useTheme();
 
     if (!visible) return null;
@@ -43,25 +43,13 @@ export default function LocationPermissionPrimer({ visible, onEnable, onSkip }) 
                             Hearsay uses your location to show you posts from people nearby. Your exact location is never shared with other users.
                         </Body>
 
-                        <View style={{ width: '100%', gap: spacing.md }}>
-                            <Button
-                                variant="primary"
-                                fullWidth
-                                onPress={onEnable}
-                            >
-                                Enable Location
-                            </Button>
-
-                            {onSkip && (
-                                <Button
-                                    variant="ghost"
-                                    fullWidth
-                                    onPress={onSkip}
-                                >
-                                    Maybe Later
-                                </Button>
-                            )}
-                        </View>
+                        <Button
+                            variant="primary"
+                            fullWidth
+                            onPress={onEnable}
+                        >
+                            Enable Location
+                        </Button>
                     </Card>
                 </View>
             </BlurView>

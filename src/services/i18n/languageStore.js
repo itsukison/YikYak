@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { translations } from './translations';
+import { translations } from './translations/index';
 
 export const useLanguageStore = create(
     persist(

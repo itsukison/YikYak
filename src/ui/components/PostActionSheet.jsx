@@ -21,6 +21,7 @@ import { Button } from "./ui";
 import { useReportPostMutation, useDeletePostMutation } from "../../services/posts/usePostActions";
 import { useBlockUserMutation } from "../../services/user/useUserActions";
 import { useAuth } from "../../services/auth/useAuth";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 import { router } from "expo-router";
 import { supabase } from "../../adapters/supabaseClient";
 
@@ -37,6 +38,7 @@ const REPORT_REASONS = [
 export default function PostActionSheet({ visible, onClose, post }) {
     const { colors, radius, spacing } = useTheme();
     const { user } = useAuth();
+    const { t } = useLanguageStore();
     const insets = useSafeAreaInsets();
     const [reportMode, setReportMode] = useState(false);
     const [reportReason, setReportReason] = useState("");
@@ -71,7 +73,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
         const finalReason = reason === "Other" ? customReason : reason;
 
         if (!finalReason.trim()) {
-            Alert.alert("Error", "Please provide a reason for reporting.");
+            Alert.alert(t('post_actions.alert_error'), t('post_actions.alert_provide_reason'));
             return;
         }
 
@@ -82,10 +84,10 @@ export default function PostActionSheet({ visible, onClose, post }) {
                 reportedUserId: post.user_id,
                 reason: finalReason,
             });
-            Alert.alert("Reported", "Thank you for your report. We will review it shortly.");
+            Alert.alert(t('post_actions.alert_reported'), t('post_actions.alert_report_success'));
             resetAndClose();
         } catch (error) {
-            Alert.alert("Error", "Failed to submit report. Please try again.");
+            Alert.alert(t('post_actions.alert_error'), t('post_actions.alert_report_error'));
             console.error(error);
         }
     };
@@ -107,20 +109,20 @@ export default function PostActionSheet({ visible, onClose, post }) {
 
     const handleBlock = () => {
         Alert.alert(
-            "Block User",
-            "Are you sure you want to block this user? You will no longer see their posts.",
+            t('post_actions.alert_block_title'),
+            t('post_actions.alert_block_message'),
             [
-                { text: "Cancel", style: "cancel" },
+                { text: t('post_actions.cancel'), style: "cancel" },
                 {
-                    text: "Block",
+                    text: t('post_actions.alert_block'),
                     style: "destructive",
                     onPress: async () => {
                         try {
                             await blockMutation.mutateAsync({ blockedUserId: post.user_id });
-                            Alert.alert("Blocked", "User has been blocked.");
+                            Alert.alert(t('post_actions.alert_blocked'), t('post_actions.alert_blocked_message'));
                             resetAndClose();
                         } catch (error) {
-                            Alert.alert("Error", "Failed to block user.");
+                            Alert.alert(t('post_actions.alert_error'), t('post_actions.alert_block_error'));
                             console.error(error);
                         }
                     },
@@ -180,7 +182,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
             });
         } catch (error) {
             console.error("Error initiating DM:", error);
-            Alert.alert("Error", "Failed to start chat.");
+            Alert.alert(t('post_actions.alert_error'), t('post_actions.alert_dm_error'));
         }
     };
 
@@ -204,12 +206,22 @@ export default function PostActionSheet({ visible, onClose, post }) {
             await deleteMutation.mutateAsync({ postId: post.id });
             resetAndClose();
         } catch (error) {
-            Alert.alert("Error", "Failed to delete post.");
+            Alert.alert(t('post_actions.alert_error'), t('post_actions.alert_delete_error'));
             console.error(error);
         }
     };
 
     if (!post) return null;
+
+    const REPORT_REASONS = [
+        t('post_actions.report_spam'),
+        t('post_actions.report_harassment'),
+        t('post_actions.report_hate'),
+        t('post_actions.report_nudity'),
+        t('post_actions.report_violence'),
+        t('post_actions.report_misinfo'),
+        t('post_actions.report_other')
+    ];
 
     return (
         <Modal
@@ -250,10 +262,10 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                     {confirmDelete ? (
                                         <View style={{ padding: spacing.lg }}>
                                             <Heading variant="h3" style={{ textAlign: "center", marginBottom: spacing.md }}>
-                                                Delete Post?
+                                                {t('post_actions.delete_title')}
                                             </Heading>
                                             <Body variant="bodySmall" color="secondary" style={{ textAlign: "center", marginBottom: spacing.xl, lineHeight: 20 }}>
-                                                Are you sure you want to delete this post? This action cannot be undone.
+                                                {t('post_actions.delete_message')}
                                             </Body>
 
                                             <View style={{ gap: spacing.md }}>
@@ -263,14 +275,14 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                     loading={deleteMutation.isPending}
                                                     fullWidth
                                                 >
-                                                    Delete
+                                                    {t('post_actions.delete')}
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     onPress={() => setConfirmDelete(false)}
                                                     fullWidth
                                                 >
-                                                    Cancel
+                                                    {t('post_actions.cancel')}
                                                 </Button>
                                             </View>
                                         </View>
@@ -280,11 +292,11 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                 <TouchableOpacity onPress={() => setReportMode(false)} style={{ padding: 4 }}>
                                                     <ArrowLeft size={24} color={colors.text} />
                                                 </TouchableOpacity>
-                                                <Heading variant="h3" style={{ marginLeft: spacing.sm }}>Report Post</Heading>
+                                                <Heading variant="h3" style={{ marginLeft: spacing.sm }}>{t('post_actions.report_title')}</Heading>
                                             </View>
 
                                             <Body variant="bodySmall" color="secondary" style={{ marginBottom: spacing.md }}>
-                                                Please select a reason for reporting this post:
+                                                {t('post_actions.report_instruction')}
                                             </Body>
 
                                             <ScrollView showsVerticalScrollIndicator={false}>
@@ -300,8 +312,8 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                             alignItems: "center"
                                                         }}
                                                         onPress={() => {
-                                                            if (reason === "Other") {
-                                                                setReportReason("Other");
+                                                            if (reason === t('post_actions.report_other')) {
+                                                                setReportReason(t('post_actions.report_other'));
                                                             } else {
                                                                 handleReport(reason);
                                                             }
@@ -312,7 +324,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                     </TouchableOpacity>
                                                 ))}
 
-                                                {reportReason === "Other" && (
+                                                {reportReason === t('post_actions.report_other') && (
                                                     <View style={{ marginTop: spacing.md, marginBottom: 40 }}>
                                                         <TextInput
                                                             style={[
@@ -324,7 +336,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                                     borderRadius: radius.input,
                                                                 },
                                                             ]}
-                                                            placeholder="Please describe the issue..."
+                                                            placeholder={t('post_actions.report_describe')}
                                                             placeholderTextColor={colors.textSecondary}
                                                             value={customReason}
                                                             onChangeText={setCustomReason}
@@ -333,11 +345,11 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                         />
                                                         <Button
                                                             variant="primary"
-                                                            onPress={() => handleReport("Other")}
+                                                            onPress={() => handleReport(t('post_actions.report_other'))}
                                                             style={{ marginTop: spacing.md }}
                                                             loading={reportMutation.isPending}
                                                         >
-                                                            Submit Report
+                                                            {t('post_actions.submit_report')}
                                                         </Button>
                                                     </View>
                                                 )}
@@ -351,14 +363,14 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                         <View style={[styles.iconContainer, { backgroundColor: colors.surfaceElevated }]}>
                                                             <Edit2 size={24} color={colors.text} />
                                                         </View>
-                                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Edit Post</Body>
+                                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>{t('post_actions.edit_post')}</Body>
                                                     </TouchableOpacity>
 
                                                     <TouchableOpacity style={styles.option} onPress={handleDelete}>
                                                         <View style={[styles.iconContainer, { backgroundColor: colors.errorSubtle }]}>
                                                             <Trash2 size={24} color={colors.error} />
                                                         </View>
-                                                        <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>Delete Post</Body>
+                                                        <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>{t('post_actions.delete_post')}</Body>
                                                     </TouchableOpacity>
                                                 </>
                                             ) : (
@@ -367,7 +379,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                         <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                                             <Flag size={24} color={colors.text} />
                                                         </View>
-                                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Report Post</Body>
+                                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>{t('post_actions.report_post')}</Body>
                                                     </TouchableOpacity>
 
                                                     {!post.is_anonymous && (
@@ -375,7 +387,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                             <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                                                 <Mail size={24} color={colors.text} />
                                                             </View>
-                                                            <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Send Message</Body>
+                                                            <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>{t('post_actions.send_message')}</Body>
                                                         </TouchableOpacity>
                                                     )}
 
@@ -384,7 +396,7 @@ export default function PostActionSheet({ visible, onClose, post }) {
                                                             <View style={[styles.iconContainer, { backgroundColor: colors.errorSubtle }]}>
                                                                 <Ban size={24} color={colors.error} />
                                                             </View>
-                                                            <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>Block User</Body>
+                                                            <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>{t('post_actions.block_user')}</Body>
                                                         </TouchableOpacity>
                                                     )}
                                                 </>

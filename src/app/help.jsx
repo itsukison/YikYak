@@ -201,7 +201,7 @@ export default function HelpScreen() {
 
           <View>
             <TouchableOpacity
-              onPress={() => openLink("https://hearsayjapan.com/terms")}
+              onPress={() => openLink("https://www.hearsay.ink/terms")}
               activeOpacity={0.7}
               style={{
                 flexDirection: "row",
@@ -218,7 +218,7 @@ export default function HelpScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => openLink("https://hearsayjapan.com/privacy")}
+              onPress={() => openLink("https://www.hearsay.ink/privacy")}
               activeOpacity={0.7}
               style={{
                 flexDirection: "row",

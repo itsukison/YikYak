@@ -26,6 +26,7 @@ import AppBackground from "../../ui/components/AppBackground";
 import MenuItem from "../../ui/components/MenuItem";
 import { Container, Section, Heading, Body, Caption, Card, Avatar, Modal, Button } from "../../ui/components/ui";
 import { useLanguageStore } from "../../services/i18n/languageStore";
+import SkeletonProfile from "../../ui/components/SkeletonProfile";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -68,15 +69,11 @@ export default function ProfileScreen() {
     upvoteCount: stats?.upvoteCount || 0,
   };
 
+
+
   // If no user or profile, show loading (root layout will handle redirect)
   if (!user || !profile) {
-    return (
-      <AppBackground>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Body>{t('profile.loading')}</Body>
-        </View>
-      </AppBackground>
-    );
+    return <SkeletonProfile />;
   }
 
   const handleScroll = (event) => {
@@ -273,7 +270,7 @@ export default function ProfileScreen() {
                   <Heading variant="h3" color="primary" style={{ color: colors.text, fontSize: 16 }}>
                     {currentUser.upvoteCount || 0}
                   </Heading>
-                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>Upvotes</Caption>
+                  <Caption color="tertiary" weight="medium" style={{ fontSize: 12 }}>{t('profile_stats.upvotes')}</Caption>
                 </View>
 
                 <TouchableOpacity
@@ -318,7 +315,7 @@ export default function ProfileScreen() {
               fontSize: 13,
             }}
           >
-            Edit Profile
+            {t('profile_stats.edit_profile')}
           </Button>
         </View>
 

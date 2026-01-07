@@ -1,0 +1,35 @@
+export const settings = {
+  title: "Settings",
+  account_section: "Account",
+  notifications_section: "Notifications",
+  privacy_section: "Privacy & Security",
+  account_management_section: "Account Management",
+
+  // Notifications
+  push_notifications: "Push Notifications",
+  push_notifications_sub: "Receive notifications on this device",
+  notify_votes: "Upvotes on your posts",
+  notify_comments: "Comments on your posts",
+  notify_follows: "New followers",
+  notify_messages: "Direct messages",
+  push_disabled: "Push notifications are disabled",
+  push_disabled_msg: "Enable notifications in your device settings.",
+  open_settings: "Open Settings",
+
+  // Privacy
+  blocked_users: "Blocked Users",
+  blocked_users_sub: "Manage blocked accounts",
+  no_blocked_users: "No blocked users",
+  unblock: "Unblock",
+  unblock_confirm_title: "Unblock User?",
+  unblock_confirm_msg: "Are you sure you want to unblock @{username}?",
+  change_password: "Change Password",
+  delete_account: "Delete Account",
+  delete_account_sub: "Permanently delete your account",
+  delete_confirm_title: "Delete Account?",
+  delete_confirm_msg: "This action cannot be undone. Type DELETE to confirm.",
+  type_delete: "Type DELETE",
+  delete_placeholder: "Type DELETE to confirm",
+  delete_success: "Account deleted successfully",
+  delete_failed: "Failed to delete account",
+};

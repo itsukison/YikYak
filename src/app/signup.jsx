@@ -32,7 +32,7 @@ export default function SignupScreen() {
   const { signUp } = useAuth();
   const { colors, spacing } = useTheme();
   const insets = useSafeAreaInsets();
-  const { t } = useLanguageStore();
+  const { t, language, changeLanguage } = useLanguageStore();
 
   const school = params.schoolId ? {
     id: params.schoolId,
@@ -145,6 +145,29 @@ export default function SignupScreen() {
             }}
           >
             <ArrowLeft size={24} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* Language Toggle */}
+          <TouchableOpacity
+            onPress={() => {
+              changeLanguage(language === 'en' ? 'ja' : 'en');
+            }}
+            style={{
+              position: 'absolute',
+              top: insets.top + spacing.md,
+              right: spacing.lg,
+              zIndex: 10,
+              paddingHorizontal: spacing.md,
+              paddingVertical: spacing.xs,
+              backgroundColor: colors.surface,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: colors.border,
+            }}
+          >
+            <Body variant="bodySmall" weight="medium" style={{ fontSize: 13 }}>
+              {language === 'en' ? 'English' : '日本語'}
+            </Body>
           </TouchableOpacity>
 
           {/* Header */}

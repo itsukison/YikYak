@@ -1,0 +1,15 @@
+export const home = {
+  home_title: 'Hearsay',
+  home_tab_new: '新着',
+  home_tab_popular: '人気',
+  home_radius_classroom_display: '教室内の投稿',
+  home_radius_campus_display: 'キャンパス内の投稿',
+  home_radius_unlimited_display: 'グローバルフィード',
+  home_posts_within: '近隣の投稿',
+  home_using_cached_location: '最後の既知の位置情報を使用中',
+  home_location_permission_denied: '位置情報の許可が拒否されました',
+  home_location_permission_msg: '近くの投稿を見るには位置情報へのアクセスが必要です。',
+  home_loading_more: 'さらに投稿を読み込んでいます...',
+  home_no_posts: '投稿はまだありません',
+  home_post_deleted: 'この投稿は削除されました',
+};

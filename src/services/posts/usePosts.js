@@ -45,6 +45,7 @@ export function usePostsQuery(
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: enabled && latitude != null && longitude != null,
+    placeholderData: (previousData) => previousData,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
   });
@@ -99,9 +100,9 @@ export function usePostQuery(postId, options = {}) {
           post.reposted_post = repostedPost;
           post.reposted_post_content = repostedPost.content;
           post.reposted_post_author = repostedPost.users?.nickname;
-          post.reposted_post_is_anonymous = repostedPost.users?.is_anonymous || repostedPost.is_anonymous;
+          post.reposted_post_is_anonymous = repostedPost.is_anonymous;
           post.reposted_post_created_at = repostedPost.created_at;
-          post.reposted_post_author_avatar_url = repostedPost.users?.is_anonymous ? null : repostedPost.users?.avatar_url || null;
+          post.reposted_post_author_avatar_url = repostedPost.is_anonymous ? null : repostedPost.users?.avatar_url || null;
         }
       }
 
@@ -209,17 +210,17 @@ export async function fetchPostDetails(postId, userLatitude, userLongitude) {
 
       // Author info
       author_nickname: post.users?.nickname || post.users?.username || "Unknown",
-      is_anonymous: post.users?.is_anonymous,
+      is_anonymous: post.is_anonymous,
       author_username: post.users?.username,
-      author_avatar_url: post.users?.is_anonymous ? null : post.users?.avatar_url || null,
+      author_avatar_url: post.is_anonymous ? null : post.users?.avatar_url || null,
 
       // Repost info
       repost_of: post.repost_of,
       reposted_post_content: post.repost?.content,
       reposted_post_author: post.repost?.user?.nickname,
-      reposted_post_is_anonymous: post.repost?.user?.is_anonymous,
+      reposted_post_is_anonymous: post.repost?.is_anonymous,
       reposted_post_created_at: post.repost?.created_at,
-      reposted_post_author_avatar_url: post.repost?.user?.is_anonymous ? null : post.repost?.user?.avatar_url || null,
+      reposted_post_author_avatar_url: post.repost?.is_anonymous ? null : post.repost?.user?.avatar_url || null,
 
       // Distance (if user location provided)
       distance_meters: (userLatitude && userLongitude && post.latitude && post.longitude)

@@ -1,6 +1,6 @@
 # UI Components - Usage Guide
 
-Artifact-inspired design system components for YikYak app.
+Artifact-inspired design system components for Hearsay app.
 
 ## Quick Import
 

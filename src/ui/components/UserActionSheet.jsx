@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../config/theme";
 import { Body } from "./ui/Text";
 import { useBlockUserMutation, useUnblockUserMutation } from "../../services/user/useUserActions";
+import { useLanguageStore } from "../../services/i18n/languageStore";
 
 export default function UserActionSheet({
     visible,
@@ -24,6 +25,7 @@ export default function UserActionSheet({
 }) {
     const { colors, radius, spacing } = useTheme();
     const insets = useSafeAreaInsets();
+    const { t } = useLanguageStore();
 
     const blockMutation = useBlockUserMutation();
     const unblockMutation = useUnblockUserMutation();
@@ -60,22 +62,22 @@ export default function UserActionSheet({
 
     const handleBlock = () => {
         Alert.alert(
-            "Block User",
-            `Are you sure you want to block ${targetUser?.nickname || 'this user'}? You will no longer see their posts.`,
+            t('user_actions.block_title'),
+            t('user_actions.block_message').replace('{name}', targetUser?.nickname || t('user_actions.this_user')),
             [
-                { text: "Cancel", style: "cancel" },
+                { text: t('user_actions.cancel'), style: "cancel" },
                 {
-                    text: "Block",
+                    text: t('user_actions.block'),
                     style: "destructive",
                     onPress: async () => {
                         try {
                             await blockMutation.mutateAsync({
                                 blockedUserId: targetUser.id
                             });
-                            Alert.alert("Blocked", `${targetUser?.nickname || 'User'} has been blocked.`);
+                            Alert.alert(t('user_actions.alert_blocked'), t('user_actions.alert_blocked_message').replace('{name}', targetUser?.nickname || t('general.user')));
                             resetAndClose();
                         } catch (error) {
-                            Alert.alert("Error", "Failed to block user.");
+                            Alert.alert(t('user_actions.alert_error'), t('user_actions.alert_block_error'));
                             console.error(error);
                         }
                     },
@@ -86,22 +88,22 @@ export default function UserActionSheet({
 
     const handleUnblock = () => {
         Alert.alert(
-            "Unblock User",
-            `Are you sure you want to unblock ${targetUser?.nickname || 'this user'}?`,
+            t('user_actions.unblock_title'),
+            t('user_actions.unblock_message').replace('{name}', targetUser?.nickname || t('user_actions.this_user')),
             [
-                { text: "Cancel", style: "cancel" },
+                { text: t('user_actions.cancel'), style: "cancel" },
                 {
-                    text: "Unblock",
+                    text: t('user_actions.unblock'),
                     style: "default",
                     onPress: async () => {
                         try {
                             await unblockMutation.mutateAsync({
                                 blockedUserId: targetUser.id
                             });
-                            Alert.alert("Unblocked", `${targetUser?.nickname || 'User'} has been unblocked.`);
+                            Alert.alert(t('user_actions.alert_unblocked'), t('user_actions.alert_unblocked_message').replace('{name}', targetUser?.nickname || t('general.user')));
                             resetAndClose();
                         } catch (error) {
-                            Alert.alert("Error", "Failed to unblock user.");
+                            Alert.alert(t('user_actions.alert_error'), t('user_actions.alert_unblock_error'));
                             console.error(error);
                         }
                     },
@@ -156,7 +158,7 @@ export default function UserActionSheet({
                                         <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                             <MessageCircle size={24} color={colors.text} />
                                         </View>
-                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Send Message</Body>
+                                        <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>{t('user_actions.send_message')}</Body>
                                     </TouchableOpacity>
 
                                     {/* Block/Unblock Option */}
@@ -165,14 +167,14 @@ export default function UserActionSheet({
                                             <View style={[styles.iconContainer, { backgroundColor: colors.surfaceElevated }]}>
                                                 <UserMinus size={24} color={colors.text} />
                                             </View>
-                                            <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>Unblock User</Body>
+                                            <Body style={{ marginLeft: spacing.md, fontSize: 16 }}>{t('user_actions.unblock_user')}</Body>
                                         </TouchableOpacity>
                                     ) : (
                                         <TouchableOpacity style={styles.option} onPress={handleBlock}>
                                             <View style={[styles.iconContainer, { backgroundColor: colors.errorSubtle }]}>
                                                 <Ban size={24} color={colors.error} />
                                             </View>
-                                            <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>Block User</Body>
+                                            <Body style={{ marginLeft: spacing.md, color: colors.error, fontSize: 16 }}>{t('user_actions.block_user')}</Body>
                                         </TouchableOpacity>
                                     )}
                                 </View>

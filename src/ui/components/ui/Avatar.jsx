@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, ActivityIndicator } from "react-native";
+import React from "react";
+import { View, Text } from "react-native";
 import { Image } from "expo-image";
 import { User } from "lucide-react-native";
 import { useTheme } from "../../../config/theme";
@@ -17,7 +17,6 @@ export default function Avatar({
   ...props
 }) {
   const { colors, radius, typography } = useTheme();
-  const [isLoading, setIsLoading] = useState(!!source);
 
   // Normalize size prop (accept both "xl" and "xlarge")
   const normalizedSize = size === "xl" ? "xlarge" : size;
@@ -56,35 +55,17 @@ export default function Avatar({
       {...props}
     >
       {source ? (
-        <>
-          <Image
-            source={source}
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
-            contentFit="cover"
-            transition={200}
-            cachePolicy="memory-disk" // Aggressive caching
-            placeholder={{ backgroundColor }}
-            onLoadStart={() => setIsLoading(true)}
-            onLoad={() => setIsLoading(false)}
-          />
-          {isLoading && (
-            <View
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: backgroundColor + "80", // Semi-transparent
-              }}
-            >
-              <ActivityIndicator size="small" color={colors.primary} />
-            </View>
-          )}
-        </>
+        <Image
+          source={source}
+          style={{
+            width: "100%",
+            height: "100%",
+          }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk" // Aggressive caching
+          placeholder={{ backgroundColor }}
+        />
       ) : (
         <User
           size={iconSizes[normalizedSize]}

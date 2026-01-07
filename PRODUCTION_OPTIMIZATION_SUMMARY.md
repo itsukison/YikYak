@@ -7,7 +7,7 @@
 
 ## 🎯 Overview
 
-Your YikYak app has been comprehensively optimized for production deployment with thousands of concurrent users. All 5 optimization phases have been successfully completed.
+Your Hearsay app has been comprehensively optimized for production deployment with thousands of concurrent users. All 5 optimization phases have been successfully completed.
 
 ---
 

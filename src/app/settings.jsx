@@ -173,6 +173,7 @@ export default function SettingsScreen() {
     >
       {/* Icon */}
       <View
+        pointerEvents="none"
         style={{
           width: 44,
           height: 44,
@@ -187,7 +188,7 @@ export default function SettingsScreen() {
       </View>
 
       {/* Text Content */}
-      <View style={{ flex: 1 }}>
+      <View pointerEvents="none" style={{ flex: 1 }}>
         <Body weight="bold" style={{ marginBottom: 2, color: destructive ? colors.error : colors.text }}>
           {title}
         </Body>

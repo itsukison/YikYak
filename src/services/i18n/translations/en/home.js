@@ -1,0 +1,15 @@
+export const home = {
+  home_title: "Hearsay",
+  home_tab_new: "New",
+  home_tab_popular: "Popular",
+  home_radius_classroom_display: "Classroom posts",
+  home_radius_campus_display: "Campus posts",
+  home_radius_unlimited_display: "Global feed",
+  home_posts_within: "Posts within",
+  home_using_cached_location: "Using last known location",
+  home_location_permission_denied: "Location permission denied",
+  home_location_permission_msg: "Location access is required to see nearby posts.",
+  home_loading_more: "Loading more posts...",
+  home_no_posts: "No Posts Yet",
+  home_post_deleted: "This post has been deleted",
+};

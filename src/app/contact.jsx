@@ -93,85 +93,65 @@ export default function ContactScreen() {
                 </View>
 
                 {/* Contact Form */}
-                <View
+                <Caption color="secondary" style={{ marginBottom: 12 }}>
+                    {t("help.feedback_placeholder")}
+                </Caption>
+
+                <TextInput
+                    value={feedbackText}
+                    onChangeText={setFeedbackText}
+                    placeholder={t("help.feedback_placeholder")}
+                    placeholderTextColor={colors.textTertiary}
+                    multiline
+                    numberOfLines={8}
+                    maxLength={1000}
                     style={{
-                        backgroundColor: colors.surface,
-                        borderRadius: radius.card,
-                        padding: 20,
-                        borderWidth: 1,
-                        borderColor: colors.borderLight,
+                        backgroundColor: colors.inputBackground,
+                        borderRadius: radius.input,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        fontSize: 16,
+                        color: colors.text,
+                        minHeight: 160,
+                        textAlignVertical: "top",
+                        marginBottom: 12,
+                    }}
+                />
+
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <Caption color="tertiary">{feedbackText.length}/1000</Caption>
+                </View>
+
+                <TouchableOpacity
+                    onPress={handleSubmitFeedback}
+                    disabled={submitting || !feedbackText.trim()}
+                    style={{
+                        backgroundColor: feedbackText.trim() && !submitting ? colors.accent : colors.surfaceElevated,
+                        borderRadius: radius.button,
+                        paddingVertical: 14,
+                        alignItems: "center",
                     }}
                 >
-                    <Caption color="secondary" style={{ marginBottom: 12 }}>
-                        {t("help.feedback_placeholder")}
-                    </Caption>
-
-                    <TextInput
-                        value={feedbackText}
-                        onChangeText={setFeedbackText}
-                        placeholder={t("help.feedback_placeholder")}
-                        placeholderTextColor={colors.textTertiary}
-                        multiline
-                        numberOfLines={8}
-                        maxLength={1000}
-                        style={{
-                            backgroundColor: colors.inputBackground,
-                            borderRadius: radius.input,
-                            paddingHorizontal: 16,
-                            paddingVertical: 12,
-                            fontSize: 16,
-                            color: colors.text,
-                            minHeight: 160,
-                            textAlignVertical: "top",
-                            marginBottom: 12,
-                        }}
-                    />
-
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                        <Caption color="tertiary">{feedbackText.length}/1000</Caption>
-                    </View>
-
-                    <TouchableOpacity
-                        onPress={handleSubmitFeedback}
-                        disabled={submitting || !feedbackText.trim()}
-                        style={{
-                            backgroundColor: feedbackText.trim() && !submitting ? colors.accent : colors.surfaceElevated,
-                            borderRadius: radius.button,
-                            paddingVertical: 14,
-                            alignItems: "center",
-                        }}
-                    >
-                        {submitting ? (
-                            <ActivityIndicator color={colors.text} />
-                        ) : (
-                            <Body weight="semibold" style={{ color: feedbackText.trim() ? colors.primaryText : colors.textSecondary }}>
-                                {t("help.submit_feedback")}
-                            </Body>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                    {submitting ? (
+                        <ActivityIndicator color={colors.text} />
+                    ) : (
+                        <Body weight="semibold" style={{ color: feedbackText.trim() ? colors.primaryText : colors.textSecondary }}>
+                            {t("help.submit_feedback")}
+                        </Body>
+                    )}
+                </TouchableOpacity>
 
                 {/* Additional Contact Info */}
                 <View style={{ marginTop: 32 }}>
-                    <View
-                        style={{
-                            backgroundColor: colors.surface,
-                            borderRadius: radius.card,
-                            padding: 20,
-                            borderWidth: 1,
-                            borderColor: colors.borderLight,
-                        }}
-                    >
-                        <Heading variant="h4" style={{ marginBottom: 12 }}>
-                            Other Ways to Reach Us
-                        </Heading>
-                        <Body color="secondary" style={{ lineHeight: 24, marginBottom: 8 }}>
-                            Email: support@hearsayjapan.com
-                        </Body>
-                        <Caption color="secondary">
-                            We typically respond within 1-2 business days.
-                        </Caption>
-                    </View>
+                    <Heading variant="h4" style={{ marginBottom: 12 }}>
+                        Other Ways to Reach Us
+                    </Heading>
+                    <Body color="secondary" style={{ lineHeight: 24, marginBottom: 8 }}>
+                        Email: atonsho@hearsay.ink
+                    </Body>
+                    <Caption color="secondary">
+                        We typically respond within 1-2 business days.
+                    </Caption>
                 </View>
             </ScrollView>
         </AppBackground>

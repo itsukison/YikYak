@@ -27,6 +27,7 @@ import { uploadPhotos } from '../services/storage/photoUpload';
 import { useCreatePostMutation } from '../services/posts/useCreatePost';
 import { useEditPostMutation } from '../services/posts/usePostActions';
 import CelebrationOverlay from '../ui/components/CelebrationOverlay';
+import { useLanguageStore } from '../services/i18n/languageStore';
 
 export default function CreatePost() {
   const insets = useSafeAreaInsets();
@@ -35,6 +36,7 @@ export default function CreatePost() {
   const params = useLocalSearchParams();
   const isEditMode = params.mode === 'edit';
   const initialPost = params.post ? JSON.parse(params.post) : null;
+  const { t } = useLanguageStore();
 
   const createPostMutation = useCreatePostMutation();
   const editPostMutation = useEditPostMutation();
@@ -43,7 +45,7 @@ export default function CreatePost() {
   const [isAnonymous, setIsAnonymous] = useState(initialPost?.is_anonymous || false);
   const [loading, setLoading] = useState(false);
   const [location, setLocation] = useState(null);
-  const [locationName, setLocationName] = useState('Locating...');
+  const [locationName, setLocationName] = useState(t('compose.locating'));
   // Standardize photos to always be array of URL strings
   const [photos, setPhotos] = useState(() => {
     if (!initialPost?.photos) return [];
@@ -126,11 +128,11 @@ export default function CreatePost() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
-          'Location Permission',
-          'Location access is required to create location-based posts.',
-          [{ text: 'OK' }]
+          t('compose.alert_location_permission'),
+          t('compose.alert_location_required'),
+          [{ text: t('common.ok') }]
         );
-        setLocationName('Unknown Location');
+        setLocationName(t('compose.unknown_location'));
         return;
       }
 
@@ -147,20 +149,20 @@ export default function CreatePost() {
         if (reverseGeocode && reverseGeocode.length > 0) {
           const address = reverseGeocode[0];
           // Prioritize name (e.g. "University of Tokyo"), then city, then region
-          const name = address.name || address.city || address.region || 'Unknown Location';
+          const name = address.name || address.city || address.region || t('compose.unknown_location');
           setLocationName(name);
         } else {
-          setLocationName('Unknown Location');
+          setLocationName(t('compose.unknown_location'));
         }
       } catch (geoError) {
         console.error('Error reverse geocoding:', geoError);
-        setLocationName('Unknown Location');
+        setLocationName(t('compose.unknown_location'));
       }
 
     } catch (error) {
       console.error('Error getting location:', error);
-      Alert.alert('Error', 'Failed to get your location. Please try again.');
-      setLocationName('Unknown Location');
+      Alert.alert(t('common.error'), t('compose.error_get_location'));
+      setLocationName(t('compose.unknown_location'));
     }
   };
 
@@ -168,22 +170,22 @@ export default function CreatePost() {
     Keyboard.dismiss();
 
     if (!content.trim()) {
-      Alert.alert('Error', 'Please enter some content for your post.');
+      Alert.alert(t('common.error'), t('compose.error_content'));
       return;
     }
 
     if (content.trim().length > 200) {
-      Alert.alert('Error', 'Post content must be 200 characters or less.');
+      Alert.alert(t('common.error'), t('compose.error_too_long'));
       return;
     }
 
     if (!location && !isEditMode) {
-      Alert.alert('Error', 'Location is required to create a post.');
+      Alert.alert(t('common.error'), t('compose.error_location'));
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to create a post.');
+      Alert.alert(t('common.error'), t('compose.error_login'));
       return;
     }
 
@@ -192,21 +194,21 @@ export default function CreatePost() {
     try {
       // Step 1: Compress and upload photos if any
       let photoUrls = [];
-      
+
       // Validate and separate photos
       // Existing photos: already uploaded (start with http/https)
-      const existingPhotos = photos.filter(p => 
+      const existingPhotos = photos.filter(p =>
         typeof p === 'string' && (p.startsWith('http://') || p.startsWith('https://'))
       );
-      
+
       // New photos: local URIs (typically start with file://)
-      const newPhotoUris = photos.filter(p => 
-        typeof p === 'string' && 
-        !p.startsWith('http://') && 
+      const newPhotoUris = photos.filter(p =>
+        typeof p === 'string' &&
+        !p.startsWith('http://') &&
         !p.startsWith('https://') &&
         p.length > 0
       );
-      
+
       console.log('[Compose] Photos state length:', photos.length);
       console.log('[Compose] Photos state types:', photos.map(p => typeof p));
       console.log('[Compose] Photos state values:', photos);
@@ -221,12 +223,12 @@ export default function CreatePost() {
           maxWidth: 1920,
           quality: 0.8,
         });
-        
+
         console.log('Compression complete, uploading...');
         // Upload compressed images
         const compressedUris = compressed.map(img => img.uri);
         const { urls, errors } = await uploadPhotos(user.id, compressedUris);
-        
+
         if (errors.length > 0) {
           console.error('Photo upload errors:', errors);
           Alert.alert('Warning', 'Some photos failed to upload. Continue anyway?', [
@@ -235,7 +237,7 @@ export default function CreatePost() {
           ]);
           return;
         }
-        
+
         photoUrls = [...existingPhotos, ...urls];
       } else {
         photoUrls = existingPhotos;
@@ -250,7 +252,7 @@ export default function CreatePost() {
       if (error.message && error.message.includes('prohibited content')) {
         setModerationError(error.message);
       } else {
-        Alert.alert('Error', `Failed to ${isEditMode ? 'save' : 'create'} post. Please try again.`);
+        Alert.alert(t('common.error'), t('compose.error_failed').replace('{action}', isEditMode ? t('common.save') : t('compose.post').toLowerCase()));
       }
     } finally {
       setLoading(false);
@@ -266,7 +268,7 @@ export default function CreatePost() {
           isAnonymous,
           photos: photoUrls,
         });
-        setSuccessMessage("Post updated successfully");
+        setSuccessMessage(t('compose.post_updated'));
       } else {
         console.log('[Compose] Creating post with photos:', photoUrls);
         await createPostMutation.mutateAsync({
@@ -318,7 +320,7 @@ export default function CreatePost() {
         <Modal
           visible={!!moderationError}
           onClose={() => setModerationError(null)}
-          title="Post Rejected"
+          title={t('compose.post_rejected')}
           message={moderationError}
           actions={[
             {
@@ -336,7 +338,7 @@ export default function CreatePost() {
             setSuccessMessage(null);
             router.back();
           }}
-          title="Success"
+          title={t('compose.success')}
           message={successMessage}
           actions={[
             {
@@ -352,7 +354,7 @@ export default function CreatePost() {
 
         {showLoading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Body>Loading...</Body>
+            <Body>{t('common.loading')}</Body>
           </View>
         ) : (
           <>
@@ -381,7 +383,7 @@ export default function CreatePost() {
                 <ArrowLeft size={24} color={colors.text} />
               </TouchableOpacity>
 
-              <Heading variant="h2">{isEditMode ? 'Edit Post' : 'Create Post'}</Heading>
+              <Heading variant="h2">{isEditMode ? t('compose.edit_post') : t('compose.create_post')}</Heading>
 
               <Button
                 variant="primary"
@@ -390,7 +392,7 @@ export default function CreatePost() {
                 disabled={loading || !content.trim() || isOverLimit}
                 style={{ minWidth: 80 }}
               >
-                {loading ? 'Saving...' : (isEditMode ? 'Save' : 'Post')}
+                {loading ? t('compose.saving') : (isEditMode ? t('compose.save') : t('compose.post'))}
               </Button>
             </View>
 
@@ -407,7 +409,7 @@ export default function CreatePost() {
                     fontWeight: '400',
                     marginBottom: 24,
                   }}
-                  placeholder="What's happening?"
+                  placeholder={t('compose.placeholder')}
                   placeholderTextColor={colors.textTertiary}
                   multiline
                   value={content}
@@ -466,10 +468,10 @@ export default function CreatePost() {
                       </View>
                       <View>
                         <Body weight="medium">
-                          {isAnonymous ? 'Anonymous' : 'Public'}
+                          {isAnonymous ? t('compose.anonymous') : t('compose.public')}
                         </Body>
                         <Caption color="secondary">
-                          {isAnonymous ? 'Your identity is hidden' : `Posting as ${profile?.nickname || 'User'}`}
+                          {isAnonymous ? t('compose.identity_hidden') : t('compose.posting_as').replace('{name}', profile?.nickname || t('general.user'))}
                         </Caption>
                       </View>
                     </View>
@@ -527,11 +529,11 @@ export default function CreatePost() {
                           <MapPin size={20} color={colors.textSecondary} />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Body weight="medium">Location</Body>
+                          <Body weight="medium">{t('compose.location')}</Body>
                           <Caption color="secondary">
                             {showLocation
-                              ? `${locationName} • Visible to nearby`
-                              : 'Hidden • Post still appears nearby'}
+                              ? t('compose.location_visible').replace('{locationName}', locationName)
+                              : t('compose.location_hidden')}
                           </Caption>
                         </View>
                       </View>

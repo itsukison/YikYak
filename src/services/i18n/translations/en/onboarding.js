@@ -1,0 +1,28 @@
+export const onboarding = {
+  welcome: "Welcome to Hearsay",
+  subtitle: "Let's set up your profile",
+  username_label: "Username *",
+  username_placeholder: "e.g., tokyo_student",
+  username_checking: "Checking availability...",
+  username_helper: "Your unique identifier (3-20 characters)",
+  nickname_label: "Nickname *",
+  nickname_placeholder: "Enter your nickname",
+  bio_label: "Bio (optional)",
+  bio_placeholder: "Tell us about yourself...",
+  anonymous_mode: "Anonymous Mode",
+  anonymous_desc: "Hide your identity in posts",
+  get_started: "Get Started",
+  skip: "Skip for now",
+
+  // Validation errors
+  err_username_required: "Username is required",
+  err_username_length: "Username must be at least 3 characters",
+  err_username_max: "Username must be 20 characters or less",
+  err_username_chars: "Username can only contain letters, numbers, and underscores",
+  err_username_taken: "Username is already taken",
+  err_username_check: "Error checking username availability",
+  err_nickname_required: "Please enter a nickname",
+  err_nickname_max: "Nickname must be 20 characters or less",
+  err_bio_max: "Bio must be 150 characters or less",
+  err_update_failed: "Failed to update profile",
+};

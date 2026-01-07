@@ -23,6 +23,7 @@ import { useLanguageStore } from "../../services/i18n/languageStore";
 import ChatHeader from "./components/ChatHeader";
 import MessageInput from "./components/MessageInput";
 import MessageBubble from "./components/MessageBubble";
+import SkeletonMessage from "../../ui/components/SkeletonMessage";
 
 const isSameDay = (d1, d2) => {
   return d1.getFullYear() === d2.getFullYear() &&
@@ -175,11 +176,23 @@ export default function ChatDetailScreen() {
       >
         <ChatHeader title={otherUserName} otherUserId={otherUserId} />
 
+
+
         {/* Messages List */}
         {isLoading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <FlatList
+            data={[...Array(12)]} // Show enough items to fill screen
+            renderItem={({ index }) => <SkeletonMessage index={index} />}
+            keyExtractor={(_, index) => `skeleton-${index}`}
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingBottom: 8,
+              flexGrow: 1,
+              justifyContent: 'flex-end',
+            }}
+            inverted // Match real chat behavior
+            showsVerticalScrollIndicator={false}
+          />
         ) : (
           <FlatList
             ref={flatListRef}

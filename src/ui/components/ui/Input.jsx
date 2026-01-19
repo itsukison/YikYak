@@ -35,12 +35,14 @@ export default function Input({
           flexDirection: "row",
           alignItems: multiline ? "flex-start" : "center",
           backgroundColor: colors.surfaceSecondary,
-          borderRadius: 14,
-          borderWidth: 1,
-          borderColor: error ? colors.error : colors.borderLight,
+          borderRadius: 12,
           paddingHorizontal: spacing.lg,
           paddingVertical: multiline ? spacing.lg : spacing.md,
           minHeight: multiline ? 100 : 52,
+          ...(error && {
+            borderWidth: 1,
+            borderColor: colors.error,
+          }),
         }}
       >
         {leftIcon && (

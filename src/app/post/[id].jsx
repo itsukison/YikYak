@@ -40,6 +40,8 @@ import {
 import { useVotePostMutation } from "../../services/posts/usePostActions";
 import { Heading, Body, Caption, Avatar } from "../../ui/components/ui";
 import PhotoGrid from "../../ui/components/PhotoGrid";
+import SkeletonPost from "../../ui/components/SkeletonPost";
+import SkeletonComment from "../../ui/components/SkeletonComment";
 
 export default function PostDetailScreen() {
   const { id: postId, post: postJson } = useLocalSearchParams();
@@ -57,7 +59,7 @@ export default function PostDetailScreen() {
   const { data: fetchedPost, isLoading: postLoading } = usePostQuery(postId);
   const post = fetchedPost || initialPost;
 
-  const { data: comments, isLoading: commentsLoading } = useCommentsQuery(postId);
+  const { data: comments, isLoading: commentsLoading, error: commentsError, refetch: refetchComments } = useCommentsQuery(postId);
   const { data: userVotes } = useCommentVotesQuery(postId, user?.id);
   const { data: postVotes } = useUserVotesQuery(user?.id);
 
@@ -75,8 +77,18 @@ export default function PostDetailScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={{ flex: 1 }}>
+          {/* Header Skeleton */}
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 60,
+              paddingBottom: 16,
+            }}
+          >
+            <Heading variant="h2">Post</Heading>
+          </View>
+          <SkeletonPost index={0} />
         </View>
       </AppBackground>
     );
@@ -437,8 +449,27 @@ export default function PostDetailScreen() {
             </Heading>
 
             {commentsLoading ? (
-              <View style={{ paddingVertical: 20, alignItems: "center" }}>
-                <ActivityIndicator size="large" color={colors.primary} />
+              <View>
+                {[...Array(3)].map((_, index) => (
+                  <SkeletonComment key={`skeleton-comment-${index}`} index={index} />
+                ))}
+              </View>
+            ) : commentsError ? (
+              <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: "center" }}>
+                <Body color="secondary" style={{ marginBottom: 12, textAlign: "center" }}>
+                  Failed to load comments. Please try again.
+                </Body>
+                <TouchableOpacity
+                  onPress={() => refetchComments()}
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    backgroundColor: colors.primary,
+                    borderRadius: radius.button,
+                  }}
+                >
+                  <Body style={{ color: colors.primaryText }}>Retry</Body>
+                </TouchableOpacity>
               </View>
             ) : comments && comments.length > 0 ? (
               comments.map((commentItem) => {

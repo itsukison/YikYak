@@ -66,20 +66,20 @@ export default function Button({
   const sizeStyles = {
     small: {
       paddingHorizontal: spacing["2xl"],
-      paddingVertical: spacing.md,
-      minHeight: 40,
+      paddingVertical: spacing.lg,
+      minHeight: 44,
       borderRadius: radius.button,
     },
     medium: {
       paddingHorizontal: spacing["3xl"],
-      paddingVertical: spacing.lg,
-      minHeight: 48,
+      paddingVertical: spacing.xl,
+      minHeight: 54,
       borderRadius: radius.button,
     },
     large: {
       paddingHorizontal: spacing["4xl"],
-      paddingVertical: spacing.xl,
-      minHeight: 56,
+      paddingVertical: spacing["2xl"],
+      minHeight: 60,
       borderRadius: radius.buttonLarge,
     },
   };

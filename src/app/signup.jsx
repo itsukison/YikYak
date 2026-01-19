@@ -77,6 +77,10 @@ export default function SignupScreen() {
   };
 
   const handleSignup = async () => {
+    // Prevent double submission
+    if (loading) return;
+
+    // Validate all fields before proceeding
     if (!email || !password || !confirmPassword) {
       setError(t('auth_error_fill_fields'));
       return;
@@ -92,28 +96,35 @@ export default function SignupScreen() {
       return;
     }
 
+    // CRITICAL: Check password match BEFORE setting loading state
     if (password !== confirmPassword) {
       setError(t('auth_error_password_match'));
       return;
     }
 
+    // Set loading state AFTER all validations pass
     setLoading(true);
     setError('');
 
-    const { data, error: signUpError } = await signUp(email, password, {
-      data: {
-        school_name: school.name,
-        school_id: school.id
-      },
-      emailConfirmation: !school.isGuest
-    });
+    try {
+      const { data, error: signUpError } = await signUp(email, password, {
+        data: {
+          school_name: school.name,
+          school_id: school.id
+        },
+        emailConfirmation: !school.isGuest
+      });
 
-    if (signUpError) {
-      setError(signUpError.message || t('error'));
+      if (signUpError) {
+        setError(signUpError.message || t('error'));
+        setLoading(false);
+      } else {
+        // Keep loading state while navigating
+        router.replace('/onboarding');
+      }
+    } catch (err) {
+      setError(err.message || t('error'));
       setLoading(false);
-    } else {
-      setLoading(false);
-      router.replace('/onboarding');
     }
   };
 
@@ -128,7 +139,7 @@ export default function SignupScreen() {
             flexGrow: 1,
             justifyContent: 'center',
             paddingHorizontal: spacing.xl,
-            paddingVertical: spacing["5xl"],
+            paddingVertical: spacing["7xl"],
           }}
           keyboardShouldPersistTaps="handled"
         >
@@ -149,9 +160,12 @@ export default function SignupScreen() {
 
           {/* Language Toggle */}
           <TouchableOpacity
-            onPress={() => {
-              changeLanguage(language === 'en' ? 'ja' : 'en');
+            onPress={(e) => {
+              e.stopPropagation();
+              const newLang = language === 'en' ? 'ja' : 'en';
+              changeLanguage(newLang);
             }}
+            disabled={loading}
             style={{
               position: 'absolute',
               top: insets.top + spacing.md,
@@ -163,6 +177,7 @@ export default function SignupScreen() {
               borderRadius: 20,
               borderWidth: 1,
               borderColor: colors.border,
+              opacity: loading ? 0.5 : 1,
             }}
           >
             <Body variant="bodySmall" weight="medium" style={{ fontSize: 13 }}>
@@ -224,7 +239,7 @@ export default function SignupScreen() {
               fullWidth
               onPress={handleSignup}
               loading={loading}
-              disabled={loading}
+              disabled={loading || !email || !password || !confirmPassword}
             >
               {t('auth_create_account_button')}
             </Button>

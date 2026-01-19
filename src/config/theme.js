@@ -127,22 +127,22 @@ export const useTheme = () => {
 
     // H1 Headings
     h1: {
-      fontSize: 32,
-      lineHeight: 40,
-      fontWeight: "700",
-      letterSpacing: -0.8,
+      fontSize: 38,
+      lineHeight: 46,
+      fontWeight: "800",
+      letterSpacing: -1.5,
     },
     h1Medium: {
+      fontSize: 34,
+      lineHeight: 42,
+      fontWeight: "700",
+      letterSpacing: -1.2,
+    },
+    h1Small: {
       fontSize: 28,
       lineHeight: 36,
       fontWeight: "700",
-      letterSpacing: -0.8,
-    },
-    h1Small: {
-      fontSize: 24,
-      lineHeight: 32,
-      fontWeight: "700",
-      letterSpacing: -0.6,
+      letterSpacing: -1,
     },
 
     // H2 Headings

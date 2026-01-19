@@ -45,72 +45,90 @@ export function useCreateCommentMutation() {
 
 /**
  * Vote on a comment (upvote/downvote)
+ * Uses optimized RPC function that reduces 3 queries to 1
  */
 export function useVoteCommentMutation() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({ userId, commentId, voteType, postId }) => {
-            // If voteType is 0 or null, delete the vote
-            if (voteType === 0 || voteType === null) {
-                const { error } = await supabase
-                    .from("votes_comments")
-                    .delete()
-                    .eq("user_id", userId)
-                    .eq("comment_id", commentId);
+            // Normalize voteType: null -> 0 for removal
+            const normalizedVoteType = voteType === null || voteType === undefined ? 0 : voteType;
 
-                if (error) throw error;
-
-                // Recalculate comment score after deletion
-                const { data: votes } = await supabase
-                    .from("votes_comments")
-                    .select("vote_type")
-                    .eq("comment_id", commentId);
-
-                const newScore =
-                    votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
-
-                await supabase
-                    .from("comments")
-                    .update({ score: newScore })
-                    .eq("id", commentId);
-
-                return null;
-            }
-
-            // Otherwise, upsert the vote
-            const { error } = await supabase.from("votes_comments").upsert(
-                {
-                    user_id: userId,
-                    comment_id: commentId,
-                    vote_type: voteType,
-                },
-                {
-                    onConflict: "user_id,comment_id",
-                }
-            );
+            // Use optimized RPC function (3 queries -> 1 RPC)
+            const { data, error } = await supabase.rpc("handle_comment_vote", {
+                p_comment_id: commentId,
+                p_vote_type: normalizedVoteType,
+            });
 
             if (error) throw error;
 
-            // Recalculate comment score after upsert
-            const { data: votes } = await supabase
-                .from("votes_comments")
-                .select("vote_type")
-                .eq("comment_id", commentId);
+            return data;
+        },
+        onMutate: async ({ commentId, voteType, postId }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+            await queryClient.cancelQueries({ queryKey: ["comment-votes", postId] });
 
-            const newScore =
-                votes?.reduce((sum, vote) => sum + vote.vote_type, 0) || 0;
+            // Snapshot the previous value
+            const previousComments = queryClient.getQueryData(["comments", postId]);
+            const previousVotes = queryClient.getQueryData(["comment-votes", postId]);
 
-            await supabase
-                .from("comments")
-                .update({ score: newScore })
-                .eq("id", commentId);
+            // Optimistically update comment score
+            queryClient.setQueryData(["comments", postId], (old) => {
+                if (!old) return old;
+                return old.map((comment) => {
+                    if (comment.id === commentId) {
+                        const currentVote = previousVotes?.[commentId] || 0;
+                        const normalizedVoteType = voteType === null ? 0 : voteType;
+                        const scoreChange = normalizedVoteType - currentVote;
+                        return {
+                            ...comment,
+                            score: (comment.score || 0) + scoreChange,
+                        };
+                    }
+                    return comment;
+                });
+            });
 
-            return voteType;
+            // Optimistically update user votes
+            queryClient.setQueryData(["comment-votes", postId], (old) => {
+                const newVotes = { ...old };
+                if (voteType === null || voteType === 0) {
+                    delete newVotes[commentId];
+                } else {
+                    newVotes[commentId] = voteType;
+                }
+                return newVotes;
+            });
+
+            return { previousComments, previousVotes };
+        },
+        onError: (err, variables, context) => {
+            // Rollback on error
+            if (context?.previousComments) {
+                queryClient.setQueryData(
+                    ["comments", variables.postId],
+                    context.previousComments
+                );
+            }
+            if (context?.previousVotes) {
+                queryClient.setQueryData(
+                    ["comment-votes", variables.postId],
+                    context.previousVotes
+                );
+            }
         },
         onSuccess: (_, variables) => {
-            queryClient.invalidateQueries(["comments", variables.postId]);
-            queryClient.invalidateQueries(["comment-votes", variables.postId]);
+            // Refetch to reconcile with server
+            queryClient.invalidateQueries({
+                queryKey: ["comments", variables.postId],
+                refetchType: "active",
+            });
+            queryClient.invalidateQueries({
+                queryKey: ["comment-votes", variables.postId],
+                refetchType: "active",
+            });
         },
     });
 }

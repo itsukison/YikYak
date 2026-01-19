@@ -35,6 +35,10 @@ export function useCommentsQuery(postId) {
             }));
         },
         enabled: !!postId,
+        retry: 3, // Retry failed requests up to 3 times
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+        staleTime: 1000 * 60, // 1 minute - comments don't change too frequently
+        gcTime: 1000 * 60 * 5, // 5 minutes garbage collection
     });
 }
 

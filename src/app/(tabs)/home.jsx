@@ -55,6 +55,20 @@ export default function HomeScreen() {
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
 
+  // Handle time filter changes with immediate refetch
+  const handleTimeFilterChange = (newFilter) => {
+    setTimeFilter(newFilter);
+    // Force immediate refetch when time filter changes
+    refetch();
+  };
+
+  // Handle tab changes with immediate refetch
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    // Force immediate refetch when switching tabs
+    refetch();
+  };
+
   // Use profile radius (default to 5000 if not set)
   const locationRadius = profile?.location_radius || 5000;
 
@@ -272,9 +286,9 @@ export default function HomeScreen() {
         ListHeaderComponent={
           <FeedHeader
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
+            setActiveTab={handleTabChange}
             timeFilter={timeFilter}
-            setTimeFilter={setTimeFilter}
+            setTimeFilter={handleTimeFilterChange}
             location={location}
             locationError={locationError}
             queryError={queryError}
@@ -311,7 +325,7 @@ export default function HomeScreen() {
         onPress={() => router.push({ pathname: "/compose" })}
         style={{
           position: "absolute",
-          bottom: insets.bottom + 0,
+          bottom: insets.bottom + 80,
           right: 20,
           width: 64,
           height: 64,
@@ -324,6 +338,7 @@ export default function HomeScreen() {
           shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 8,
+          zIndex: 100,
         }}
       >
         <Plus size={32} color={colors.primaryText} />

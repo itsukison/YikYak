@@ -105,33 +105,28 @@ export default function OnboardingScreen() {
     setLoading(true);
     setError('');
 
-    const optimisticProfile = {
-      ...profile,
-      username: username.toLowerCase().trim(),
-      nickname: nickname.trim(),
-      bio: bio.trim() || null,
-      is_anonymous: isAnonymous,
-      onboarding_completed: true,
-    };
+    // REMOVED OPTIMISTIC UPDATE - causes flickering
+    // Simply update and wait for server response
 
-    setProfile(optimisticProfile);
+    try {
+      const { data, error: updateError } = await updateProfile({
+        username: username.toLowerCase().trim(),
+        nickname: nickname.trim(),
+        bio: bio.trim() || null,
+        is_anonymous: isAnonymous,
+        onboarding_completed: true,
+      });
 
-    const { data, error: updateError } = await updateProfile({
-      username: username.toLowerCase().trim(),
-      nickname: nickname.trim(),
-      bio: bio.trim() || null,
-      is_anonymous: isAnonymous,
-      onboarding_completed: true,
-    });
-
-    if (updateError) {
-      if (user?.id) {
-        await fetchProfile(user.id);
+      if (updateError) {
+        setError(updateError.message || t('onboarding.err_update_failed'));
+        setLoading(false);
+      } else {
+        // Profile updated successfully, navigate
+        router.replace('/(tabs)/home');
       }
-      setError(updateError.message || t('onboarding.err_update_failed'));
+    } catch (err) {
+      setError(err.message || t('onboarding.err_update_failed'));
       setLoading(false);
-    } else {
-      router.replace('/(tabs)/home');
     }
   };
 
@@ -140,33 +135,28 @@ export default function OnboardingScreen() {
 
     const randomUsername = `user_${Math.random().toString(36).substring(2, 10)}`;
 
-    const optimisticProfile = {
-      ...profile,
-      username: randomUsername,
-      nickname: 'Anonymous User',
-      bio: null,
-      is_anonymous: true,
-      onboarding_completed: true,
-    };
+    // REMOVED OPTIMISTIC UPDATE - causes flickering
+    // Simply update and wait for server response
 
-    setProfile(optimisticProfile);
+    try {
+      const { error: updateError } = await updateProfile({
+        username: randomUsername,
+        nickname: 'Anonymous User',
+        bio: null,
+        is_anonymous: true,
+        onboarding_completed: true,
+      });
 
-    const { error: updateError } = await updateProfile({
-      username: randomUsername,
-      nickname: 'Anonymous User',
-      bio: null,
-      is_anonymous: true,
-      onboarding_completed: true,
-    });
-
-    if (updateError) {
-      if (user?.id) {
-        await fetchProfile(user.id);
+      if (updateError) {
+        setError(updateError.message || t('onboarding.err_update_failed'));
+        setLoading(false);
+      } else {
+        // Profile updated successfully, navigate
+        router.replace('/(tabs)/home');
       }
-      setError(updateError.message || t('onboarding.err_update_failed'));
+    } catch (err) {
+      setError(err.message || t('onboarding.err_update_failed'));
       setLoading(false);
-    } else {
-      router.replace('/(tabs)/home');
     }
   };
 
@@ -181,21 +171,40 @@ export default function OnboardingScreen() {
             flexGrow: 1,
             justifyContent: 'center',
             paddingHorizontal: spacing.xl,
-            paddingVertical: spacing["5xl"],
+            paddingVertical: spacing["7xl"],
           }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Language Selector */}
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.md, paddingHorizontal: spacing.sm }}>
             <TouchableOpacity
-              onPress={() => setLanguage('en')}
-              style={{ padding: spacing.xs, marginRight: spacing.sm, borderBottomWidth: language === 'en' ? 2 : 0, borderBottomColor: colors.primary }}
+              onPress={(e) => {
+                e.stopPropagation();
+                setLanguage('en');
+              }}
+              disabled={loading}
+              style={{ 
+                padding: spacing.xs, 
+                marginRight: spacing.sm, 
+                borderBottomWidth: language === 'en' ? 2 : 0, 
+                borderBottomColor: colors.primary,
+                opacity: loading ? 0.5 : 1,
+              }}
             >
               <Body style={{ fontWeight: language === 'en' ? 'bold' : 'normal', opacity: language === 'en' ? 1 : 0.5 }}>English</Body>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setLanguage('ja')}
-              style={{ padding: spacing.xs, borderBottomWidth: language === 'ja' ? 2 : 0, borderBottomColor: colors.primary }}
+              onPress={(e) => {
+                e.stopPropagation();
+                setLanguage('ja');
+              }}
+              disabled={loading}
+              style={{ 
+                padding: spacing.xs, 
+                borderBottomWidth: language === 'ja' ? 2 : 0, 
+                borderBottomColor: colors.primary,
+                opacity: loading ? 0.5 : 1,
+              }}
             >
               <Body style={{ fontWeight: language === 'ja' ? 'bold' : 'normal', opacity: language === 'ja' ? 1 : 0.5 }}>日本語</Body>
             </TouchableOpacity>

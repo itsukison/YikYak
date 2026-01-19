@@ -128,26 +128,27 @@ export function useVotePostMutation() {
       }
     },
     onSuccess: (_, variables) => {
-      // HYBRID APPROACH: Optimistic updates + server reconciliation
-      // Mark user votes as stale but don't refetch immediately
-      // This prevents race condition with optimistic update
+      // CRITICAL FIX: Refetch all vote-related queries to ensure UI shows server state
+      
+      // Immediately refetch user votes to update vote button state
       queryClient.invalidateQueries({
         queryKey: ["user-votes", variables.userId],
         exact: true,
-        refetchType: "none", // Don't refetch now, prevents overwriting optimistic update
+        refetchType: "active", // Refetch active queries immediately
       });
 
-      // Mark post data as stale but don't refetch immediately (no loading spinner)
-      // This ensures next time we fetch, we get accurate server data
+      // Refetch the specific post if user is viewing detail page
       queryClient.invalidateQueries({
         queryKey: ["post", variables.postId],
-        refetchType: "none", // Don't refetch now, just mark stale
+        refetchType: "active", // Immediate refetch for single post view
       });
 
-      // Mark posts lists as stale (will refetch on next mount or focus)
+      // CRITICAL: Refetch posts list to reconcile score with server
+      // Changed from "none" to "active" to fix vote UI not updating
+      // React Query's smart caching prevents scroll jumps and unnecessary re-renders
       queryClient.invalidateQueries({
         queryKey: ["posts"],
-        refetchType: "none", // Don't refetch now
+        refetchType: "active", // NOW REFETCHES - this fixes the vote update issue!
       });
     },
   });

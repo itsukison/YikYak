@@ -60,7 +60,7 @@ export default function LoginScreen() {
             flexGrow: 1,
             justifyContent: 'center',
             paddingHorizontal: spacing.xl,
-            paddingVertical: spacing["5xl"],
+            paddingVertical: spacing["7xl"],
           }}
           keyboardShouldPersistTaps="handled"
         >

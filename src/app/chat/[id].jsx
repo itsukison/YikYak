@@ -109,9 +109,20 @@ export default function ChatDetailScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <ChatHeader title="Chat" />
+        <FlatList
+          data={[...Array(12)]}
+          renderItem={({ index }) => <SkeletonMessage index={index} />}
+          keyExtractor={(_, index) => `skeleton-${index}`}
+          contentContainerStyle={{
+            paddingTop: 16,
+            paddingBottom: 8,
+            flexGrow: 1,
+            justifyContent: 'flex-end',
+          }}
+          inverted
+          showsVerticalScrollIndicator={false}
+        />
       </AppBackground>
     );
   }

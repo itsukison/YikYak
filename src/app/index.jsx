@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicat
 import { useRouter } from 'expo-router';
 import { useAuth } from '../services/auth/useAuth';
 import { useTheme } from '../config/theme';
+import SkeletonBox from '../ui/components/SkeletonBox';
 
 export default function WelcomeScreen() {
   const { user, profile, loading } = useAuth();
@@ -23,8 +24,27 @@ export default function WelcomeScreen() {
 
   if (loading || user) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: '#fdfdfb' }]}>
-        <ActivityIndicator size="large" color="#000000" />
+      <View style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
+            {/* Top Section Skeleton */}
+            <View style={styles.topSection}>
+              <SkeletonBox width={200} height={40} radius={8} />
+            </View>
+
+            {/* Image Section Skeleton */}
+            <View style={styles.imageSection}>
+              <SkeletonBox width={300} height={300} radius={20} />
+            </View>
+
+            {/* Action Section Skeleton */}
+            <View style={styles.actionSection}>
+              <SkeletonBox width="100%" height={56} radius={50} />
+              <SkeletonBox width={150} height={20} radius={4} />
+              <SkeletonBox width={250} height={14} radius={4} style={{ marginTop: 8 }} />
+            </View>
+          </View>
+        </SafeAreaView>
       </View>
     );
   }
@@ -36,7 +56,7 @@ export default function WelcomeScreen() {
 
           {/* Top Section - Quote */}
           <View style={styles.topSection}>
-            <Text style={[styles.quote, typography.h1]}>
+            <Text style={[typography.h1, { fontWeight: '600' }]}>
               Hear it, say it.
             </Text>
           </View>

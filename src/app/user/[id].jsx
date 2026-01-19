@@ -27,6 +27,8 @@ import { useUserVotesQuery } from "../../services/posts/usePosts";
 import { useBlockStatusQuery } from "../../services/user/useUserActions";
 import UserActionSheet from "../../ui/components/UserActionSheet";
 import { Heading, Body, Caption, Card, Avatar, Button } from "../../ui/components/ui";
+import SkeletonProfile from "../../ui/components/SkeletonProfile";
+import SkeletonPost from "../../ui/components/SkeletonPost";
 
 export default function UserProfileScreen() {
   const { id: targetUserId } = useLocalSearchParams();
@@ -178,8 +180,13 @@ export default function UserProfileScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         {profileLoading ? (
-          <View style={{ padding: 40, alignItems: "center" }}>
-            <ActivityIndicator size="large" color={colors.primary} />
+          <View>
+            <SkeletonProfile />
+            <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+              {[...Array(3)].map((_, i) => (
+                <SkeletonPost key={i} index={i} />
+              ))}
+            </View>
           </View>
         ) : (
           <>

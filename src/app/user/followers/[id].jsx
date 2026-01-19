@@ -20,6 +20,7 @@ import {
   useUnfollowMutation,
 } from "../../../services/user/useFollows";
 import { Heading, Body, Card, Avatar, Button } from "../../../ui/components/ui";
+import SkeletonBox from "../../../ui/components/SkeletonBox";
 
 export default function FollowersScreen() {
   const { id: userId } = useLocalSearchParams();
@@ -90,9 +91,24 @@ export default function FollowersScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        {/* Header Skeleton */}
+        <View style={{ paddingHorizontal: 20, paddingTop: insets.top + 16, paddingBottom: 16, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <SkeletonBox width={48} height={48} radius={24} style={{ marginRight: 12 }} />
+          <SkeletonBox width={150} height={32} radius={8} />
         </View>
+        <FlatList
+          data={[...Array(8)]}
+          renderItem={() => (
+            <View style={{ paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center' }}>
+              <SkeletonBox width={48} height={48} radius={24} style={{ marginRight: 12 }} />
+              <View style={{ flex: 1 }}>
+                <SkeletonBox width={120} height={16} radius={4} />
+              </View>
+              <SkeletonBox width={90} height={32} radius={16} />
+            </View>
+          )}
+          keyExtractor={(_, i) => `skeleton-${i}`}
+        />
       </AppBackground>
     );
   }

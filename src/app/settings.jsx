@@ -31,6 +31,7 @@ import AppBackground from "../ui/components/AppBackground";
 import { Heading, Body, Caption, Avatar } from "../ui/components/ui";
 import LanguageModal from "../ui/components/LanguageModal";
 import LocationRadiusModal from "../ui/components/LocationRadiusModal";
+import SkeletonBox from "../ui/components/SkeletonBox";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -406,7 +407,29 @@ export default function SettingsScreen() {
             {/* Blocked Users List (Expandable) */}
             {showBlockedUsers && (
               <View style={{ paddingLeft: 60, marginTop: 8, marginBottom: 8 }}>
-                {blockedLoading && <ActivityIndicator color={colors.textSecondary} />}
+                {blockedLoading && (
+                  <View>
+                    {[1, 2, 3].map((i) => (
+                      <View
+                        key={i}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          paddingVertical: 12,
+                          borderBottomWidth: 0.5,
+                          borderBottomColor: colors.borderLight,
+                        }}
+                      >
+                        <SkeletonBox width={32} height={32} radius={16} style={{ marginRight: 12 }} />
+                        <View style={{ flex: 1 }}>
+                          <SkeletonBox width={100} height={14} radius={radius.small} style={{ marginBottom: 4 }} />
+                          <SkeletonBox width={60} height={12} radius={radius.small} />
+                        </View>
+                        <SkeletonBox width={70} height={28} radius={radius.button} />
+                      </View>
+                    ))}
+                  </View>
+                )}
 
                 {!blockedLoading && blockedUsers.length === 0 && (
                   <Caption color="secondary" style={{ paddingVertical: 12 }}>

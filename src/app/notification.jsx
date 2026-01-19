@@ -21,6 +21,7 @@ import { subscribeToNotifications } from "../services/realtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { Container, Heading, Body, Caption, Avatar } from "../ui/components/ui";
 import { useLanguageStore } from "../services/i18n/languageStore";
+import SkeletonBox from "../ui/components/SkeletonBox";
 
 export default function NotificationScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -144,9 +145,26 @@ export default function NotificationScreen() {
     return (
       <AppBackground>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        {/* Header Skeleton */}
+        <Container padding="none">
+          <View style={{ paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20, flexDirection: "row", alignItems: "center", gap: 16 }}>
+            <SkeletonBox width={40} height={40} radius={20} />
+            <SkeletonBox width={150} height={32} radius={8} />
+          </View>
+          <FlatList
+            data={[...Array(8)]}
+            renderItem={() => (
+              <View style={{ paddingHorizontal: 16, paddingVertical: 12, flexDirection: 'row', gap: 12 }}>
+                <SkeletonBox width={40} height={40} radius={20} />
+                <View style={{ flex: 1, gap: 8 }}>
+                  <SkeletonBox width="60%" height={16} radius={4} />
+                  <SkeletonBox width="40%" height={12} radius={4} />
+                </View>
+              </View>
+            )}
+            keyExtractor={(_, index) => `skeleton-${index}`}
+          />
+        </Container>
       </AppBackground>
     );
   }

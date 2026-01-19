@@ -15,6 +15,7 @@ import {
   Plus,
   AlertCircle
 } from "lucide-react-native";
+import * as Device from 'expo-device';
 import { useTheme } from "../../config/theme";
 import { useAuth } from "../../services/auth/useAuth";
 import { usePostsQuery, useUserVotesQuery } from "../../services/posts/usePosts";
@@ -325,7 +326,7 @@ export default function HomeScreen() {
         onPress={() => router.push({ pathname: "/compose" })}
         style={{
           position: "absolute",
-          bottom: insets.bottom + 80,
+          bottom: (Device.deviceType === 2 || Device.deviceType === 'TABLET') ? insets.bottom + 80 : insets.bottom + 5,
           right: 20,
           width: 64,
           height: 64,

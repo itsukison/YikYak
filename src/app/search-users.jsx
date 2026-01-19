@@ -19,6 +19,7 @@ import { useAuth } from "../services/auth/useAuth";
 import { useUserSearchQuery } from "../services/user/useUser";
 import { useFollowStatusQuery } from "../services/user/useFollows";
 import { Container, Heading, Caption } from "../ui/components/ui";
+import SkeletonBox from "../ui/components/SkeletonBox";
 
 export default function SearchUsersScreen() {
   const { isDark, colors, radius } = useTheme();
@@ -133,9 +134,19 @@ export default function SearchUsersScreen() {
             description="Enter a username or user ID to find other students and start connecting!"
           />
         ) : isLoading ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <FlatList
+            data={[...Array(5)]}
+            renderItem={() => (
+              <View style={{ paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center' }}>
+                <SkeletonBox width={48} height={48} radius={24} style={{ marginRight: 12 }} />
+                <View>
+                  <SkeletonBox width={120} height={16} radius={4} style={{ marginBottom: 6 }} />
+                  <SkeletonBox width={80} height={12} radius={4} />
+                </View>
+              </View>
+            )}
+            keyExtractor={(_, i) => `skeleton-${i}`}
+          />
         ) : showEmptyState ? (
           <EmptyState
             Icon={Users}
